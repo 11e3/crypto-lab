@@ -23,8 +23,8 @@ class TestBacktestCommand:
         assert result.exit_code == 0
         assert "Usage:" in result.output or "help" in result.output.lower()
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_vanilla_strategy(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:
@@ -56,8 +56,8 @@ class TestBacktestCommand:
         )
         mock_run_backtest.assert_called_once()
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_minimal_strategy(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:
@@ -88,8 +88,8 @@ class TestBacktestCommand:
             use_noise_filter=False,
         )
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_legacy_strategy(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:
@@ -125,8 +125,8 @@ class TestBacktestCommand:
             exclude_current=True,
         )
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_custom_options(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:
@@ -167,8 +167,8 @@ class TestBacktestCommand:
         assert config.use_cache is False
 
     @patch("src.backtester.report.generate_report")
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_with_output(
         self,
         mock_create_strategy: MagicMock,
@@ -206,8 +206,8 @@ class TestBacktestCommand:
             assert call_args.kwargs.get("save_path") == output_dir
             assert call_args.kwargs.get("show") is False
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_invalid_strategy(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:
@@ -218,8 +218,8 @@ class TestBacktestCommand:
         assert result.exit_code != 0
         assert "invalid choice" in result.output.lower() or "invalid" in result.output.lower()
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_unknown_strategy_value_error(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:
@@ -245,8 +245,8 @@ class TestBacktestCommand:
                 no_cache=False,
             )
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_empty_dates(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:
@@ -275,8 +275,8 @@ class TestBacktestCommand:
         assert result.exit_code == 0
         mock_run_backtest.assert_called_once()
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_all_options(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:
@@ -333,8 +333,8 @@ class TestBacktestCommand:
             assert config.use_cache is False
 
     @patch("src.backtester.report.generate_report")
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_output_with_string_path(
         self,
         mock_create_strategy: MagicMock,
@@ -372,8 +372,8 @@ class TestBacktestCommand:
             assert save_path is not None
             assert str(save_path) == output_path
 
-    @patch("src.backtester.run_backtest")
-    @patch("src.strategies.volatility_breakout.create_vbo_strategy")
+    @patch("src.cli.commands.backtest.run_backtest")
+    @patch("src.cli.commands.backtest.create_vbo_strategy")
     def test_backtest_command_run_backtest_error(
         self, mock_create_strategy: MagicMock, mock_run_backtest: MagicMock
     ) -> None:

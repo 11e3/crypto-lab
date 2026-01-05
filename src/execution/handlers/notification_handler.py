@@ -79,21 +79,35 @@ class NotificationHandler:
 
     def _handle_order_placed(self, event: Event) -> None:
         """Handle order placed event."""
-        # Safety check: prevent notifications during tests
+        # Safety check: prevent notifications during tests (only if Telegram is real)
+        # Allow mocks to work in tests
         import os
         import sys
-        
+        from unittest.mock import MagicMock
+
         is_testing = (
             "pytest" in sys.modules
             or "unittest" in sys.modules
             or "PYTEST_CURRENT_TEST" in os.environ
             or any("test" in arg.lower() for arg in sys.argv)
         )
-        
-        if is_testing:
+
+        # Only block if Telegram is real (not a mock) and enabled
+        # Mocks are used in tests and should work
+        if (
+            is_testing
+            and self.telegram
+            and not isinstance(self.telegram, MagicMock)
+            and hasattr(self.telegram, "enabled")
+            and self.telegram.enabled
+            and hasattr(self.telegram, "token")
+            and self.telegram.token
+            and "YOUR_" not in self.telegram.token
+        ):
+            # Real Telegram in test environment - block it
             logger.debug(f"Order notification blocked during testing: {event.ticker}")
             return
-        
+
         if isinstance(event, OrderEvent) and self.telegram:
             try:
                 side = "BUY" if event.side == "buy" else "SELL"

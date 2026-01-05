@@ -21,7 +21,7 @@ class TestRunBotCommand:
         assert result.exit_code == 0
         assert "Usage:" in result.output or "help" in result.output.lower()
 
-    @patch("src.execution.bot_facade.create_bot")
+    @patch("src.cli.commands.run_bot.create_bot")
     def test_run_bot_command_default_config(self, mock_create_bot: MagicMock) -> None:
         """Test run_bot command with default config."""
         mock_bot = MagicMock()
@@ -40,7 +40,7 @@ class TestRunBotCommand:
             mock_create_bot.assert_called_once_with(config_path=None)
             mock_bot.run.assert_called_once()
 
-    @patch("src.execution.bot_facade.create_bot")
+    @patch("src.cli.commands.run_bot.create_bot")
     def test_run_bot_command_with_config(self, mock_create_bot: MagicMock) -> None:
         """Test run_bot command with custom config path."""
         mock_bot = MagicMock()
@@ -62,7 +62,7 @@ class TestRunBotCommand:
             assert call_args.kwargs.get("config_path") == config_path
             mock_bot.run.assert_called_once()
 
-    @patch("src.execution.bot_facade.create_bot")
+    @patch("src.cli.commands.run_bot.create_bot")
     def test_run_bot_command_dry_run(self, mock_create_bot: MagicMock) -> None:
         """Test run_bot command with dry-run flag."""
         mock_bot = MagicMock()
@@ -81,7 +81,7 @@ class TestRunBotCommand:
             mock_create_bot.assert_called_once()
             mock_bot.run.assert_called_once()
 
-    @patch("src.execution.bot_facade.create_bot")
+    @patch("src.cli.commands.run_bot.create_bot")
     def test_run_bot_command_keyboard_interrupt(self, mock_create_bot: MagicMock) -> None:
         """Test run_bot command handles KeyboardInterrupt gracefully."""
         mock_bot = MagicMock()
@@ -99,7 +99,7 @@ class TestRunBotCommand:
             mock_create_bot.assert_called_once()
             mock_bot.run.assert_called_once()
 
-    @patch("src.execution.bot_facade.create_bot")
+    @patch("src.cli.commands.run_bot.create_bot")
     def test_run_bot_command_error_handling(self, mock_create_bot: MagicMock) -> None:
         """Test run_bot command handles errors."""
         mock_bot = MagicMock()
@@ -115,7 +115,7 @@ class TestRunBotCommand:
             assert result.exit_code != 0
             assert "error" in result.output.lower() or "failed" in result.output.lower()
 
-    @patch("src.execution.bot_facade.create_bot")
+    @patch("src.cli.commands.run_bot.create_bot")
     def test_run_bot_command_config_path_conversion(self, mock_create_bot: MagicMock) -> None:
         """Test run_bot command converts string config path to Path object."""
         mock_bot = MagicMock()
@@ -139,7 +139,7 @@ class TestRunBotCommand:
             assert isinstance(passed_path, Path)
             assert passed_path == config_path
 
-    @patch("src.execution.bot_facade.create_bot")
+    @patch("src.cli.commands.run_bot.create_bot")
     def test_run_bot_command_none_config_path(self, mock_create_bot: MagicMock) -> None:
         """Test run_bot command with None config path (default)."""
         mock_bot = MagicMock()

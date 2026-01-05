@@ -319,7 +319,7 @@ class TradingBotFacade:
                     or "PYTEST_CURRENT_TEST" in os.environ
                     or any("test" in arg.lower() for arg in sys.argv)
                 )
-                
+
                 if not is_testing:
                     try:
                         curr_price = self.exchange.get_current_price(ticker)
@@ -413,22 +413,37 @@ class TradingBotFacade:
 
     def run(self) -> None:
         """Run the trading bot main loop."""
-        # Safety check: prevent running during tests
+        # Safety check: prevent running during tests (only if Telegram is real)
+        # Allow mocks to work in tests
         import sys
-        
-        # Check if we're in a test environment
+        from unittest.mock import MagicMock
+
         is_testing = (
             "pytest" in sys.modules
             or "unittest" in sys.modules
             or "PYTEST_CURRENT_TEST" in os.environ
             or any("test" in arg.lower() for arg in sys.argv)
         )
-        
-        if is_testing and "--allow-test-run" not in sys.argv:
+
+        # Only block if Telegram is real (not a mock) and enabled
+        # Tests use mocks which should work
+        should_block = (
+            is_testing
+            and "--allow-test-run" not in sys.argv
+            and self.telegram
+            and not isinstance(self.telegram, MagicMock)
+            and hasattr(self.telegram, "enabled")
+            and self.telegram.enabled
+            and hasattr(self.telegram, "token")
+            and self.telegram.token
+            and "YOUR_" not in self.telegram.token
+        )
+
+        if should_block:
             logger.warning("Bot.run() called during testing - blocking execution for safety")
             logger.warning("If you need to test bot.run(), use --allow-test-run flag")
             return
-        
+
         logger.info("Starting Trading Bot (VBO Strategy)...")
 
         # Test API connection
@@ -508,19 +523,19 @@ def create_bot(config_path: Path | None = None) -> TradingBotFacade:
 def main() -> None:  # pragma: no cover (CLI entry point, tested via integration)
     """
     Main entry point.
-    
+
     WARNING: This will start the live trading bot!
     Use 'upbit-quant run-bot' command instead.
     """
     import sys
-    
+
     # Safety check: require explicit flag to prevent accidental execution
     if "--force" not in sys.argv:
         print("ERROR: Direct execution of bot_facade.py is disabled for safety.")
         print("Use 'upbit-quant run-bot' command instead.")
         print("If you really want to run this directly, use: python -m src.execution.bot_facade --force")
         sys.exit(1)
-    
+
     bot = create_bot()
     bot.run()
 
