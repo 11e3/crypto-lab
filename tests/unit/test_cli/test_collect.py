@@ -37,7 +37,7 @@ class TestCollectCommand:
         # Exit code can be 0 (success) or non-zero (API error)
         assert isinstance(result.exit_code, int)
 
-    @patch("src.cli.commands.collect.UpbitDataCollector")
+    @patch("src.cli.commands.collect.UpbitDataCollector", create=True)
     def test_collect_command_with_failures(
         self, mock_collector_class: MagicMock
     ) -> None:

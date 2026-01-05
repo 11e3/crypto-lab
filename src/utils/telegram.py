@@ -73,7 +73,7 @@ class TelegramNotifier:
                 or len(self.token) < 20  # Real tokens are much longer
             )
         )
-        
+
         if (
             is_testing
             and self.enabled
