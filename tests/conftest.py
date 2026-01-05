@@ -2,8 +2,12 @@
 Pytest configuration and shared fixtures.
 """
 
+import os
 import sys
 from pathlib import Path
+
+# Set matplotlib to use non-interactive backend for CI/testing
+os.environ.setdefault("MPLBACKEND", "Agg")
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent

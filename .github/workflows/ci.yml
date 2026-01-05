@@ -84,8 +84,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Run Bandit security linter
-        uses: securecodewarrior/github-action-bandit@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          args: "-r src/ -f json -o bandit-report.json"
+          version: "latest"
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Install dependencies
+        run: |
+          uv sync --extra dev
+      
+      - name: Install Bandit
+        run: |
+          uv pip install bandit[toml]
+      
+      - name: Run Bandit security linter
+        run: |
+          uv run bandit -r src/ -f json -o bandit-report.json || true
         continue-on-error: true
+      
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit-report.json
