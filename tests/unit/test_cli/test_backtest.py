@@ -166,7 +166,7 @@ class TestBacktestCommand:
         assert config is not None
         assert config.use_cache is False
 
-    @patch("src.backtester.report.generate_report", create=True)
+    @patch("src.backtester.report.generate_report")
     @patch("src.cli.commands.backtest.run_backtest", create=True)
     @patch("src.cli.commands.backtest.create_vbo_strategy", create=True)
     def test_backtest_command_with_output(
@@ -332,7 +332,7 @@ class TestBacktestCommand:
             assert config.max_slots == 2
             assert config.use_cache is False
 
-    @patch("src.backtester.report.generate_report", create=True)
+    @patch("src.backtester.report.generate_report")
     @patch("src.cli.commands.backtest.run_backtest", create=True)
     @patch("src.cli.commands.backtest.create_vbo_strategy", create=True)
     def test_backtest_command_output_with_string_path(

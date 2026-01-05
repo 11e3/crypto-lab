@@ -65,13 +65,10 @@ class TelegramNotifier:
         # 3. Telegram has a real token (not placeholder, not test token)
         # 4. Telegram is NOT a mock (tests use mocks which should work)
         # 5. Token looks like a real production token (not "real_token", "test_token", etc.)
-        is_test_token = (
-            self.token
-            and (
-                self.token in ("real_token", "test_token", "test_chat_id")
-                or self.token.startswith("test_")
-                or len(self.token) < 20  # Real tokens are much longer
-            )
+        is_test_token = self.token and (
+            self.token in ("real_token", "test_token", "test_chat_id")
+            or self.token.startswith("test_")
+            or len(self.token) < 20  # Real tokens are much longer
         )
 
         if (

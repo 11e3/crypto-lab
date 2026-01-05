@@ -313,6 +313,7 @@ class TradingBotFacade:
 
                 # Send notification (only if not in test environment)
                 import sys
+
                 is_testing = (
                     "pytest" in sys.modules
                     or "unittest" in sys.modules
@@ -533,7 +534,9 @@ def main() -> None:  # pragma: no cover (CLI entry point, tested via integration
     if "--force" not in sys.argv:
         print("ERROR: Direct execution of bot_facade.py is disabled for safety.")
         print("Use 'upbit-quant run-bot' command instead.")
-        print("If you really want to run this directly, use: python -m src.execution.bot_facade --force")
+        print(
+            "If you really want to run this directly, use: python -m src.execution.bot_facade --force"
+        )
         sys.exit(1)
 
     bot = create_bot()
