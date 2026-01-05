@@ -6,6 +6,7 @@ Provides a high-level interface that delegates to specialized managers.
 
 import contextlib
 import datetime
+import os
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -310,19 +311,28 @@ class TradingBotFacade:
                 # Remove position
                 self.position_manager.remove_position(ticker)
 
-                # Send notification
-                try:
-                    curr_price = self.exchange.get_current_price(ticker)
-                    currency = ticker.split("-")[1]
-                    balance = self.exchange.get_balance(currency)
-                    self.telegram.send_trade_signal(
-                        "SELL",
-                        ticker,
-                        curr_price,
-                        amount=balance.available,
-                    )
-                except Exception:
-                    pass  # Notification is optional
+                # Send notification (only if not in test environment)
+                import sys
+                is_testing = (
+                    "pytest" in sys.modules
+                    or "unittest" in sys.modules
+                    or "PYTEST_CURRENT_TEST" in os.environ
+                    or any("test" in arg.lower() for arg in sys.argv)
+                )
+                
+                if not is_testing:
+                    try:
+                        curr_price = self.exchange.get_current_price(ticker)
+                        currency = ticker.split("-")[1]
+                        balance = self.exchange.get_balance(currency)
+                        self.telegram.send_trade_signal(
+                            "SELL",
+                            ticker,
+                            curr_price,
+                            amount=balance.available,
+                        )
+                    except Exception:
+                        pass  # Notification is optional
 
                 logger.info(f"Sold all {ticker}")
                 return True
@@ -403,6 +413,22 @@ class TradingBotFacade:
 
     def run(self) -> None:
         """Run the trading bot main loop."""
+        # Safety check: prevent running during tests
+        import sys
+        
+        # Check if we're in a test environment
+        is_testing = (
+            "pytest" in sys.modules
+            or "unittest" in sys.modules
+            or "PYTEST_CURRENT_TEST" in os.environ
+            or any("test" in arg.lower() for arg in sys.argv)
+        )
+        
+        if is_testing and "--allow-test-run" not in sys.argv:
+            logger.warning("Bot.run() called during testing - blocking execution for safety")
+            logger.warning("If you need to test bot.run(), use --allow-test-run flag")
+            return
+        
         logger.info("Starting Trading Bot (VBO Strategy)...")
 
         # Test API connection
@@ -480,7 +506,21 @@ def create_bot(config_path: Path | None = None) -> TradingBotFacade:
 
 
 def main() -> None:  # pragma: no cover (CLI entry point, tested via integration)
-    """Main entry point."""
+    """
+    Main entry point.
+    
+    WARNING: This will start the live trading bot!
+    Use 'upbit-quant run-bot' command instead.
+    """
+    import sys
+    
+    # Safety check: require explicit flag to prevent accidental execution
+    if "--force" not in sys.argv:
+        print("ERROR: Direct execution of bot_facade.py is disabled for safety.")
+        print("Use 'upbit-quant run-bot' command instead.")
+        print("If you really want to run this directly, use: python -m src.execution.bot_facade --force")
+        sys.exit(1)
+    
     bot = create_bot()
     bot.run()
 

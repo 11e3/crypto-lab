@@ -47,6 +47,20 @@ class TelegramNotifier:
         Returns:
             True if message was sent successfully, False otherwise
         """
+        # Safety check: prevent sending during tests
+        import sys
+        
+        is_testing = (
+            "pytest" in sys.modules
+            or "unittest" in sys.modules
+            or "PYTEST_CURRENT_TEST" in os.environ
+            or any("test" in arg.lower() for arg in sys.argv)
+        )
+        
+        if is_testing:
+            logger.debug(f"Telegram.send() blocked during testing: {message[:50]}...")
+            return False
+        
         if not self.enabled:
             return False
 
