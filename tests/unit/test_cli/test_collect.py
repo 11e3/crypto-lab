@@ -21,7 +21,7 @@ class TestCollectCommand:
         assert result.exit_code == 0
         assert "Usage:" in result.output or "help" in result.output.lower()
 
-    @patch("src.cli.commands.collect.UpbitDataCollector")
+    @patch("src.cli.commands.collect.UpbitDataCollector", create=True)
     def test_collect_command_execution(self, mock_collector_class: MagicMock) -> None:
         """Test collect command execution."""
         # Mock collector instance
@@ -37,7 +37,7 @@ class TestCollectCommand:
         # Exit code can be 0 (success) or non-zero (API error)
         assert isinstance(result.exit_code, int)
 
-    @patch("src.cli.commands.collect.UpbitDataCollector")
+    @patch("src.cli.commands.collect.UpbitDataCollector", create=True)
     def test_collect_command_with_failures(self, mock_collector_class: MagicMock) -> None:
         """Test collect command with some failures (count < 0) to cover line 67."""
         # Mock collector instance with mixed results (success and failure)
