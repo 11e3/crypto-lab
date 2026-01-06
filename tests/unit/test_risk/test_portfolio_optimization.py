@@ -91,7 +91,7 @@ class TestPortfolioOptimizer:
         # Calculate a reasonable target return based on sample data
         mean_returns = sample_returns_df.mean() * 252
         target_return = mean_returns.mean()
-        
+
         weights = optimizer.optimize_mpt(sample_returns_df, target_return=target_return)
         assert isinstance(weights, PortfolioWeights)
         assert weights.method == "mpt"
@@ -123,7 +123,7 @@ class TestPortfolioOptimizer:
         """Test MPT with max/min weight constraints."""
         # Mock minimize to ensure it returns a successful result that respects constraints
         mock_weights = np.array([0.3, 0.3, 0.4]) # These sum to 1 and respect max_w >= 0.4
-        
+
         mock_result = OptimizeResult(
             x=mock_weights,
             success=True,
@@ -168,15 +168,6 @@ class TestPortfolioOptimizer:
     def test_optimize_mpt_exception_handling(
         self, optimizer: PortfolioOptimizer, sample_returns_df: pd.DataFrame, error, mocker
     ) -> None:
-        mock_result = OptimizeResult(
-            x=np.array([0.33, 0.33, 0.34]), # A dummy result, not actually used with side_effect
-            success=False,
-            message="Optimization failed",
-            fun=0,
-            nit=0,
-            jac=np.array([]),
-            hess_inv=None,
-        )
         mocker.patch("src.risk.portfolio_optimization.minimize", side_effect=error)
         weights = optimizer.optimize_mpt(sample_returns_df)
         assert isinstance(weights, PortfolioWeights)
@@ -216,7 +207,7 @@ class TestPortfolioOptimizer:
         """Test risk parity with max/min weight constraints."""
         # Mock minimize to ensure it returns a successful result that respects constraints
         mock_weights = np.array([0.3, 0.3, 0.4]) # These sum to 1 and respect max_w >= 0.4
-        
+
         mock_result = OptimizeResult(
             x=mock_weights,
             success=True,
@@ -262,16 +253,6 @@ class TestPortfolioOptimizer:
     def test_optimize_risk_parity_exception_handling(
         self, optimizer: PortfolioOptimizer, sample_returns_df: pd.DataFrame, error, mocker
     ) -> None:
-        """Test risk parity exception handling fallback."""
-        mock_result = OptimizeResult(
-            x=np.array([0.33, 0.33, 0.34]), # A dummy result, not actually used with side_effect
-            success=False,
-            message="Optimization failed",
-            fun=0,
-            nit=0,
-            jac=np.array([]),
-            hess_inv=None,
-        )
         mocker.patch("src.risk.portfolio_optimization.minimize", side_effect=error)
         weights = optimizer.optimize_risk_parity(sample_returns_df)
         assert isinstance(weights, PortfolioWeights)
@@ -388,8 +369,9 @@ class TestPortfolioOptimizer:
         self, sample_returns_df: pd.DataFrame, mocker
     ) -> None:
         """Test optimize_portfolio for MPT method."""
-        mocker.patch.object(
-            PortfolioOptimizer, "optimize_mpt", return_value=PortfolioWeights(weights={}, method="mpt")
+        mocker.patch(
+            "src.risk.portfolio_optimization.PortfolioOptimizer.optimize_mpt",
+            return_value=PortfolioWeights(weights={}, method="mpt"),
         )
         result = optimize_portfolio(sample_returns_df, method="mpt")
         assert result.method == "mpt"
@@ -399,8 +381,9 @@ class TestPortfolioOptimizer:
         self, sample_returns_df: pd.DataFrame, mocker
     ) -> None:
         """Test optimize_portfolio for risk_parity method."""
-        mocker.patch.object(
-            PortfolioOptimizer, "optimize_risk_parity", return_value=PortfolioWeights(weights={}, method="risk_parity")
+        mocker.patch(
+            "src.risk.portfolio_optimization.PortfolioOptimizer.optimize_risk_parity",
+            return_value=PortfolioWeights(weights={}, method="risk_parity"),
         )
         result = optimize_portfolio(sample_returns_df, method="risk_parity")
         assert result.method == "risk_parity"
@@ -410,9 +393,8 @@ class TestPortfolioOptimizer:
         self, sample_returns_df: pd.DataFrame, sample_trades_df: pd.DataFrame, mocker
     ) -> None:
         """Test optimize_portfolio for kelly method."""
-        mocker.patch.object(
-            PortfolioOptimizer,
-            "optimize_kelly_portfolio",
+        mocker.patch(
+            "src.risk.portfolio_optimization.PortfolioOptimizer.optimize_kelly_portfolio",
             return_value={"ASSET1": 5000.0, "ASSET2": 3000.0},
         )
         result = optimize_portfolio(
