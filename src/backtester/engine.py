@@ -480,7 +480,7 @@ class VectorizedBacktestEngine:
 
         if n_dates == 0:
             logger.warning("No data available for backtesting")
-            return BacktestResult()
+            return BacktestResult(strategy_name=strategy.name)
 
         # Pre-build lookup arrays for each ticker
         # Shape: (n_tickers, n_dates) for each attribute
@@ -1046,7 +1046,7 @@ class VectorizedBacktestEngine:
 
         if len(all_dates) == 0:
             logger.warning("No data available for pair trading backtest")
-            return BacktestResult()
+            return BacktestResult(strategy_name=strategy.name)
 
         # Create unified timeline
         sorted_dates = np.array(sorted(all_dates))
@@ -1126,7 +1126,7 @@ class VectorizedBacktestEngine:
             logger.warning(
                 f"No valid dates after filtering (need at least {min_required_days} days)"
             )
-            return BacktestResult()
+            return BacktestResult(strategy_name=strategy.name)
 
         # Simulate trading
         cash = self.config.initial_capital
