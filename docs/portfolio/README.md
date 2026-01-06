@@ -1,32 +1,32 @@
-# Portfolio Publication Documentation
+# 포트폴리오 공개 문서
 
-This directory contains documentation related to preparing this repository for public portfolio publication.
+이 디렉토리에는 이 저장소를 공개 포트폴리오로 준비하는 것과 관련된 문서가 포함되어 있습니다.
 
-## 📋 Contents
+## 📋 내용
 
-### Publication Guides
-- **[Portfolio Publication Guide](PORTFOLIO_PUBLICATION_GUIDE.md)** - Comprehensive guide for making the repository public
-- **[Publication Checklist](PUBLICATION_CHECKLIST.md)** - Quick reference checklist
-- **[Portfolio Checklist](PORTFOLIO_CHECKLIST.md)** - Detailed portfolio preparation checklist
-- **[Portfolio Publication Plan](PORTFOLIO_PUBLICATION_PLAN.md)** - Original planning document
+### 공개 가이드
+- **[포트폴리오 공개 가이드](PORTFOLIO_PUBLICATION_GUIDE.md)** - 저장소를 공개하기 위한 포괄적인 가이드
+- **[공개 체크리스트](PUBLICATION_CHECKLIST.md)** - 빠른 참조 체크리스트
+- **[포트폴리오 체크리스트](PORTFOLIO_CHECKLIST.md)** - 상세한 포트폴리오 준비 체크리스트
+- **[포트폴리오 공개 계획](PORTFOLIO_PUBLICATION_PLAN.md)** - 원본 계획 문서
 
-## 🎯 Quick Start
+## 🎯 빠른 시작
 
-1. **Read the guide**: Start with [PORTFOLIO_PUBLICATION_GUIDE.md](PORTFOLIO_PUBLICATION_GUIDE.md)
-2. **Follow the checklist**: Use [PUBLICATION_CHECKLIST.md](PUBLICATION_CHECKLIST.md) for quick reference
-3. **Complete tasks**: Work through [PORTFOLIO_CHECKLIST.md](PORTFOLIO_CHECKLIST.md)
+1. **가이드 읽기**: [PORTFOLIO_PUBLICATION_GUIDE.md](PORTFOLIO_PUBLICATION_GUIDE.md)부터 시작
+2. **체크리스트 따르기**: 빠른 참조를 위해 [PUBLICATION_CHECKLIST.md](PUBLICATION_CHECKLIST.md) 사용
+3. **작업 완료**: [PORTFOLIO_CHECKLIST.md](PORTFOLIO_CHECKLIST.md)를 따라 작업 수행
 
-## 📝 Related Documentation
+## 📝 관련 문서
 
-- [Maintenance Documentation](../maintenance/) - Cleanup and audit files
-- [Planning Documentation](../planning/) - Project planning documents
-- [Main README](../../README.md) - Project overview
+- [유지보수 문서](../maintenance/) - 정리 및 감사 파일
+- [계획 문서](../planning/) - 프로젝트 계획 문서
+- [메인 README](../../README.md) - 프로젝트 개요
 
-## 💡 Note
+## 💡 참고
 
-These documents are included in the repository to demonstrate:
-- **Planning & Organization**: Systematic approach to repository preparation
-- **Professional Standards**: Attention to detail in portfolio presentation
-- **Documentation Skills**: Comprehensive guides and checklists
+이 문서들은 다음을 보여주기 위해 저장소에 포함되어 있습니다:
+- **계획 및 구성**: 저장소 준비에 대한 체계적인 접근
+- **전문적 표준**: 포트폴리오 프레젠테이션에 대한 세심한 주의
+- **문서화 기술**: 포괄적인 가이드 및 체크리스트
 
-For a private/internal repository, you may choose to add this directory to `.gitignore`.
+비공개/내부 저장소의 경우 이 디렉토리를 `.gitignore`에 추가할 수 있습니다.

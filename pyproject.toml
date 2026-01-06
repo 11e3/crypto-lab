@@ -3,16 +3,16 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "upbit-quant-system"
+name = "crypto-quant-system"
 version = "0.1.0"
-description = "Automated trading system for Upbit using volatility breakout strategy"
+description = "Automated trading system for multiple cryptocurrency exchanges using volatility breakout strategy"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "Upbit Quant System"}
+    {name = "Crypto Quant System"}
 ]
-keywords = ["trading", "cryptocurrency", "upbit", "quantitative", "backtesting"]
+keywords = ["trading", "cryptocurrency", "quantitative", "backtesting", "exchange"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Financial and Insurance Industry",
@@ -31,6 +31,7 @@ dependencies = [
     "requests>=2.31.0",
     "pandas>=2.0.0",
     "numpy>=1.24.0",
+    "scipy>=1.10.0",  # Portfolio optimization
     "matplotlib>=3.7.0",
     "seaborn>=0.12.0",
     "pyarrow>=12.0.0",
@@ -42,7 +43,7 @@ dependencies = [
 
 # CLI 진입점
 [project.scripts]
-upbit-quant = "src.cli.main:main"
+crypto-quant = "src.cli.main:main"
 
 # 선택적 의존성 그룹
 [project.optional-dependencies]
@@ -62,6 +63,8 @@ test = [
 docs = [
     "sphinx>=7.1.0",
     "sphinx-rtd-theme>=1.3.0",
+    "sphinx-autodoc-typehints>=1.24.0",
+    "myst-parser>=2.0.0",
 ]
 notebooks = [
     "jupyter>=1.0.0",

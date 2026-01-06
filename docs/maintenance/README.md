@@ -1,23 +1,23 @@
-# Maintenance Documentation
+# 유지보수 문서
 
-This directory contains maintenance, cleanup, and audit documentation for the repository.
+이 디렉토리에는 저장소의 유지보수, 정리, 감사 문서가 포함되어 있습니다.
 
-## 📋 Contents
+## 📋 내용
 
-### Cleanup Documentation
-- **[Cleanup Recommendations](CLEANUP_RECOMMENDATIONS.md)** - Analysis of files that can be deleted
-- **[Cleanup Script](CLEANUP_SCRIPT.md)** - Scripts for cleaning up unnecessary files
-- **[Files to Delete](FILES_TO_DELETE.md)** - List of files safe to delete
+### 정리 문서
+- **[정리 권장사항](CLEANUP_RECOMMENDATIONS.md)** - 삭제 가능한 파일 분석
+- **[정리 스크립트](CLEANUP_SCRIPT.md)** - 불필요한 파일 정리를 위한 스크립트
+- **[삭제할 파일](FILES_TO_DELETE.md)** - 안전하게 삭제할 수 있는 파일 목록
 
-### Audit Documentation
-- **[Gitignore Audit](GITIGNORE_AUDIT.md)** - Analysis of .gitignore patterns
+### 감사 문서
+- **[Gitignore 감사](GITIGNORE_AUDIT.md)** - .gitignore 패턴 분석
 
-## 🎯 Purpose
+## 🎯 목적
 
-These documents help maintain repository cleanliness and ensure proper file organization.
+이 문서들은 저장소의 깔끔함을 유지하고 적절한 파일 구성을 보장하는 데 도움이 됩니다.
 
-## 📝 Related Documentation
+## 📝 관련 문서
 
-- [Portfolio Documentation](../portfolio/) - Publication preparation
-- [Planning Documentation](../planning/) - Project planning
-- [Main README](../../README.md) - Project overview
+- [포트폴리오 문서](../portfolio/) - 공개 준비
+- [계획 문서](../planning/) - 프로젝트 계획
+- [메인 README](../../README.md) - 프로젝트 개요

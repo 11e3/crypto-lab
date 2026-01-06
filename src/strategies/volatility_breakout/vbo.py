@@ -272,18 +272,20 @@ def create_vbo_strategy(
         Configured VanillaVBO instance
 
     Example:
-        # Create VBO without noise condition
-        strategy = create_vbo_strategy(
-            name="VBO_NoNoise",
-            use_noise_filter=False,
-        )
+        Create VBO without noise condition::
 
-        # Add custom momentum condition
-        from src.strategies.volatility_breakout.conditions import ConsecutiveUpCondition
-        strategy = create_vbo_strategy(
-            name="VBO_Momentum",
-            extra_entry_conditions=[ConsecutiveUpCondition(days=2)],
-        )
+            strategy = create_vbo_strategy(
+                name="VBO_NoNoise",
+                use_noise_filter=False,
+            )
+
+        Add custom momentum condition::
+
+            from src.strategies.volatility_breakout.conditions import ConsecutiveUpCondition
+            strategy = create_vbo_strategy(
+                name="VBO_Momentum",
+                extra_entry_conditions=[ConsecutiveUpCondition(days=2)],
+            )
     """
     # Build entry conditions
     entry_conditions: list[Condition] = []

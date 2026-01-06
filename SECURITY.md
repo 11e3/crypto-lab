@@ -1,110 +1,110 @@
-# Security Policy
+# 보안 정책
 
-## Supported Versions
+## 지원 버전
 
-We currently support the following versions with security updates:
+현재 다음 버전에 대해 보안 업데이트를 제공합니다:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| 버전   | 지원 여부          |
+| ------ | ------------------ |
+| 0.1.x  | :white_check_mark: |
 
-## Reporting a Vulnerability
+## 취약점 신고
 
-If you discover a security vulnerability, please **do not** open a public issue.
+보안 취약점을 발견한 경우, **공개 이슈를 열지 마세요**.
 
-Instead, please report it via one of the following methods:
+대신 다음 방법 중 하나로 신고해 주세요:
 
-1. **Email**: Send details to [utioed@gmail.com]
-2. **Private Security Advisory**: Create a [private security advisory](https://github.com/your-username/upbit-quant-system/security/advisories/new) on GitHub
+1. **이메일**: [utioed@gmail.com]로 세부 정보 전송
+2. **비공개 보안 권고**: GitHub에서 [비공개 보안 권고](https://github.com/11e3/upbit-quant-system/security/advisories/new) 생성
 
-### What to Include
+### 포함할 내용
 
-Please include the following information:
+다음 정보를 포함해 주세요:
 
-- Type of vulnerability
-- Full paths of source file(s) related to the vulnerability
-- Location of the affected code (tag/branch/commit or direct URL)
-- Step-by-step instructions to reproduce the issue
-- Proof-of-concept or exploit code (if possible)
-- Impact of the vulnerability
+- 취약점 유형
+- 취약점과 관련된 소스 파일의 전체 경로
+- 영향을 받는 코드의 위치 (태그/브랜치/커밋 또는 직접 URL)
+- 문제를 재현하는 단계별 지침
+- 개념 증명 또는 익스플로잇 코드 (가능한 경우)
+- 취약점의 영향
 
-### Response Timeline
+### 응답 타임라인
 
-- **Initial Response**: Within 48 hours
-- **Status Update**: Within 7 days
-- **Fix Timeline**: Depends on severity and complexity
+- **초기 응답**: 48시간 이내
+- **상태 업데이트**: 7일 이내
+- **수정 타임라인**: 심각도 및 복잡도에 따라 다름
 
-## Security Best Practices
+## 보안 모범 사례
 
-### For Users
+### 사용자를 위한
 
-1. **API Keys**: Never commit API keys to version control
-   - Use environment variables
-   - Use `.env` files (and ensure they're in `.gitignore`)
-   - Use secret management services in production
+1. **API 키**: API 키를 버전 관리에 커밋하지 마세요
+   - 환경 변수 사용
+   - `.env` 파일 사용 (`.gitignore`에 포함되어 있는지 확인)
+   - 프로덕션에서는 비밀 관리 서비스 사용
 
-2. **Environment Variables**: Store sensitive data in environment variables
+2. **환경 변수**: 민감한 데이터를 환경 변수에 저장
    ```bash
    export UPBIT_ACCESS_KEY="your-key"
    export UPBIT_SECRET_KEY="your-secret"
    ```
 
-3. **Permissions**: Use API keys with minimal required permissions
-   - Read-only keys for backtesting
-   - Trading keys only for live trading
+3. **권한**: 최소 필수 권한을 가진 API 키 사용
+   - 백테스팅용 읽기 전용 키
+   - 실거래용 거래 키만
 
-4. **Network Security**: Use secure connections
-   - HTTPS for all API calls
-   - Secure WebSocket connections (WSS)
+4. **네트워크 보안**: 보안 연결 사용
+   - 모든 API 호출에 HTTPS
+   - 보안 WebSocket 연결 (WSS)
 
-5. **Regular Updates**: Keep dependencies updated
+5. **정기 업데이트**: 의존성을 최신 상태로 유지
    ```bash
    uv sync --upgrade
    ```
 
-### For Developers
+### 개발자를 위한
 
-1. **Input Validation**: Always validate user inputs
-2. **Error Handling**: Don't expose sensitive information in error messages
-3. **Dependencies**: Regularly update and audit dependencies
-4. **Secrets**: Never hardcode secrets in source code
-5. **Code Review**: Review security-sensitive code carefully
+1. **입력 검증**: 항상 사용자 입력을 검증
+2. **오류 처리**: 오류 메시지에 민감한 정보 노출하지 않기
+3. **의존성**: 의존성을 정기적으로 업데이트 및 감사
+4. **비밀**: 소스 코드에 비밀을 하드코딩하지 않기
+5. **코드 리뷰**: 보안에 민감한 코드를 신중하게 검토
 
-## Known Security Considerations
+## 알려진 보안 고려사항
 
-### API Key Management
+### API 키 관리
 
-- API keys are required for live trading
-- Keys should be stored securely (environment variables, secret managers)
-- Never share API keys publicly
-- Rotate keys regularly
+- 실거래에는 API 키가 필요합니다
+- 키는 안전하게 저장해야 합니다 (환경 변수, 비밀 관리자)
+- API 키를 공개적으로 공유하지 마세요
+- 키를 정기적으로 교체하세요
 
-### Trading Risks
+### 거래 위험
 
-- This software executes real trades with real money
-- Always test thoroughly in backtesting before live trading
-- Use dry-run mode when available
-- Start with small amounts
-- Monitor the bot regularly
+- 이 소프트웨어는 실제 돈으로 실제 거래를 실행합니다
+- 실거래 전에 항상 백테스팅으로 충분히 테스트하세요
+- 가능한 경우 드라이런 모드 사용
+- 소액으로 시작하세요
+- 봇을 정기적으로 모니터링하세요
 
-### Data Privacy
+### 데이터 개인정보 보호
 
-- Trading data may contain sensitive information
-- Be cautious when sharing logs or reports
-- Consider data anonymization for public sharing
+- 거래 데이터에는 민감한 정보가 포함될 수 있습니다
+- 로그나 리포트를 공유할 때 주의하세요
+- 공개 공유를 위해 데이터 익명화 고려
 
-## Security Updates
+## 보안 업데이트
 
-Security updates will be announced via:
+보안 업데이트는 다음을 통해 발표됩니다:
 - GitHub Releases
-- Security Advisories
-- Project README (for critical issues)
+- 보안 권고
+- 프로젝트 README (중요한 문제의 경우)
 
-## Acknowledgments
+## 감사의 말
 
-We appreciate responsible disclosure of security vulnerabilities. Contributors who report valid security issues will be acknowledged (if desired) in our security advisories.
+보안 취약점을 책임감 있게 공개해 주신 분들께 감사드립니다. 유효한 보안 문제를 신고한 기여자들은 보안 권고에 명시될 수 있습니다 (원하는 경우).
 
-## Additional Resources
+## 추가 리소스
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [Python Security](https://python.readthedocs.io/en/stable/library/security_warnings.html)

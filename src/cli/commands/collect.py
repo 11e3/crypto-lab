@@ -1,12 +1,13 @@
 """
 Data collection command.
 
-Collects OHLCV data from Upbit API.
+Collects OHLCV data from cryptocurrency exchanges.
 """
 
 import click
 
-from src.data.collector import Interval, UpbitDataCollector
+from src.data.collector import Interval
+from src.data.collector_factory import DataCollectorFactory
 from src.utils.logger import get_logger, setup_logging
 
 setup_logging()
@@ -52,19 +53,19 @@ logger = get_logger(__name__)
 )
 def collect(tickers: tuple[str, ...], intervals: tuple[str, ...], full_refresh: bool) -> None:
     """
-    Collect OHLCV data from Upbit API.
+    Collect OHLCV data from cryptocurrency exchanges.
 
     Performs incremental update if data already exists, unless --full-refresh is used.
     """
     ticker_list = list(tickers)
     interval_list: list[Interval] = list(intervals)  # type: ignore
 
-    logger.info("Starting Upbit data collection...")
+    logger.info("Starting data collection...")
     logger.info(f"Tickers: {ticker_list}")
     logger.info(f"Intervals: {interval_list}")
     logger.info(f"Full refresh: {full_refresh}")
 
-    collector = UpbitDataCollector()
+    collector = DataCollectorFactory.create()
 
     results = collector.collect_multiple(ticker_list, interval_list, full_refresh=full_refresh)
 

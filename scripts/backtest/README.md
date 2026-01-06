@@ -1,19 +1,19 @@
-# Backtest Scripts
+# 백테스트 스크립트
 
-This directory contains backtest-related scripts.
+이 디렉토리에는 백테스트 관련 스크립트가 포함되어 있습니다.
 
-## Files
+## 파일
 
-- `legacy_bt_with_trades.py`: Legacy backtest implementation with trade extraction
+- `legacy_bt_with_trades.py`: 거래 추출 기능이 포함된 레거시 백테스트 구현
 
-## Note
+## 참고
 
-For running backtests, use the CLI command:
+백테스트 실행을 위해서는 CLI 명령어를 사용하세요:
 ```bash
 upbit-quant backtest --tickers KRW-BTC KRW-ETH --interval day
 ```
 
-Or use the Jupyter notebook:
+또는 Jupyter 노트북을 사용하세요:
 ```bash
 jupyter notebook notebooks/01_vbo.ipynb
 ```

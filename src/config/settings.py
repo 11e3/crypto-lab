@@ -32,6 +32,9 @@ class Settings(BaseSettings):
         extra="ignore",  # Ignore extra environment variables
     )
 
+    # Exchange Configuration
+    exchange_name: str = Field(default="upbit", description="Exchange name (e.g., 'upbit', 'binance')")
+
     # Upbit API Configuration
     upbit_access_key: str = Field(default="", description="Upbit API access key")
     upbit_secret_key: str = Field(default="", description="Upbit API secret key")

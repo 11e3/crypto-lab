@@ -91,7 +91,8 @@ def noise_ratio(
     """
     Noise ratio: measures how much of the range is "noise" vs directional movement.
 
-    Noise = 1 - |close - open| / (high - low)
+    Formula: Noise = 1 - abs(close - open) / (high - low)
+
     Higher values indicate more noise (less directional movement).
 
     Args:

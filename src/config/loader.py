@@ -180,6 +180,15 @@ class ConfigLoader:
         # Default: return as string
         return env_value
 
+    def get_exchange_name(self) -> str:
+        """
+        Get configured exchange name.
+
+        Returns:
+            Exchange name (e.g., 'upbit')
+        """
+        return self.get("exchange.name", self._settings.exchange_name) or "upbit"
+
     def get_upbit_keys(self) -> tuple[str, str]:
         """
         Get Upbit API keys from Pydantic Settings or config.
@@ -206,6 +215,32 @@ class ConfigLoader:
                 ) from e
 
             return access_key, secret_key
+
+    def get_exchange_keys(self, exchange_name: str | None = None) -> tuple[str, str]:
+        """
+        Get API keys for the specified exchange.
+
+        Args:
+            exchange_name: Exchange name (defaults to configured exchange)
+
+        Returns:
+            Tuple of (access_key, secret_key)
+
+        Raises:
+            ValueError: If exchange is not supported or keys are not configured
+        """
+        if exchange_name is None:
+            exchange_name = self.get_exchange_name()
+
+        exchange_name = exchange_name.lower()
+
+        if exchange_name == "upbit":
+            return self.get_upbit_keys()
+        else:
+            raise ValueError(
+                f"Exchange '{exchange_name}' not supported yet. "
+                f"Supported exchanges: upbit"
+            )
 
     def get_telegram_config(self) -> dict[str, Any]:
         """
@@ -244,6 +279,15 @@ class ConfigLoader:
         yaml_min_order_amount = self.get("trading.min_order_amount")
         if yaml_min_order_amount is not None:
             trading_config["min_order_amount"] = yaml_min_order_amount
+        yaml_stop_loss_pct = self.get("trading.stop_loss_pct")
+        if yaml_stop_loss_pct is not None:
+            trading_config["stop_loss_pct"] = yaml_stop_loss_pct
+        yaml_take_profit_pct = self.get("trading.take_profit_pct")
+        if yaml_take_profit_pct is not None:
+            trading_config["take_profit_pct"] = yaml_take_profit_pct
+        yaml_trailing_stop_pct = self.get("trading.trailing_stop_pct")
+        if yaml_trailing_stop_pct is not None:
+            trading_config["trailing_stop_pct"] = yaml_trailing_stop_pct
         return trading_config
 
     def get_strategy_config(self) -> dict[str, Any]:

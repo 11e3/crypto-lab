@@ -6,6 +6,8 @@ Upbit Quant System은 모듈화된 아키텍처를 사용하여 거래 전략을
 
 ## 아키텍처 다이어그램
 
+> **참고**: 더 자세한 다이어그램은 [Architecture Diagrams](architecture_diagrams.md) 문서를 참고하세요.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    TradingBotFacade                         │

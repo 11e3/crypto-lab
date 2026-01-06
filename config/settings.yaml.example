@@ -1,4 +1,4 @@
-# Upbit Quant System - Configuration Template
+# Crypto Quant System - Configuration Template
 #
 # Copy this file to config/settings.yaml and fill in your values
 # DO NOT commit config/settings.yaml to version control
@@ -19,6 +19,16 @@ trading:
   
   # Minimum order amount in KRW
   min_order_amount: 5000.0
+  
+  # Advanced order settings (optional)
+  # Stop loss as percentage (e.g., 0.05 = 5%)
+  stop_loss_pct: null
+  
+  # Take profit as percentage (e.g., 0.10 = 10%)
+  take_profit_pct: null
+  
+  # Trailing stop as percentage (e.g., 0.05 = 5%)
+  trailing_stop_pct: null
 
 # Strategy Configuration
 strategy:
@@ -57,6 +67,10 @@ telegram:
   enabled: true
   token: ""  # Set via TELEGRAM_TOKEN environment variable
   chat_id: ""  # Set via TELEGRAM_CHAT_ID environment variable
+
+# Exchange Configuration
+exchange:
+  name: "upbit"  # Exchange name: "upbit" (more exchanges coming soon)
 
 # Upbit API Configuration
 # IMPORTANT: Never commit real API keys to version control

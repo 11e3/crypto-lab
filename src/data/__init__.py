@@ -3,6 +3,7 @@
 from src.data.base import DataSource
 from src.data.cache import IndicatorCache, get_cache
 from src.data.collector import Interval, UpbitDataCollector
+from src.data.collector_factory import DataCollectorFactory
 from src.data.converters import (
     convert_csv_directory,
     convert_ticker_format,
@@ -21,6 +22,7 @@ __all__ = [
     "DataSourceConnectionError",
     "DataSourceNotFoundError",
     "UpbitDataSource",
+    "DataCollectorFactory",
     "IndicatorCache",
     "Interval",
     "UpbitDataCollector",

@@ -1,151 +1,151 @@
-# Contributing to Upbit Quant System
+# Crypto Quant System에 기여하기
 
-Thank you for your interest in contributing! This document provides guidelines and instructions for contributing to this project.
+기여에 관심을 가져주셔서 감사합니다! 이 문서는 이 프로젝트에 기여하기 위한 가이드라인과 지침을 제공합니다.
 
-## Code of Conduct
+## 행동 강령
 
-- Be respectful and inclusive
-- Welcome newcomers and help them learn
-- Focus on constructive feedback
-- Respect different viewpoints and experiences
+- 존중하고 포용적이 되기
+- 신규 참여자를 환영하고 학습을 돕기
+- 건설적인 피드백에 집중하기
+- 다양한 관점과 경험을 존중하기
 
-## How to Contribute
+## 기여 방법
 
-### Reporting Bugs
+### 버그 신고
 
-1. Check if the bug has already been reported in [Issues](https://github.com/your-username/upbit-quant-system/issues)
-2. If not, create a new issue with:
-   - Clear title and description
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - Environment details (OS, Python version, etc.)
-   - Error messages or logs if applicable
+1. [Issues](https://github.com/your-username/crypto-quant-system/issues)에서 버그가 이미 신고되었는지 확인
+2. 그렇지 않은 경우, 다음을 포함하여 새 이슈 생성:
+   - 명확한 제목과 설명
+   - 재현 단계
+   - 예상 동작 vs 실제 동작
+   - 환경 세부 정보 (OS, Python 버전 등)
+   - 오류 메시지 또는 로그 (해당되는 경우)
 
-### Suggesting Features
+### 기능 제안
 
-1. Check existing issues and discussions
-2. Create a new issue with:
-   - Clear description of the feature
-   - Use case and motivation
-   - Proposed implementation (if you have ideas)
+1. 기존 이슈 및 토론 확인
+2. 다음을 포함하여 새 이슈 생성:
+   - 기능에 대한 명확한 설명
+   - 사용 사례 및 동기
+   - 제안된 구현 (아이디어가 있는 경우)
 
-### Pull Requests
+### Pull Request
 
-1. **Fork the repository**
-2. **Create a feature branch**
+1. **저장소 포크**
+2. **기능 브랜치 생성**
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
-3. **Make your changes**
-   - Follow the coding standards (see below)
-   - Write/update tests
-   - Update documentation
+3. **변경사항 작성**
+   - 코딩 표준 준수 (아래 참조)
+   - 테스트 작성/업데이트
+   - 문서 업데이트
 
-4. **Run quality checks**
+4. **품질 검사 실행**
    ```bash
-   make check  # Runs all checks (format, lint, type-check, test)
+   make check  # 모든 검사 실행 (포맷, 린트, 타입 체크, 테스트)
    ```
 
-5. **Commit your changes**
+5. **변경사항 커밋**
    ```bash
    git commit -m "feat: add new feature"
    ```
-   Use conventional commit messages:
-   - `feat:` New feature
-   - `fix:` Bug fix
-   - `docs:` Documentation changes
-   - `test:` Test additions/changes
-   - `refactor:` Code refactoring
-   - `style:` Code style changes (formatting, etc.)
+   Conventional commit 메시지 사용:
+   - `feat:` 새로운 기능
+   - `fix:` 버그 수정
+   - `docs:` 문서 변경
+   - `test:` 테스트 추가/변경
+   - `refactor:` 코드 리팩토링
+   - `style:` 코드 스타일 변경 (포맷팅 등)
 
-6. **Push to your fork**
+6. **포크에 푸시**
    ```bash
    git push origin feature/your-feature-name
    ```
 
-7. **Create a Pull Request**
-   - Provide clear description
-   - Reference related issues
-   - Wait for review and feedback
+7. **Pull Request 생성**
+   - 명확한 설명 제공
+   - 관련 이슈 참조
+   - 리뷰 및 피드백 대기
 
-## Development Setup
+## 개발 환경 설정
 
-### Prerequisites
+### 사전 요구사항
 
 - Python 3.10+
-- [uv](https://github.com/astral-sh/uv) package manager
+- [uv](https://github.com/astral-sh/uv) 패키지 관리자
 
-### Setup
+### 설정
 
 ```bash
-# Clone your fork
-git clone https://github.com/your-username/upbit-quant-system.git
-cd upbit-quant-system
+# 포크 클론
+git clone https://github.com/your-username/crypto-quant-system.git
+cd crypto-quant-system
 
-# Install dependencies
+# 의존성 설치
 uv sync --extra dev
 
-# Install pre-commit hooks
+# pre-commit 훅 설치
 uv run pre-commit install
 ```
 
-## Coding Standards
+## 코딩 표준
 
-### Python Style
+### Python 스타일
 
-- Follow [PEP 8](https://pep8.org/)
-- Use type hints for all functions
-- Write docstrings (Google style)
-- Maximum line length: 100 characters
+- [PEP 8](https://pep8.org/) 준수
+- 모든 함수에 타입 힌트 사용
+- 독스트링 작성 (Google 스타일)
+- 최대 줄 길이: 100자
 
-### Code Quality Tools
+### 코드 품질 도구
 
 ```bash
-# Format code
+# 코드 포맷팅
 make format
 
-# Lint code
+# 린팅
 make lint
 
-# Type check
+# 타입 체크
 make type-check
 
-# Run tests
+# 테스트 실행
 make test
 
-# Run all checks
+# 모든 검사 실행
 make check
 ```
 
-### Testing
+### 테스트
 
-- Write tests for new features
-- Maintain or improve test coverage
-- Use pytest fixtures for test data
-- Follow naming: `test_*.py` files, `test_*` functions
+- 새 기능에 대한 테스트 작성
+- 테스트 커버리지 유지 또는 개선
+- 테스트 데이터에 pytest 픽스처 사용
+- 명명 규칙: `test_*.py` 파일, `test_*` 함수
 
-### Documentation
+### 문서
 
-- Update README.md if needed
-- Add docstrings to new functions/classes
-- Update relevant documentation files
-- Keep comments clear and concise
+- 필요시 README.md 업데이트
+- 새 함수/클래스에 독스트링 추가
+- 관련 문서 파일 업데이트
+- 주석을 명확하고 간결하게 유지
 
-## Project Structure
+## 프로젝트 구조
 
 ```
-upbit-quant-system/
-├── src/              # Source code
-├── tests/            # Test files
-├── docs/             # Documentation
-├── scripts/          # Utility scripts
-└── deploy/           # Deployment files
+crypto-quant-system/
+├── src/              # 소스 코드
+├── tests/            # 테스트 파일
+├── docs/             # 문서
+├── scripts/          # 유틸리티 스크립트
+└── deploy/           # 배포 파일
 ```
 
-## Commit Message Guidelines
+## 커밋 메시지 가이드라인
 
-Use [Conventional Commits](https://www.conventionalcommits.org/):
+[Conventional Commits](https://www.conventionalcommits.org/) 사용:
 
 ```
 <type>(<scope>): <subject>
@@ -155,23 +155,23 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 <footer>
 ```
 
-Examples:
+예시:
 - `feat(strategy): add momentum filter condition`
 - `fix(engine): correct equity calculation bug`
 - `docs(readme): update installation instructions`
 - `test(cache): add cache invalidation tests`
 
-## Review Process
+## 리뷰 프로세스
 
-1. All PRs require at least one review
-2. Maintainers will review within 2-3 business days
-3. Address review comments promptly
-4. Keep PRs focused and reasonably sized
+1. 모든 PR은 최소 1명의 리뷰가 필요합니다
+2. 유지보수자는 2-3 영업일 내에 리뷰합니다
+3. 리뷰 코멘트에 신속하게 대응합니다
+4. PR을 집중적이고 합리적인 크기로 유지합니다
 
-## Questions?
+## 질문이 있으신가요?
 
-- Open an issue for questions
-- Check existing documentation
-- Review closed issues/PRs for similar questions
+- 질문에 대한 이슈 열기
+- 기존 문서 확인
+- 유사한 질문에 대한 닫힌 이슈/PR 검토
 
-Thank you for contributing! 🎉
+기여해 주셔서 감사합니다! 🎉

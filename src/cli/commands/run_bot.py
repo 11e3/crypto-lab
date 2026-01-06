@@ -34,7 +34,7 @@ def run_bot(config: str | None, dry_run: bool) -> None:
     The bot will connect to Upbit API and execute trades based on the VBO strategy.
 
     Example:
-        upbit-quant run-bot --config custom_config.yaml
+        crypto-quant run-bot --config custom_config.yaml
     """
     if dry_run:
         logger.warning("DRY RUN MODE: No real trades will be executed")

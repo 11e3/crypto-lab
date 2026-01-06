@@ -8,16 +8,19 @@ import contextlib
 import datetime
 import os
 import time
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pyupbit
 
 from src.config.loader import get_config
-from src.exchange import Exchange, UpbitExchange
+from src.exchange import Exchange, ExchangeFactory
 from src.execution.event_bus import get_event_bus
 from src.execution.handlers.notification_handler import NotificationHandler
 from src.execution.handlers.trade_handler import TradeHandler
+from src.execution.advanced_orders import AdvancedOrderManager
+from src.execution.advanced_orders import AdvancedOrderManager
 from src.execution.order_manager import OrderManager
 from src.execution.position_manager import PositionManager
 from src.execution.signal_handler import SignalHandler
@@ -82,13 +85,8 @@ class TradingBotFacade:
 
         # Initialize Exchange (dependency injection)
         if exchange is None:
-            access_key, secret_key = self.config.get_upbit_keys()
-            if not access_key or not secret_key:
-                raise ValueError(
-                    "Upbit API keys not found. Set UPBIT_ACCESS_KEY and UPBIT_SECRET_KEY "
-                    "environment variables or configure in settings.yaml"
-                )
-            self.exchange: Exchange = UpbitExchange(access_key, secret_key)
+            exchange_name = self.config.get_exchange_name()
+            self.exchange: Exchange = ExchangeFactory.create(exchange_name)
         else:
             self.exchange = exchange
 
@@ -138,6 +136,9 @@ class TradingBotFacade:
             )
         else:
             self.signal_handler = signal_handler
+        
+        # Initialize advanced order manager
+        self.advanced_order_manager = AdvancedOrderManager()
 
         # Trading configuration
         self.tickers = self.trading_config["tickers"]
@@ -365,6 +366,38 @@ class TradingBotFacade:
                     entry_price=current_price,
                     amount=estimated_amount,
                 )
+                
+                # Create advanced orders if configured
+                stop_loss_pct = self.trading_config.get("stop_loss_pct")
+                take_profit_pct = self.trading_config.get("take_profit_pct")
+                trailing_stop_pct = self.trading_config.get("trailing_stop_pct")
+                
+                if stop_loss_pct is not None:
+                    self.advanced_order_manager.create_stop_loss(
+                        ticker=ticker,
+                        entry_price=current_price,
+                        entry_date=date.today(),
+                        amount=estimated_amount,
+                        stop_loss_pct=stop_loss_pct,
+                    )
+                
+                if take_profit_pct is not None:
+                    self.advanced_order_manager.create_take_profit(
+                        ticker=ticker,
+                        entry_price=current_price,
+                        entry_date=date.today(),
+                        amount=estimated_amount,
+                        take_profit_pct=take_profit_pct,
+                    )
+                
+                if trailing_stop_pct is not None:
+                    self.advanced_order_manager.create_trailing_stop(
+                        ticker=ticker,
+                        entry_price=current_price,
+                        entry_date=date.today(),
+                        amount=estimated_amount,
+                        trailing_stop_pct=trailing_stop_pct,
+                    )
 
                 metrics = self.target_info.get(ticker, {})
                 self.telegram.send_trade_signal(
@@ -394,7 +427,52 @@ class TradingBotFacade:
             ticker: Trading pair ticker
             current_price: Current market price
         """
-        # Skip if already holding
+        # Check advanced orders first (stop loss, take profit, trailing stop)
+        if self.position_manager.has_position(ticker):
+            # Get OHLCV data for advanced order checking
+            try:
+                ohlcv_data = self.signal_handler.get_ohlcv_data(ticker, count=1)
+                if ohlcv_data is not None and len(ohlcv_data) > 0:
+                    latest = ohlcv_data.iloc[-1]
+                    low_price = latest.get("low", current_price)
+                    high_price = latest.get("high", current_price)
+                    
+                    # Check advanced orders
+                    triggered = self.advanced_order_manager.check_orders(
+                        ticker=ticker,
+                        current_price=current_price,
+                        current_date=date.today(),
+                        low_price=low_price,
+                        high_price=high_price,
+                    )
+                    
+                    # If any order triggered, execute sell
+                    if triggered:
+                        logger.info(
+                            f"Advanced order triggered for {ticker}: "
+                            f"{triggered[0].order_type.value} @ {triggered[0].triggered_price:.0f}"
+                        )
+                        # Execute sell order
+                        position = self.position_manager.get_position(ticker)
+                        if position:
+                            min_order_amount = self.trading_config.get("min_order_amount", 5000.0)
+                            sell_order = self.order_manager.place_sell_order(
+                                ticker=ticker,
+                                amount=position.amount,
+                                min_order_amount=min_order_amount,
+                            )
+                            if sell_order:
+                                # Remove position after successful sell
+                                self.position_manager.remove_position(ticker)
+                                # Cancel remaining advanced orders
+                                self.advanced_order_manager.cancel_all_orders(ticker=ticker)
+                                logger.info(f"Sold {ticker} due to advanced order trigger")
+                        return
+            
+            except Exception as e:
+                logger.warning(f"Error checking advanced orders for {ticker}: {e}")
+        
+        # Skip if already holding (after advanced order check)
         if self.position_manager.has_position(ticker):
             return
 
@@ -526,14 +604,14 @@ def main() -> None:  # pragma: no cover (CLI entry point, tested via integration
     Main entry point.
 
     WARNING: This will start the live trading bot!
-    Use 'upbit-quant run-bot' command instead.
+    Use 'crypto-quant run-bot' command instead.
     """
     import sys
 
     # Safety check: require explicit flag to prevent accidental execution
     if "--force" not in sys.argv:
         print("ERROR: Direct execution of bot_facade.py is disabled for safety.")
-        print("Use 'upbit-quant run-bot' command instead.")
+        print("Use 'crypto-quant run-bot' command instead.")
         print(
             "If you really want to run this directly, use: python -m src.execution.bot_facade --force"
         )

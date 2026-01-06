@@ -122,11 +122,15 @@ def calculate_metrics(
     final_equity = equity_curve[-1]
     total_return_pct = (final_equity / initial_capital - 1) * 100
 
-    # CAGR
-    if total_days > 0 and initial_capital > 0 and final_equity > 0:
-        cagr_pct = ((final_equity / initial_capital) ** (365.0 / total_days) - 1) * 100
-    else:
+    # CAGR (matching legacy calculation)
+    if total_days <= 0:
         cagr_pct = 0.0
+    elif initial_capital <= 0:
+        cagr_pct = 0.0
+    elif final_equity <= 0:
+        cagr_pct = -100.0
+    else:
+        cagr_pct = ((final_equity / initial_capital) ** (365.0 / total_days) - 1) * 100
 
     # Daily returns
     daily_returns = np.diff(equity_curve) / equity_curve[:-1]
@@ -389,8 +393,33 @@ class BacktestReport:
             f"   Avg Profit:     {m.avg_profit_pct:.2f}%",
             f"   Avg Loss:       {m.avg_loss_pct:.2f}%",
             f"   Avg Trade:      {m.avg_trade_pct:.2f}%",
-            f"\n{'=' * 60}\n",
         ]
+        
+        # Add risk metrics if available
+        if self.risk_metrics:
+            output_lines.extend([
+                "\n[Portfolio Risk Metrics]",
+                f"   VaR (95%):      {self.risk_metrics.var_95*100:.2f}%",
+                f"   CVaR (95%):     {self.risk_metrics.cvar_95*100:.2f}%",
+                f"   VaR (99%):      {self.risk_metrics.var_99*100:.2f}%",
+                f"   CVaR (99%):    {self.risk_metrics.cvar_99*100:.2f}%",
+                f"   Portfolio Vol:  {self.risk_metrics.portfolio_volatility*100:.2f}%",
+            ])
+            if self.risk_metrics.avg_correlation != 0.0:
+                output_lines.extend([
+                    f"   Avg Correlation: {self.risk_metrics.avg_correlation:.3f}",
+                    f"   Max Correlation: {self.risk_metrics.max_correlation:.3f}",
+                    f"   Min Correlation: {self.risk_metrics.min_correlation:.3f}",
+                ])
+            if self.risk_metrics.max_position_pct > 0:
+                output_lines.extend([
+                    f"   Max Position %:  {self.risk_metrics.max_position_pct*100:.2f}%",
+                    f"   Position HHI:     {self.risk_metrics.position_concentration:.3f}",
+                ])
+            if self.risk_metrics.portfolio_beta is not None:
+                output_lines.append(f"   Portfolio Beta:  {self.risk_metrics.portfolio_beta:.2f}")
+        
+        output_lines.append(f"\n{'=' * 60}\n")
 
         # Use logger.info for structured logging (outputs to console via logging handler)
         for line in output_lines:
@@ -621,6 +650,17 @@ class BacktestReport:
             ["Avg Profit", f"{m.avg_profit_pct:.2f}%"],
             ["Avg Loss", f"{m.avg_loss_pct:.2f}%"],
         ]
+        
+        # Add risk metrics if available
+        if self.risk_metrics:
+            data.extend([
+                ["", ""],  # Separator
+                ["VaR (95%)", f"{self.risk_metrics.var_95*100:.2f}%"],
+                ["CVaR (95%)", f"{self.risk_metrics.cvar_95*100:.2f}%"],
+                ["Portfolio Vol", f"{self.risk_metrics.portfolio_volatility*100:.2f}%"],
+            ])
+            if self.risk_metrics.avg_correlation != 0.0:
+                data.append(["Avg Correlation", f"{self.risk_metrics.avg_correlation:.3f}"])
 
         table = ax.table(
             cellText=data,
@@ -698,6 +738,10 @@ def generate_report(
     strategy_name: str | None = None,
     save_path: Path | str | None = None,
     show: bool = True,
+    format: str = "png",  # "png" or "html"
+    strategy_obj=None,  # Strategy instance for parameter extraction
+    config=None,  # BacktestConfig instance
+    tickers: list[str] | None = None,  # List of tickers used in backtest
 ) -> BacktestReport:
     """
     Convenience function to generate report from BacktestResult.
@@ -705,8 +749,9 @@ def generate_report(
     Args:
         result: BacktestResult from backtest engine
         strategy_name: Override strategy name
-        save_path: Path to save the figure
-        show: Whether to display the figure
+        save_path: Path to save the figure/report
+        show: Whether to display the figure (PNG only)
+        format: Output format ("png" or "html")
 
     Returns:
         BacktestReport instance
@@ -718,10 +763,32 @@ def generate_report(
         strategy_name=strategy_name or result.strategy_name,
         initial_capital=result.config.initial_capital if result.config else 1.0,
     )
+    
+    # Add risk metrics to report if available
+    if hasattr(result, 'risk_metrics') and result.risk_metrics:
+        report.risk_metrics = result.risk_metrics
 
     report.print_summary()
 
-    if save_path or show:
-        report.plot_full_report(save_path=save_path, show=show)
+    if save_path:
+        save_path = Path(save_path) if isinstance(save_path, str) else save_path
+        
+        # Determine format from file extension if not specified
+        if format == "png" and save_path.suffix.lower() == ".html":
+            format = "html"
+        elif format == "html" and save_path.suffix.lower() == ".png":
+            format = "png"
+        elif save_path.suffix.lower() == ".html":
+            format = "html"
+        elif save_path.suffix.lower() == ".png":
+            format = "png"
+        
+        if format == "html":
+            from src.backtester.html_report import generate_html_report
+            generate_html_report(report, save_path, strategy_obj=strategy_obj, config=config, tickers=tickers)
+        else:
+            report.plot_full_report(save_path=save_path, show=show)
+    elif show:
+        report.plot_full_report(save_path=None, show=show)
 
     return report

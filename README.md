@@ -1,100 +1,100 @@
-# 🚀 Upbit Quant System
+# 🚀 Crypto Quant System
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Tests](https://img.shields.io/badge/Tests-495%20passing-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/Coverage-90%25-success.svg)
 ![Code Style](https://img.shields.io/badge/Code%20Style-Ruff-black.svg)
 
-**Automated cryptocurrency trading system using volatility breakout strategy**
+**변동성 돌파 전략을 사용한 암호화폐 자동 거래 시스템**
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [Documentation](#-documentation) • [Contributing](#-contributing)
+[기능](#-features) • [빠른 시작](#-quick-start) • [아키텍처](#-architecture) • [문서](#-documentation) • [기여하기](#-contributing)
 
 </div>
 
 ---
 
-## 📋 Overview
+## 📋 개요
 
-Upbit Quant System is a production-ready automated trading system for the Upbit cryptocurrency exchange. It implements a sophisticated volatility breakout (VBO) strategy with comprehensive backtesting capabilities, real-time trading execution, and extensive performance analytics.
+Crypto Quant System은 여러 암호화폐 거래소(Upbit 등)를 지원하는 프로덕션 준비가 완료된 자동 거래 시스템입니다. 포괄적인 백테스팅 기능, 실시간 거래 실행, 그리고 광범위한 성능 분석을 갖춘 정교한 변동성 돌파(VBO) 전략을 구현합니다.
 
-### 🎯 Key Highlights
+### 🎯 주요 특징
 
-- **High-Performance Backtesting**: Vectorized engine using pandas/numpy for fast historical analysis
-- **Modular Strategy System**: Composable conditions and filters for flexible strategy design
-- **Production-Ready**: Full error handling, logging, monitoring, and Docker deployment
-- **Well-Tested**: 90%+ test coverage with 495+ test cases
-- **Modern Python**: Type hints, Pydantic settings, SOLID principles, clean architecture
+- **고성능 백테스팅**: 빠른 과거 데이터 분석을 위한 pandas/numpy 기반 벡터화 엔진
+- **모듈식 전략 시스템**: 유연한 전략 설계를 위한 구성 가능한 조건 및 필터
+- **프로덕션 준비 완료**: 완전한 오류 처리, 로깅, 모니터링 및 Docker 배포
+- **충분한 테스트**: 495개 이상의 테스트 케이스로 90% 이상의 테스트 커버리지
+- **현대적 Python**: 타입 힌트, Pydantic 설정, SOLID 원칙, 클린 아키텍처
 
-## ✨ Features
+## ✨ 기능
 
-### Core Functionality
+### 핵심 기능
 
-- 🔄 **Volatility Breakout Strategy**: Automated entry/exit based on volatility patterns
-- 📊 **Vectorized Backtesting**: Fast historical performance analysis
-- 🤖 **Live Trading Bot**: Real-time execution with WebSocket integration
-- 📈 **Performance Analytics**: Comprehensive metrics (CAGR, Sharpe, MDD, etc.)
-- 🎨 **Visual Reports**: Equity curves, drawdown charts, monthly heatmaps
+- 🔄 **변동성 돌파 전략**: 변동성 패턴 기반 자동 진입/청산
+- 📊 **벡터화 백테스팅**: 빠른 과거 성능 분석
+- 🤖 **실시간 거래 봇**: WebSocket 통합을 통한 실시간 실행
+- 📈 **성능 분석**: 포괄적인 지표 (CAGR, Sharpe, MDD 등)
+- 🎨 **시각적 리포트**: 자산 곡선, 낙폭 차트, 월별 히트맵
 
-### Technical Excellence
+### 기술적 우수성
 
-- 🏗️ **Clean Architecture**: SOLID principles, dependency injection, separation of concerns
-- 🧪 **High Test Coverage**: 90%+ coverage with unit and integration tests
-- 📝 **Type Safety**: Full type hints with MyPy validation
-- 🔒 **Security**: Environment-based configuration, no hardcoded secrets
-- 🐳 **Docker Support**: Production-ready containerization for GCP/AWS deployment
-- 📚 **Comprehensive Docs**: Architecture guides, API docs, contribution guidelines
+- 🏗️ **클린 아키텍처**: SOLID 원칙, 의존성 주입, 관심사 분리
+- 🧪 **높은 테스트 커버리지**: 단위 및 통합 테스트로 90% 이상 커버리지
+- 📝 **타입 안전성**: MyPy 검증을 통한 완전한 타입 힌트
+- 🔒 **보안**: 환경 변수 기반 설정, 하드코딩된 비밀번호 없음
+- 🐳 **Docker 지원**: GCP/AWS 배포를 위한 프로덕션 준비 컨테이너화
+- 📚 **포괄적인 문서**: 아키텍처 가이드, API 문서, 기여 가이드라인
 
-## 🛠️ Tech Stack
+## 🛠️ 기술 스택
 
-### Core Technologies
-- **Python 3.10+**: Modern Python with type hints
-- **pandas/numpy**: Data processing and vectorized operations
-- **pydantic**: Type-safe configuration management
-- **click**: CLI framework
-- **pyupbit**: Upbit API integration
+### 핵심 기술
+- **Python 3.11+**: 타입 힌트를 포함한 현대적 Python
+- **pandas/numpy**: 데이터 처리 및 벡터화 연산
+- **pydantic**: 타입 안전 설정 관리
+- **click**: CLI 프레임워크
+- **pyupbit**: Upbit API 통합 (다른 거래소 지원 확장 가능)
 
-### Development Tools
-- **uv**: Fast Python package manager
-- **Ruff**: Linter and formatter (replaces Black)
-- **MyPy**: Static type checking
-- **pytest**: Testing framework with 85%+ coverage
-- **pre-commit**: Git hooks for code quality
+### 개발 도구
+- **uv**: 빠른 Python 패키지 관리자
+- **Ruff**: 린터 및 포맷터 (Black 대체)
+- **MyPy**: 정적 타입 검사
+- **pytest**: 85% 이상 커버리지의 테스트 프레임워크
+- **pre-commit**: 코드 품질을 위한 Git 훅
 
-### Infrastructure
-- **Docker**: Containerization
-- **GCP**: Cloud deployment support
-- **WebSocket**: Real-time market data
+### 인프라
+- **Docker**: 컨테이너화
+- **GCP**: 클라우드 배포 지원
+- **WebSocket**: 실시간 시장 데이터
 
-## 🚀 Quick Start
+## 🚀 빠른 시작
 
-### Installation
+### 설치
 
 ```bash
-# Clone repository
-git clone https://github.com/your-username/upbit-quant-system.git
-cd upbit-quant-system
+# 저장소 클론
+git clone https://github.com/your-username/crypto-quant-system.git
+cd crypto-quant-system
 
-# Install uv (if not installed)
+# uv 설치 (설치되지 않은 경우)
 # Windows:
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 # Linux/macOS:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install dependencies
+# 의존성 설치
 uv sync --extra dev
 ```
 
-### Backtesting
+### 백테스팅
 
 ```bash
-# Run backtest with default settings
-upbit-quant backtest
+# 기본 설정으로 백테스트 실행
+crypto-quant backtest
 
-# Custom backtest
-upbit-quant backtest \
+# 커스텀 백테스트
+crypto-quant backtest \
     --tickers KRW-BTC KRW-ETH \
     --interval day \
     --strategy legacy \
@@ -102,181 +102,182 @@ upbit-quant backtest \
     --max-slots 4
 ```
 
-### Live Trading (Requires API Keys)
+### 실시간 거래 (API 키 필요)
 
 ```bash
-# Set environment variables
+# 환경 변수 설정
 export UPBIT_ACCESS_KEY="your-access-key"
 export UPBIT_SECRET_KEY="your-secret-key"
 
-# Run trading bot
-upbit-quant run-bot
+# 거래 봇 실행
+crypto-quant run-bot
 ```
 
-## 📊 Performance Results
+## 📊 성능 결과
 
-### Backtest Results (Default Strategy)
-- **Period**: 3,018 days (8+ years)
-- **Total Return**: 38,331.40%
+### 백테스트 결과 (기본 전략)
+- **기간**: 3,018일 (8년 이상)
+- **총 수익률**: 38,331.40%
 - **CAGR**: 105.40%
-- **Max Drawdown**: 24.97%
-- **Sharpe Ratio**: 1.97
-- **Calmar Ratio**: 4.22
-- **Win Rate**: 36.03%
-- **Total Trades**: 705
-- **Profit Factor**: 1.77
+- **최대 낙폭**: 24.97%
+- **샤프 비율**: 1.97
+- **칼마 비율**: 4.22
+- **승률**: 36.03%
+- **총 거래 횟수**: 705
+- **수익 팩터**: 1.77
 
-*Note: Past performance does not guarantee future results. These results are for educational purposes only.*
+*참고: 과거 성과는 미래 결과를 보장하지 않습니다. 이 결과는 교육 목적으로만 제공됩니다.*
 
-## 🏗️ Architecture
+## 🏗️ 아키텍처
 
-### System Design
+### 시스템 설계
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    CLI Interface                        │
-│              (upbit-quant commands)                     │
+│                    CLI 인터페이스                        │
+│              (crypto-quant 명령어)                       │
 └────────────────────┬──────────────────────────────────┘
                      │
          ┌───────────┴───────────┐
          │                       │
     ┌────▼────┐            ┌────▼────┐
-    │Backtest │            │Live Bot  │
-    │ Engine  │            │Facade    │
+    │백테스트 │            │실시간 봇 │
+    │ 엔진    │            │Facade    │
     └────┬────┘            └────┬─────┘
          │                      │
     ┌────▼──────────────────────▼─────┐
-    │      Strategy System             │
+    │      전략 시스템                  │
     │  (VanillaVBO, Conditions, etc.)  │
     └────┬─────────────────────────────┘
          │
     ┌────▼────────────┐
-    │  Data Layer     │
+    │  데이터 레이어   │
     │  (Cache, Source) │
     └─────────────────┘
 ```
 
-### Key Components
+### 주요 구성 요소
 
-- **Backtesting Engine**: Vectorized calculations for fast historical analysis
-- **Strategy System**: Modular conditions and filters for flexible strategy design
-- **Execution Layer**: Order management, position tracking, signal handling
-- **Data Layer**: Efficient caching, data collection, indicator calculation
-- **Configuration**: Type-safe settings with environment variable support
+- **백테스팅 엔진**: 빠른 과거 데이터 분석을 위한 벡터화 계산
+- **전략 시스템**: 유연한 전략 설계를 위한 모듈식 조건 및 필터
+- **실행 레이어**: 주문 관리, 포지션 추적, 신호 처리
+- **데이터 레이어**: 효율적인 캐싱, 데이터 수집, 지표 계산
+- **설정**: 환경 변수 지원을 통한 타입 안전 설정
 
-## 📁 Project Structure
+## 📁 프로젝트 구조
 
 ```
-upbit-quant-system/
+crypto-quant-system/
 ├── src/
-│   ├── backtester/      # Backtesting engine
-│   ├── execution/       # Live trading bot
-│   ├── strategies/      # Trading strategies
-│   ├── data/            # Data collection & caching
-│   ├── exchange/        # Exchange API abstraction
-│   ├── config/          # Configuration management
-│   └── utils/           # Utilities
-├── tests/               # Test suite (85%+ coverage)
-├── docs/                # Comprehensive documentation
-├── deploy/              # Docker & deployment configs
-└── scripts/             # Utility scripts
+│   ├── backtester/      # 백테스팅 엔진
+│   ├── execution/       # 실시간 거래 봇
+│   ├── strategies/      # 거래 전략
+│   ├── data/            # 데이터 수집 및 캐싱
+│   ├── exchange/        # 거래소 API 추상화
+│   ├── config/          # 설정 관리
+│   └── utils/           # 유틸리티
+├── tests/               # 테스트 스위트 (85% 이상 커버리지)
+├── docs/                # 포괄적인 문서
+├── deploy/              # Docker 및 배포 설정
+└── scripts/             # 유틸리티 스크립트
 ```
 
-## 📚 Documentation
+## 📚 문서
 
-### 📖 Guides
-- [Getting Started](docs/guides/getting_started.md) - Installation and setup
-- [Strategy Customization](docs/guides/strategy_customization.md) - Creating custom strategies
-- [Configuration](docs/guides/configuration.md) - Configuration guide
+### 📖 가이드
+- [시작 가이드](docs/guides/getting_started.md) - 설치 및 설정
+- [전략 커스터마이징](docs/guides/strategy_customization.md) - 커스텀 전략 작성
+- [설정 가이드](docs/guides/configuration.md) - 설정 가이드
 
-### 🏗️ Architecture
-- [System Architecture](docs/architecture.md) - Design principles and structure
-- [Legacy vs New Bot Comparison](docs/comparison_legacy_vs_new_bot.md) - Migration guide
+### 🏗️ 아키텍처
+- [시스템 아키텍처](docs/architecture.md) - 설계 원칙 및 구조
+- [레거시 vs 신규 봇 비교](docs/comparison_legacy_vs_new_bot.md) - 마이그레이션 가이드
 
-### 📋 Development
-- [Test Coverage Plan](docs/TEST_COVERAGE_PLAN.md) - Testing strategy
-- [Refactoring Standards](docs/refactoring/STANDARDS_COMPLIANCE_REPORT.md) - Code quality standards
+### 📋 개발
+- [테스트 커버리지 계획](docs/TEST_COVERAGE_PLAN.md) - 테스트 전략
+- [리팩토링 표준](docs/refactoring/STANDARDS_COMPLIANCE_REPORT.md) - 코드 품질 표준
 
-## 🧪 Testing
+## 🧪 테스트
 
 ```bash
-# Run all tests
+# 모든 테스트 실행
 make test
 
-# Run with coverage
+# 커버리지 포함 실행
 uv run pytest --cov=src --cov-report=html
 
-# Run specific test
+# 특정 테스트 실행
 uv run pytest tests/unit/test_strategy.py
 ```
 
-**Test Statistics:**
-- Total Tests: 495+
-- Coverage: 90%+ (Target: 90%)
-- Test Types: Unit, Integration, Fixtures
+**테스트 통계:**
+- 총 테스트: 495개 이상
+- 커버리지: 90% 이상 (목표: 90%)
+- 테스트 유형: 단위, 통합, 픽스처
 
-## 🚢 Deployment
+## 🚢 배포
 
-### Docker Deployment
+### Docker 배포
 
 ```bash
 cd deploy
 docker-compose up -d
 ```
 
-### GCP Deployment
+### GCP 배포
 
-See [deploy/README.md](deploy/README.md) for detailed GCP deployment instructions.
+자세한 GCP 배포 지침은 [deploy/README.md](deploy/README.md)를 참조하세요.
 
-## 🤝 Contributing
+## 🤝 기여하기
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+기여를 환영합니다! 가이드라인은 [CONTRIBUTING.md](CONTRIBUTING.md)를 참조하세요.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. 저장소 포크
+2. 기능 브랜치 생성 (`git checkout -b feature/amazing-feature`)
+3. 변경사항 커밋 (`git commit -m 'feat: add amazing feature'`)
+4. 브랜치에 푸시 (`git push origin feature/amazing-feature`)
+5. Pull Request 생성
 
-## 📝 Code Quality
+## 📝 코드 품질
 
-This project follows modern Python development standards:
+이 프로젝트는 현대적 Python 개발 표준을 따릅니다:
 
-- ✅ **SOLID Principles**: Clean architecture with dependency injection
-- ✅ **Type Hints**: Full type coverage with MyPy validation
-- ✅ **Testing**: 90%+ coverage with pytest
-- ✅ **Linting**: Ruff for code quality
-- ✅ **Documentation**: Comprehensive docs and docstrings
+- ✅ **SOLID 원칙**: 의존성 주입을 통한 클린 아키텍처
+- ✅ **타입 힌트**: MyPy 검증을 통한 완전한 타입 커버리지
+- ✅ **테스트**: pytest로 90% 이상 커버리지
+- ✅ **린팅**: 코드 품질을 위한 Ruff
+- ✅ **문서**: 포괄적인 문서 및 독스트링
 
-## ⚠️ Disclaimer
+## ⚠️ 면책 조항
 
-**This software is for educational and research purposes only.**
+**이 소프트웨어는 교육 및 연구 목적으로만 제공됩니다.**
 
-- Trading cryptocurrencies involves substantial risk of loss
-- Past performance does not guarantee future results
-- Always test thoroughly in backtesting before live trading
-- Use at your own risk
-- The authors are not responsible for any financial losses
+- 암호화폐 거래는 상당한 손실 위험이 수반됩니다
+- 과거 성과는 미래 결과를 보장하지 않습니다
+- 실거래 전에 항상 백테스팅으로 충분히 테스트하세요
+- 본인의 책임 하에 사용하세요
+- 작성자는 어떠한 금융 손실에 대해서도 책임지지 않습니다
 
-## 📄 License
+## 📄 라이선스
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
-## 🙏 Acknowledgments
+## 🙏 감사의 말
 
-- [pyupbit](https://github.com/sharebook-kr/pyupbit) for Upbit API integration
-- Modern Python development community for best practices
+- Upbit API 통합을 위한 [pyupbit](https://github.com/sharebook-kr/pyupbit)
+- 다양한 거래소 지원 확장 가능한 아키텍처
+- 모범 사례를 제공한 현대적 Python 개발 커뮤니티
 
-## 📧 Contact
+## 📧 문의
 
-For questions or support, please open an issue on GitHub.
+질문이나 지원이 필요한 경우 GitHub에 이슈를 열어주세요.
 
 ---
 
 <div align="center">
 
-**Made with ❤️ for quantitative trading**
+**정량적 거래를 위해 ❤️로 만들었습니다**
 
-⭐ Star this repo if you find it useful!
+⭐ 유용하다고 생각되시면 이 저장소에 스타를 눌러주세요!
 
 </div>

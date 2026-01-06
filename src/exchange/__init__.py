@@ -12,12 +12,15 @@ from src.exceptions.exchange import (
     InsufficientBalanceError,
 )
 from src.exchange.base import Exchange
+from src.exchange.factory import ExchangeFactory, ExchangeName
 from src.exchange.types import Balance, Order, OrderSide, OrderStatus, OrderType, Ticker
 from src.exchange.upbit import UpbitExchange
 
 __all__ = [
     "Exchange",
     "UpbitExchange",
+    "ExchangeFactory",
+    "ExchangeName",
     "Balance",
     "Order",
     "OrderSide",

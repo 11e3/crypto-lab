@@ -1,78 +1,78 @@
-# Changelog
+# 변경 로그
 
-All notable changes to this project will be documented in this file.
+이 프로젝트의 모든 주요 변경사항은 이 파일에 문서화됩니다.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+형식은 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)를 기반으로 하며,
+이 프로젝트는 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)을 준수합니다.
 
 ## [Unreleased]
 
-### Added
-- Comprehensive examples directory
-- Performance metrics documentation
-- Architecture diagrams with Mermaid
-- Troubleshooting guide
-- FAQ section
+### 추가됨
+- 포괄적인 예제 디렉토리
+- 성능 지표 문서
+- Mermaid를 사용한 아키텍처 다이어그램
+- 문제 해결 가이드
+- FAQ 섹션
 
-### Changed
-- Improved README with dynamic badges
-- Enhanced API documentation
-- Updated documentation structure
+### 변경됨
+- 동적 배지를 포함한 README 개선
+- API 문서 향상
+- 문서 구조 업데이트
 
 ## [0.1.0] - 2026-01-05
 
-### Added
-- Initial release of Upbit Quant System
-- Volatility Breakout (VBO) strategy implementation
-- Vectorized backtesting engine
-- Real-time trading bot with WebSocket support
-- Comprehensive test suite (90%+ coverage)
-- CLI interface for all major operations
-- Docker deployment support
-- Pydantic-based configuration management
-- Event-driven architecture with pub-sub pattern
-- Modular strategy system with composable conditions
-- Performance analytics and reporting
-- Data collection and caching system
+### 추가됨
+- Crypto Quant System 초기 릴리스 (이전: Upbit Quant System)
+- 변동성 돌파(VBO) 전략 구현
+- 벡터화 백테스팅 엔진
+- WebSocket 지원을 포함한 실시간 거래 봇
+- 포괄적인 테스트 스위트 (90% 이상 커버리지)
+- 모든 주요 작업을 위한 CLI 인터페이스
+- Docker 배포 지원
+- Pydantic 기반 설정 관리
+- pub-sub 패턴을 사용한 이벤트 기반 아키텍처
+- 구성 가능한 조건을 가진 모듈식 전략 시스템
+- 성능 분석 및 리포팅
+- 데이터 수집 및 캐싱 시스템
 
-### Features
-- **Backtesting**: Fast vectorized backtesting with pandas/numpy
-- **Live Trading**: Real-time execution with risk management
-- **Strategy System**: Flexible, composable strategy framework
-- **Data Management**: Efficient data collection and caching
-- **Performance Analytics**: Comprehensive metrics (CAGR, Sharpe, MDD, etc.)
-- **Visual Reports**: Equity curves, drawdown charts, monthly heatmaps
+### 기능
+- **백테스팅**: pandas/numpy를 사용한 빠른 벡터화 백테스팅
+- **실시간 거래**: 리스크 관리가 포함된 실시간 실행
+- **전략 시스템**: 유연하고 구성 가능한 전략 프레임워크
+- **데이터 관리**: 효율적인 데이터 수집 및 캐싱
+- **성능 분석**: 포괄적인 지표 (CAGR, Sharpe, MDD 등)
+- **시각적 리포트**: 자산 곡선, 낙폭 차트, 월별 히트맵
 
-### Technical
-- Python 3.10+ with full type hints
-- Modern Python standards (uv, Ruff, MyPy, pytest)
-- SOLID principles and clean architecture
-- 90%+ test coverage with 495+ test cases
-- Comprehensive documentation
-- CI/CD pipeline with GitHub Actions
+### 기술적
+- 완전한 타입 힌트를 포함한 Python 3.10+
+- 현대적 Python 표준 (uv, Ruff, MyPy, pytest)
+- SOLID 원칙 및 클린 아키텍처
+- 495개 이상의 테스트 케이스로 90% 이상 테스트 커버리지
+- 포괄적인 문서
+- GitHub Actions를 사용한 CI/CD 파이프라인
 
-### Documentation
-- Architecture documentation
-- User guides (getting started, configuration, strategy customization)
-- API documentation
-- Contribution guidelines
-- Security policy
+### 문서
+- 아키텍처 문서
+- 사용자 가이드 (시작하기, 설정, 전략 커스터마이징)
+- API 문서
+- 기여 가이드라인
+- 보안 정책
 
 ## [0.0.1] - 2025-12-XX
 
-### Added
-- Initial project structure
-- Basic VBO strategy implementation
-- Legacy backtesting code
-- Data collection infrastructure
+### 추가됨
+- 초기 프로젝트 구조
+- 기본 VBO 전략 구현
+- 레거시 백테스팅 코드
+- 데이터 수집 인프라
 
 ---
 
-## Types of Changes
+## 변경 유형
 
-- **Added** for new features
-- **Changed** for changes in existing functionality
-- **Deprecated** for soon-to-be removed features
-- **Removed** for now removed features
-- **Fixed** for any bug fixes
-- **Security** for vulnerability fixes
+- **Added**: 새로운 기능
+- **Changed**: 기존 기능의 변경
+- **Deprecated**: 곧 제거될 기능
+- **Removed**: 제거된 기능
+- **Fixed**: 버그 수정
+- **Security**: 취약점 수정

@@ -1,96 +1,96 @@
-# Documentation Organization
+# 문서 구조
 
-This document describes the organization structure of all markdown files in the repository.
+이 문서는 저장소 내 모든 마크다운 파일의 구조를 설명합니다.
 
-## 📁 Directory Structure
+## 📁 디렉토리 구조
 
 ```
 docs/
-├── portfolio/          # Portfolio publication documentation
+├── portfolio/          # 포트폴리오 공개 문서
 │   ├── README.md
 │   ├── PORTFOLIO_PUBLICATION_GUIDE.md
 │   ├── PUBLICATION_CHECKLIST.md
 │   ├── PORTFOLIO_CHECKLIST.md
 │   └── PORTFOLIO_PUBLICATION_PLAN.md
 │
-├── maintenance/        # Maintenance and cleanup documentation
+├── maintenance/        # 유지보수 및 정리 문서
 │   ├── README.md
 │   ├── CLEANUP_RECOMMENDATIONS.md
 │   ├── CLEANUP_SCRIPT.md
 │   ├── FILES_TO_DELETE.md
 │   └── GITIGNORE_AUDIT.md
 │
-├── guides/             # User guides
+├── guides/             # 사용자 가이드
 │   ├── getting_started.md
 │   ├── configuration.md
 │   ├── strategy_customization.md
 │   └── deprecation_guide.md
 │
-├── planning/           # Project planning documents
+├── planning/           # 프로젝트 계획 문서
 │   ├── TEST_COVERAGE_PLAN.md
 │   ├── COVERAGE_PROGRESS.md
 │   ├── COVERAGE_90_PERCENT_PLAN.md
 │   ├── CONFIGURATION_STANDARD.md
 │   └── comparison_legacy_vs_new_bot.md
 │
-├── refactoring/        # Refactoring documentation
+├── refactoring/        # 리팩토링 문서
 │   ├── REFACTORING_SUMMARY.md
 │   ├── MODERN_PYTHON_STANDARDS_MIGRATION.md
 │   └── STANDARDS_COMPLIANCE_REPORT.md
 │
-├── archive/            # Historical/archived documents
-│   └── [21 phase completion documents]
+├── archive/            # 역사적/아카이브 문서
+│   └── [21개의 단계 완료 문서]
 │
-├── api/                # API documentation
+├── api/                # API 문서
 │   └── README.md
 │
-├── architecture.md     # System architecture
-└── README.md           # Documentation index
+├── architecture.md     # 시스템 아키텍처
+└── README.md           # 문서 인덱스
 ```
 
-## 📄 Root-Level Files
+## 📄 루트 레벨 파일
 
-Essential documentation files that remain in the root:
+루트에 남아있는 필수 문서 파일:
 
-- `README.md` - Main project README
-- `CONTRIBUTING.md` - Contribution guidelines
-- `SECURITY.md` - Security policy
+- `README.md` - 메인 프로젝트 README
+- `CONTRIBUTING.md` - 기여 가이드라인
+- `SECURITY.md` - 보안 정책
 
-## 🎯 Quick Reference
+## 🎯 빠른 참조
 
-### For Users
-- **Getting Started**: `docs/guides/getting_started.md`
-- **Configuration**: `docs/guides/configuration.md`
-- **Strategy Customization**: `docs/guides/strategy_customization.md`
-- **Architecture**: `docs/architecture.md`
+### 사용자를 위한
+- **시작하기**: `docs/guides/getting_started.md`
+- **설정**: `docs/guides/configuration.md`
+- **전략 커스터마이징**: `docs/guides/strategy_customization.md`
+- **아키텍처**: `docs/architecture.md`
 
-### For Portfolio Publication
-- **Main Guide**: `docs/portfolio/PORTFOLIO_PUBLICATION_GUIDE.md`
-- **Quick Checklist**: `docs/portfolio/PUBLICATION_CHECKLIST.md`
+### 포트폴리오 공개를 위한
+- **메인 가이드**: `docs/portfolio/PORTFOLIO_PUBLICATION_GUIDE.md`
+- **빠른 체크리스트**: `docs/portfolio/PUBLICATION_CHECKLIST.md`
 
-### For Maintenance
-- **Cleanup Guide**: `docs/maintenance/CLEANUP_RECOMMENDATIONS.md`
-- **Files to Delete**: `docs/maintenance/FILES_TO_DELETE.md`
+### 유지보수를 위한
+- **정리 가이드**: `docs/maintenance/CLEANUP_RECOMMENDATIONS.md`
+- **삭제할 파일**: `docs/maintenance/FILES_TO_DELETE.md`
 
-## 📝 Organization Principles
+## 📝 구조 원칙
 
-1. **Root Level**: Only essential files (README, CONTRIBUTING, SECURITY)
-2. **docs/portfolio/**: All portfolio publication related documents
-3. **docs/maintenance/**: Cleanup, audit, and maintenance guides
-4. **docs/guides/**: User-facing guides and tutorials
-5. **docs/planning/**: Project planning and tracking documents
-6. **docs/archive/**: Historical/archived documents
-7. **docs/refactoring/**: Refactoring documentation
+1. **루트 레벨**: 필수 파일만 (README, CONTRIBUTING, SECURITY)
+2. **docs/portfolio/**: 포트폴리오 공개 관련 모든 문서
+3. **docs/maintenance/**: 정리, 감사, 유지보수 가이드
+4. **docs/guides/**: 사용자 대상 가이드 및 튜토리얼
+5. **docs/planning/**: 프로젝트 계획 및 추적 문서
+6. **docs/archive/**: 역사적/아카이브 문서
+7. **docs/refactoring/**: 리팩토링 문서
 
-## 🔄 Migration Summary
+## 🔄 마이그레이션 요약
 
-**Moved to `docs/portfolio/`:**
+**`docs/portfolio/`로 이동:**
 - `PORTFOLIO_PUBLICATION_GUIDE.md`
 - `PUBLICATION_CHECKLIST.md`
 - `docs/planning/PORTFOLIO_CHECKLIST.md`
 - `docs/planning/PORTFOLIO_PUBLICATION_PLAN.md`
 
-**Moved to `docs/maintenance/`:**
+**`docs/maintenance/`로 이동:**
 - `CLEANUP_RECOMMENDATIONS.md`
 - `CLEANUP_SCRIPT.md`
 - `FILES_TO_DELETE.md`
