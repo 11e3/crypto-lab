@@ -21,7 +21,7 @@ from src.strategies.pair_trading import PairTradingStrategy
 
 
 @pytest.fixture
-def mock_config():
+def mock_config() -> BacktestConfig:
     return BacktestConfig(
         initial_capital=10000.0,
         fee_rate=0.001,
@@ -33,12 +33,12 @@ def mock_config():
 
 
 @pytest.fixture
-def engine(mock_config):
+def engine(mock_config: BacktestConfig) -> VectorizedBacktestEngine:
     return VectorizedBacktestEngine(config=mock_config)
 
 
 @pytest.fixture
-def mock_strategy():
+def mock_strategy() -> MagicMock:
     strategy = MagicMock(spec=Strategy)
     strategy.name = "TestStrategy"
     # Basic attributes needed for cache params
@@ -51,7 +51,7 @@ def mock_strategy():
 
 
 @pytest.fixture
-def sample_data():
+def sample_data() -> pd.DataFrame:
     """Create a sample OHLCV DataFrame."""
     # Use 100 periods to ensure enough history for lookbacks
     periods = 100
@@ -83,7 +83,9 @@ def sample_data():
 
 
 class TestVectorizedBacktestEngine:
-    def test_load_data_success(self, engine, tmp_path, sample_data):
+    def test_load_data_success(
+        self, engine: VectorizedBacktestEngine, tmp_path: Path, sample_data: pd.DataFrame
+    ) -> None:
         file_path = tmp_path / "test_data.parquet"
         sample_data.to_parquet(file_path)
 
@@ -91,11 +93,13 @@ class TestVectorizedBacktestEngine:
         assert len(df) == 100
         assert "close" in df.columns
 
-    def test_load_data_file_not_found(self, engine):
+    def test_load_data_file_not_found(self, engine: VectorizedBacktestEngine) -> None:
         with pytest.raises(FileNotFoundError):
             engine.load_data(Path("non_existent_file.parquet"))
 
-    def test_add_price_columns(self, engine, sample_data):
+    def test_add_price_columns(
+        self, engine: VectorizedBacktestEngine, sample_data: pd.DataFrame
+    ) -> None:
         sample_data["entry_signal"] = True
         sample_data["exit_signal"] = True
         # Set specific target to verify calculation (VBO logic)
@@ -116,7 +120,7 @@ class TestVectorizedBacktestEngine:
         expected_entry_close = 100.0 * (1 + 0.001)
         assert df2["entry_price"].iloc[0] == pytest.approx(expected_entry_close)
 
-    def test_calculate_metrics_vectorized(self, engine):
+    def test_calculate_metrics_vectorized(self, engine: VectorizedBacktestEngine) -> None:
         dates = np.array([date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3)])
         equity_curve = np.array([10000.0, 11000.0, 9900.0])
         trades_df = pd.DataFrame()
@@ -126,7 +130,13 @@ class TestVectorizedBacktestEngine:
         assert result.total_return == pytest.approx(-1.0)
         assert result.mdd == pytest.approx(10.0)
 
-    def test_run_basic_flow(self, engine, mock_strategy, sample_data, tmp_path):
+    def test_run_basic_flow(
+        self,
+        engine: VectorizedBacktestEngine,
+        mock_strategy: MagicMock,
+        sample_data: pd.DataFrame,
+        tmp_path: Path,
+    ) -> None:
         """Test standard backtest run with sufficient data."""
         fpath = tmp_path / "KRW-BTC_day.parquet"
 
@@ -155,7 +165,13 @@ class TestVectorizedBacktestEngine:
         assert result.trades[0].is_closed
         assert result.trades[0].exit_date == sample_data.index[35].date()
 
-    def test_run_whipsaw_logic(self, engine, mock_strategy, sample_data, tmp_path):
+    def test_run_whipsaw_logic(
+        self,
+        engine: VectorizedBacktestEngine,
+        mock_strategy: MagicMock,
+        sample_data: pd.DataFrame,
+        tmp_path: Path,
+    ) -> None:
         """Test whipsaw logic (entry and close < sma same day)."""
         fpath = tmp_path / "KRW-ETH_day.parquet"
 
@@ -179,8 +195,13 @@ class TestVectorizedBacktestEngine:
 
     @patch("src.backtester.engine.calculate_position_size")
     def test_position_sizing_integration(
-        self, mock_calc_size, engine, mock_strategy, sample_data, tmp_path
-    ):
+        self,
+        mock_calc_size: MagicMock,
+        engine: VectorizedBacktestEngine,
+        mock_strategy: MagicMock,
+        sample_data: pd.DataFrame,
+        tmp_path: Path,
+    ) -> None:
         """Test position sizing integration for single asset."""
         engine.config.position_sizing = "volatility"
 
@@ -206,7 +227,7 @@ class TestVectorizedBacktestEngine:
 
 
 class TestBacktestResult:
-    def test_summary_generation(self):
+    def test_summary_generation(self) -> None:
         """Test summary string generation."""
         result = BacktestResult(total_return=10.0, cagr=5.0, mdd=2.0, strategy_name="TestStrat")
         result.risk_metrics = MagicMock()
@@ -220,14 +241,14 @@ class TestBacktestResult:
         assert "CAGR: 5.00%" in summary
         assert "VaR (95%): 5.00%" in summary
 
-    def test_calculate_metrics_edge_cases(self, engine):
+    def test_calculate_metrics_edge_cases(self, engine: VectorizedBacktestEngine) -> None:
         """Test metrics calculation with insufficient data."""
         dates = np.array([date(2023, 1, 1)])
         equity = np.array([100.0])
         result = engine._calculate_metrics_vectorized(equity, dates, pd.DataFrame())
         assert result.total_return == 0.0
 
-    def test_risk_metrics_failure_handling(self, engine):
+    def test_risk_metrics_failure_handling(self, engine: VectorizedBacktestEngine) -> None:
         """Test exception handling during risk metrics calculation."""
         dates = np.array([date(2023, 1, 1), date(2023, 1, 2)])
         equity = np.array([100.0, 110.0])
@@ -239,7 +260,7 @@ class TestBacktestResult:
             result = engine._calculate_metrics_vectorized(equity, dates, pd.DataFrame())
             assert result.risk_metrics is None
 
-    def test_position_value_normalization(self, engine):
+    def test_position_value_normalization(self, engine: VectorizedBacktestEngine) -> None:
         """Test position value normalization when value > equity."""
         dates = np.array([date(2023, 1, 1), date(2023, 1, 2)])
         equity = np.array([100.0, 50.0])
@@ -273,7 +294,9 @@ class TestBacktestResult:
 
 
 class TestEngineDataHandling:
-    def test_load_data_generic_exception(self, engine, tmp_path):
+    def test_load_data_generic_exception(
+        self, engine: VectorizedBacktestEngine, tmp_path: Path
+    ) -> None:
         fpath = tmp_path / "bad_data.parquet"
         fpath.touch()
         with (
@@ -282,7 +305,13 @@ class TestEngineDataHandling:
         ):
             engine.load_data(fpath)
 
-    def test_caching_logic(self, engine, mock_strategy, sample_data, tmp_path):
+    def test_caching_logic(
+        self,
+        engine: VectorizedBacktestEngine,
+        mock_strategy: MagicMock,
+        sample_data: pd.DataFrame,
+        tmp_path: Path,
+    ) -> None:
         engine.config.use_cache = True
         fpath = tmp_path / "KRW-BTC_day.parquet"
         sample_data.to_parquet(fpath)
@@ -313,7 +342,13 @@ class TestEngineDataHandling:
 
 
 class TestEngineTradingLogic:
-    def test_noise_sorting(self, engine, mock_strategy, sample_data, tmp_path):
+    def test_noise_sorting(
+        self,
+        engine: VectorizedBacktestEngine,
+        mock_strategy: MagicMock,
+        sample_data: pd.DataFrame,
+        tmp_path: Path,
+    ) -> None:
         """Test sorting candidates by short_noise."""
         idx = 30  # Use index > 20 to ensure valid data (past lookback/skips)
         sample_data.loc[sample_data.index[idx], "entry_signal"] = True
@@ -342,7 +377,13 @@ class TestEngineTradingLogic:
         assert len(result.trades) == 1
         assert result.trades[0].ticker == "LOW"
 
-    def test_portfolio_optimization_mpt(self, engine, mock_strategy, sample_data, tmp_path):
+    def test_portfolio_optimization_mpt(
+        self,
+        engine: VectorizedBacktestEngine,
+        mock_strategy: MagicMock,
+        sample_data: pd.DataFrame,
+        tmp_path: Path,
+    ) -> None:
         """Test MPT optimization branch."""
         engine.config.position_sizing = "mpt"
         engine.config.max_slots = 2
@@ -371,7 +412,13 @@ class TestEngineTradingLogic:
             mock_opt.assert_called()
             assert len(result.trades) == 2
 
-    def test_portfolio_optimization_kelly(self, engine, mock_strategy, sample_data, tmp_path):
+    def test_portfolio_optimization_kelly(
+        self,
+        engine: VectorizedBacktestEngine,
+        mock_strategy: MagicMock,
+        sample_data: pd.DataFrame,
+        tmp_path: Path,
+    ) -> None:
         """Test Kelly criterion fallback logic."""
         engine.config.position_sizing = "kelly"
         engine.config.max_slots = 2
@@ -391,7 +438,13 @@ class TestEngineTradingLogic:
             result = engine.run(mock_strategy, {"A": fpath})
             assert len(result.trades) == 1
 
-    def test_equity_curve_nan_fill(self, engine, mock_strategy, sample_data, tmp_path):
+    def test_equity_curve_nan_fill(
+        self,
+        engine: VectorizedBacktestEngine,
+        mock_strategy: MagicMock,
+        sample_data: pd.DataFrame,
+        tmp_path: Path,
+    ) -> None:
         """Test equity curve forward fill on NaN."""
         sample_data.loc[sample_data.index[40], "close"] = np.nan
         sample_data.loc[sample_data.index[30], "entry_signal"] = True
@@ -414,20 +467,20 @@ class TestEngineTradingLogic:
 
 # Define dummy class at module level for correct patching behavior
 class DummyPairStrategy(PairTradingStrategy):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("PairStrat")
         self.lookback_period = 10
 
-    def required_indicators(self):
+    def required_indicators(self) -> list[str]:
         return []
 
-    def calculate_indicators(self, df):
+    def calculate_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         return df
 
-    def generate_signals(self, df):
+    def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
         return df
 
-    def calculate_spread_for_pair(self, df1, df2):
+    def calculate_spread_for_pair(self, df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         m = pd.DataFrame(index=df1.index)
         m["entry_signal"] = False
         m["exit_signal"] = False
@@ -438,7 +491,7 @@ class DummyPairStrategy(PairTradingStrategy):
 
 
 class TestPairTradingExtended:
-    def test_pair_trading_wrong_file_count(self, engine):
+    def test_pair_trading_wrong_file_count(self, engine: VectorizedBacktestEngine) -> None:
         """Test pair trading validates 2 files."""
         # Since import is now inside run(), we need to patch before run() is called
         # But the isinstance check will still work since we're importing inside run()
@@ -446,7 +499,9 @@ class TestPairTradingExtended:
         with pytest.raises(ValueError, match="requires exactly 2 tickers"):
             engine.run(strat, {"A": Path("a")})
 
-    def test_pair_trading_insufficient_slots(self, engine, tmp_path):
+    def test_pair_trading_insufficient_slots(
+        self, engine: VectorizedBacktestEngine, tmp_path: Path
+    ) -> None:
         """Test pair trading logic when slots < 2."""
         strat = DummyPairStrategy()
 
@@ -489,7 +544,9 @@ class TestPairTradingExtended:
 class TestConvenienceFunction:
     @patch("src.backtester.engine.VectorizedBacktestEngine")
     @patch("src.backtester.engine.DataCollectorFactory")
-    def test_run_backtest_logic(self, mock_factory, mock_engine_cls, tmp_path):
+    def test_run_backtest_logic(
+        self, mock_factory: MagicMock, mock_engine_cls: MagicMock, tmp_path: Path
+    ) -> None:
         """Test run_backtest wrapper logic."""
 
         # Setup Mocks
@@ -504,7 +561,7 @@ class TestConvenienceFunction:
 
         # Use side_effect to create file physically during collection
         # This satisfies the check `if v.exists()` later in the function
-        def create_file_side_effect(ticker, *args, **kwargs):
+        def create_file_side_effect(ticker: str, *args: object, **kwargs: object) -> None:
             (tmp_path / "data").mkdir(exist_ok=True, parents=True)
             (tmp_path / "data" / f"{ticker}_day.parquet").touch()
 
@@ -519,7 +576,7 @@ class TestConvenienceFunction:
         mock_engine_instance.run.assert_called()
 
     @patch("src.backtester.engine.VectorizedBacktestEngine")
-    def test_run_backtest_no_files_found(self, mock_engine, tmp_path):
+    def test_run_backtest_no_files_found(self, mock_engine: MagicMock, tmp_path: Path) -> None:
         """Test exception when data collection fails/no files found."""
         data_dir = tmp_path / "empty_data"
         with patch("src.backtester.engine.DataCollectorFactory"), pytest.raises(FileNotFoundError):

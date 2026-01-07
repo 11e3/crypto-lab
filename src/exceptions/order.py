@@ -2,6 +2,8 @@
 Order-related exceptions.
 """
 
+from typing import Any
+
 from src.exceptions.base import TradingSystemError
 
 
@@ -18,7 +20,7 @@ class OrderNotFoundError(OrderError):
         self,
         message: str = "Order not found",
         order_id: str | None = None,
-        details: dict | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize order not found error.
@@ -45,7 +47,7 @@ class OrderExecutionError(OrderError):
         message: str = "Order execution failed",
         order_id: str | None = None,
         reason: str | None = None,
-        details: dict | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize order execution error.

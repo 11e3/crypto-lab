@@ -2,6 +2,8 @@
 Strategy-related exceptions.
 """
 
+from typing import Any
+
 from src.exceptions.base import TradingSystemError
 
 
@@ -19,7 +21,7 @@ class StrategyConfigurationError(StrategyError):
         message: str = "Strategy configuration error",
         strategy_name: str | None = None,
         parameter: str | None = None,
-        details: dict | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize strategy configuration error.
@@ -50,7 +52,7 @@ class StrategyExecutionError(StrategyError):
         message: str = "Strategy execution error",
         strategy_name: str | None = None,
         ticker: str | None = None,
-        details: dict | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize strategy execution error.

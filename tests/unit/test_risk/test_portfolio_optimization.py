@@ -127,7 +127,7 @@ class TestPortfolioOptimizer:
         sample_returns_df: pd.DataFrame,
         max_w: float,
         min_w: float,
-        mocker,
+        mocker: pytest.MonkeyPatch,
     ) -> None:
         # 가짜 최적화 결과 생성
         mock_weights = np.array([0.3, 0.3, 0.4])
@@ -155,9 +155,9 @@ class TestPortfolioOptimizer:
         self,
         optimizer: PortfolioOptimizer,
         sample_returns_df: pd.DataFrame,
-        method,
-        success_status,
-        mocker,
+        method: str,
+        success_status: bool,
+        mocker: pytest.MonkeyPatch,
     ) -> None:
         mock_result = OptimizeResult(
             x=np.array([0.33, 0.33, 0.34]), success=success_status, message="Optimization failed"
@@ -170,7 +170,11 @@ class TestPortfolioOptimizer:
 
     @pytest.mark.parametrize("error", [Exception("Mock error")])
     def test_optimize_mpt_exception_handling(
-        self, optimizer: PortfolioOptimizer, sample_returns_df: pd.DataFrame, error, mocker
+        self,
+        optimizer: PortfolioOptimizer,
+        sample_returns_df: pd.DataFrame,
+        error: Exception,
+        mocker: pytest.MonkeyPatch,
     ) -> None:
         mocker.patch("src.risk.portfolio_optimization.minimize", side_effect=error)
         weights = optimizer.optimize_mpt(sample_returns_df)
@@ -197,7 +201,9 @@ class TestPortfolioOptimizer:
     # Integration Tests (Using optimize_portfolio wrapper)
     # -------------------------------------------------------------------------
 
-    def test_optimize_portfolio_mpt(self, sample_returns_df: pd.DataFrame, mocker) -> None:
+    def test_optimize_portfolio_mpt(
+        self, sample_returns_df: pd.DataFrame, mocker: pytest.MonkeyPatch
+    ) -> None:
         """Test optimize_portfolio wrapper calls the correct class method."""
         # 문자열 경로 대신 객체를 직접 패치 (더 안전함)
         mock_method = mocker.patch.object(
@@ -210,7 +216,9 @@ class TestPortfolioOptimizer:
         assert result.method == "mpt"
         mock_method.assert_called_once()
 
-    def test_optimize_portfolio_risk_parity(self, sample_returns_df: pd.DataFrame, mocker) -> None:
+    def test_optimize_portfolio_risk_parity(
+        self, sample_returns_df: pd.DataFrame, mocker: pytest.MonkeyPatch
+    ) -> None:
         mock_method = mocker.patch.object(
             PortfolioOptimizer,
             "optimize_risk_parity",
@@ -222,7 +230,10 @@ class TestPortfolioOptimizer:
         mock_method.assert_called_once()
 
     def test_optimize_portfolio_kelly(
-        self, sample_returns_df: pd.DataFrame, sample_trades_df: pd.DataFrame, mocker
+        self,
+        sample_returns_df: pd.DataFrame,
+        sample_trades_df: pd.DataFrame,
+        mocker: pytest.MonkeyPatch,
     ) -> None:
         mock_method = mocker.patch.object(
             PortfolioOptimizer,

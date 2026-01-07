@@ -21,7 +21,7 @@ class ExchangeFactory:
     """Factory for creating exchange instances."""
 
     @staticmethod
-    def create(exchange_name: str | ExchangeName | None = None, **kwargs) -> Exchange:
+    def create(exchange_name: str | ExchangeName | None = None, **kwargs: str) -> Exchange:
         """
         Create an exchange instance.
 
@@ -58,7 +58,7 @@ class ExchangeFactory:
             )
 
     @staticmethod
-    def _create_upbit(**kwargs) -> UpbitExchange:
+    def _create_upbit(**kwargs: str) -> UpbitExchange:
         """Create Upbit exchange instance."""
         config = get_config()
 

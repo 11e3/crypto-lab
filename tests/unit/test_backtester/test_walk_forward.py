@@ -21,7 +21,7 @@ from src.strategies.base import Strategy
 
 
 @pytest.fixture
-def mock_strategy_factory():
+def mock_strategy_factory() -> MagicMock:
     """Mock strategy factory function."""
     mock_strategy = MagicMock(spec=Strategy)
     mock_strategy.name = "MockStrategy"

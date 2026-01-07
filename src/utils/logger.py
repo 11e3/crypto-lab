@@ -21,7 +21,7 @@ LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
 
-class ContextLogger(logging.LoggerAdapter):
+class ContextLogger(logging.LoggerAdapter[logging.Logger]):
     """
     Logger adapter that adds context information to log records.
 
@@ -168,7 +168,7 @@ def get_context_logger(name: str, **context: Any) -> ContextLogger:
 
 
 @contextmanager
-def log_performance(logger: logging.Logger, operation: str, **context: Any):
+def log_performance(logger: logging.Logger, operation: str, **context: Any) -> Any:
     """
     Context manager for performance logging.
 

@@ -19,8 +19,8 @@ class TestOrderSide:
 
     def test_order_side_values(self) -> None:
         """Test OrderSide enum values."""
-        assert OrderSide.BUY == "buy"
-        assert OrderSide.SELL == "sell"
+        assert OrderSide.BUY.value == "buy"
+        assert OrderSide.SELL.value == "sell"
 
 
 class TestOrderType:
@@ -28,8 +28,8 @@ class TestOrderType:
 
     def test_order_type_values(self) -> None:
         """Test OrderType enum values."""
-        assert OrderType.MARKET == "market"
-        assert OrderType.LIMIT == "limit"
+        assert OrderType.MARKET.value == "market"
+        assert OrderType.LIMIT.value == "limit"
 
 
 class TestOrderStatus:
@@ -37,11 +37,11 @@ class TestOrderStatus:
 
     def test_order_status_values(self) -> None:
         """Test OrderStatus enum values."""
-        assert OrderStatus.PENDING == "pending"
-        assert OrderStatus.FILLED == "filled"
-        assert OrderStatus.PARTIALLY_FILLED == "partially_filled"
-        assert OrderStatus.CANCELLED == "cancelled"
-        assert OrderStatus.FAILED == "failed"
+        assert OrderStatus.PENDING.value == "pending"
+        assert OrderStatus.FILLED.value == "filled"
+        assert OrderStatus.PARTIALLY_FILLED.value == "partially_filled"
+        assert OrderStatus.CANCELLED.value == "cancelled"
+        assert OrderStatus.FAILED.value == "failed"
 
 
 class TestBalance:

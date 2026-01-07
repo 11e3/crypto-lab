@@ -43,9 +43,26 @@
    - 문서 업데이트
 
 4. **품질 검사 실행**
+   
    ```bash
-   make check  # 모든 검사 실행 (포맷, 린트, 타입 체크, 테스트)
+   # 방법 1: 모든 nox 세션 실행 (권장)
+   nox
+   
+   # 또는 개별 세션 실행
+   nox -s format    # 코드 포맷팅
+   nox -s lint      # 린팅 & 타입 검사
+   nox -s tests     # 테스트 실행
+   nox -s docs      # 문서 빌드
    ```
+   
+   **PR 제출 전 체크리스트:**
+   - [ ] `nox`가 모든 세션에서 통과됨
+   - [ ] 신규 코드에 대한 테스트 추가됨
+   - [ ] 테스트 커버리지 80% 이상 유지
+   - [ ] 문서 업데이트됨 (해당되는 경우)
+   - [ ] 타입 힌트 추가됨
+   - [ ] Docstring 추가됨 (Google 스타일)
+   - [ ] 변경사항이 관련 이슈를 해결함
 
 5. **변경사항 커밋**
    ```bash
@@ -73,21 +90,35 @@
 
 ### 사전 요구사항
 
-- Python 3.10+
-- [uv](https://github.com/astral-sh/uv) 패키지 관리자
+- Python 3.14+
+- Git
 
-### 설정
+### 초기 설정
 
 ```bash
 # 포크 클론
 git clone https://github.com/your-username/crypto-quant-system.git
 cd crypto-quant-system
 
-# 의존성 설치
-uv sync --extra dev
+# 가상 환경 생성 (선택사항, 권장)
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Unix/macOS
+source .venv/bin/activate
 
-# pre-commit 훅 설치
-uv run pre-commit install
+# 의존성 설치 (개발 종속성 포함)
+pip install -e ".[dev,test,docs]"
+
+# Pre-commit 훅 설정 (커밋 전 자동 검사)
+pre-commit install
+```
+
+### 설정 검증
+
+```bash
+# Pre-commit 훅이 모든 파일에 적용되는지 확인
+pre-commit run --all-files
 ```
 
 ## 코딩 표준
@@ -99,31 +130,113 @@ uv run pre-commit install
 - 독스트링 작성 (Google 스타일)
 - 최대 줄 길이: 100자
 
-### 코드 품질 도구
+### 개발 워크플로우 (nox 사용)
+
+모든 개발 작업은 `nox`를 통해 자동화됩니다. `nox`는 개발 환경을 격리하고 일관된 도구 버전을 관리합니다.
+
+**주요 nox 세션:**
 
 ```bash
-# 코드 포맷팅
-make format
+# 1. 코드 포맷팅 (Black, isort, docformatter)
+nox -s format
 
-# 린팅
-make lint
+# 2. 린팅 및 타입 검사 (Ruff, mypy)
+nox -s lint
 
-# 타입 체크
-make type-check
+# 3. 엄격한 타입 검사 (mypy --strict)
+nox -s type_check
 
-# 테스트 실행
-make test
+# 4. 테스트 실행 (pytest with coverage)
+nox -s tests
 
-# 모든 검사 실행
-make check
+# 5. 문서 빌드 (Sphinx)
+nox -s docs
+
+# 6. Pre-commit 검사 (모든 hooks 실행)
+nox -s pre_commit_check
+
+# 7. 캐시 정리
+nox -s clean
+
+# 모든 세션 실행 (권장: PR 전에)
+nox
+```
+
+**세션별 설명:**
+
+| 세션 | 목적 | 도구 |
+|------|------|------|
+| `format` | 코드 자동 포맷팅 | Ruff, isort, docformatter |
+| `lint` | 린팅 & 타입 검사 | Ruff, mypy |
+| `type_check` | 엄격한 타입 검사 | mypy (--strict) |
+| `tests` | 테스트 실행 & 커버리지 | pytest |
+| `docs` | 문서 생성 | Sphinx |
+| `pre_commit_check` | Pre-commit 훅 검증 | pre-commit |
+| `clean` | 빌드 아티팩트 정리 | shutil |
+
+### Pre-commit 훅
+
+커밋할 때 자동으로 실행되는 검사:
+
+```yaml
+# .pre-commit-config.yaml 참고
+- Ruff: 코드 스타일 및 포맷팅
+- isort: import 정렬
+- Black: 코드 포맷팅 
+- mypy: 타입 검사
+- docformatter: docstring 포맷팅
+- bandit: 보안 검사
+- 그 외 10+ 핸들러
+```
+
+**Pre-commit 우회 (권장하지 않음):**
+
+```bash
+git commit --no-verify
 ```
 
 ### 테스트
 
+테스트는 코드 품질을 보장하는 핵심입니다.
+
+```bash
+# 전체 테스트 실행
+nox -s tests
+
+# 특정 테스트 파일만 실행
+pytest tests/test_strategy.py -v
+
+# 특정 테스트 함수만 실행
+pytest tests/test_strategy.py::test_volatility_breakout -v
+
+# 커버리지 리포트 생성
+pytest --cov=src --cov-report=html
+# htmlcov/index.html에서 리포트 확인
+```
+
+**테스트 작성 가이드:**
+
 - 새 기능에 대한 테스트 작성
-- 테스트 커버리지 유지 또는 개선
+- 테스트 커버리지 유지 또는 개선 (목표: 80%+)
 - 테스트 데이터에 pytest 픽스처 사용
 - 명명 규칙: `test_*.py` 파일, `test_*` 함수
+- Arrange-Act-Assert 패턴 사용
+
+**예시:**
+
+```python
+def test_volatility_breakout_calculate_signals(sample_data):
+    """Test signal generation in volatility breakout strategy."""
+    # Arrange
+    strategy = VolatilityBreakout(volatility_threshold=0.02)
+    
+    # Act
+    signals = strategy.calculate_signals(sample_data)
+    
+    # Assert
+    assert len(signals) == len(sample_data)
+    assert all(s in [-1, 0, 1] for s in signals)
+```
 
 ### 문서
 

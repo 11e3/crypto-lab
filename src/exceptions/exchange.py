@@ -2,6 +2,8 @@
 Exchange-related exceptions.
 """
 
+from typing import Any
+
 from src.exceptions.base import TradingSystemError
 
 
@@ -15,7 +17,7 @@ class ExchangeConnectionError(ExchangeError):
     """Error connecting to exchange API."""
 
     def __init__(
-        self, message: str = "Failed to connect to exchange", details: dict | None = None
+        self, message: str = "Failed to connect to exchange", details: dict[str, Any] | None = None
     ) -> None:
         super().__init__(message, details)
 
@@ -23,7 +25,9 @@ class ExchangeConnectionError(ExchangeError):
 class ExchangeAuthenticationError(ExchangeError):
     """Error authenticating with exchange API."""
 
-    def __init__(self, message: str = "Authentication failed", details: dict | None = None) -> None:
+    def __init__(
+        self, message: str = "Authentication failed", details: dict[str, Any] | None = None
+    ) -> None:
         super().__init__(message, details)
 
 
@@ -31,7 +35,7 @@ class ExchangeOrderError(ExchangeError):
     """Error placing or managing orders."""
 
     def __init__(
-        self, message: str = "Order operation failed", details: dict | None = None
+        self, message: str = "Order operation failed", details: dict[str, Any] | None = None
     ) -> None:
         super().__init__(message, details)
 
@@ -45,7 +49,7 @@ class InsufficientBalanceError(ExchangeOrderError):
         currency: str | None = None,
         required: float | None = None,
         available: float | None = None,
-        details: dict | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize insufficient balance error.

@@ -2,7 +2,8 @@
 Tests for Compare and Optimize CLI commands.
 """
 
-from unittest.mock import patch
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -12,7 +13,7 @@ from src.cli.commands.optimize import optimize
 
 
 @pytest.fixture
-def runner():
+def runner() -> CliRunner:
     """Create a Click CLI test runner."""
     return CliRunner()
 
@@ -20,14 +21,14 @@ def runner():
 class TestCompareCommand:
     """Test Strategy Comparison CLI command."""
 
-    def test_compare_help(self, runner):
+    def test_compare_help(self, runner: CliRunner) -> None:
         """Test help message."""
         result = runner.invoke(compare, ["--help"])
         assert result.exit_code == 0
         assert "compare" in result.output.lower()
 
     @patch("src.cli.commands.compare.compare_strategies")
-    def test_compare_with_defaults(self, mock_compare, runner):
+    def test_compare_with_defaults(self, mock_compare: MagicMock, runner: CliRunner) -> None:
         """Test compare with default parameters."""
         mock_compare.return_value = {}
 
@@ -37,7 +38,7 @@ class TestCompareCommand:
         mock_compare.assert_called_once()
 
     @patch("src.cli.commands.compare.compare_strategies")
-    def test_compare_with_custom_tickers(self, mock_compare, runner):
+    def test_compare_with_custom_tickers(self, mock_compare: MagicMock, runner: CliRunner) -> None:
         """Test compare with custom tickers."""
         mock_compare.return_value = {}
 
@@ -54,7 +55,7 @@ class TestCompareCommand:
         assert result.exit_code == 0
 
     @patch("src.cli.commands.compare.compare_strategies")
-    def test_compare_with_custom_params(self, mock_compare, runner):
+    def test_compare_with_custom_params(self, mock_compare: MagicMock, runner: CliRunner) -> None:
         """Test compare with custom parameters."""
         mock_compare.return_value = {}
 
@@ -75,7 +76,7 @@ class TestCompareCommand:
         assert result.exit_code == 0
 
     @patch("src.cli.commands.compare.compare_strategies")
-    def test_compare_with_strategies(self, mock_compare, runner):
+    def test_compare_with_strategies(self, mock_compare: MagicMock, runner: CliRunner) -> None:
         """Test compare with multiple strategies."""
         mock_compare.return_value = {}
 
@@ -94,7 +95,9 @@ class TestCompareCommand:
         assert result.exit_code == 0
 
     @patch("src.cli.commands.compare.compare_strategies")
-    def test_compare_with_output(self, mock_compare, runner, tmp_path):
+    def test_compare_with_output(
+        self, mock_compare: MagicMock, runner: CliRunner, tmp_path: Path
+    ) -> None:
         """Test compare with output file."""
         mock_compare.return_value = {}
 
@@ -111,7 +114,7 @@ class TestCompareCommand:
         assert result.exit_code == 0
 
     @patch("src.cli.commands.compare.compare_strategies")
-    def test_compare_with_workers(self, mock_compare, runner):
+    def test_compare_with_workers(self, mock_compare: MagicMock, runner: CliRunner) -> None:
         """Test compare with custom worker count."""
         mock_compare.return_value = {}
 
@@ -126,7 +129,7 @@ class TestCompareCommand:
         assert result.exit_code == 0
 
     @patch("src.cli.commands.compare.compare_strategies")
-    def test_compare_error_handling(self, mock_compare, runner):
+    def test_compare_error_handling(self, mock_compare: MagicMock, runner: CliRunner) -> None:
         """Test error handling in compare."""
         mock_compare.side_effect = ValueError("Comparison failed")
 
@@ -135,7 +138,9 @@ class TestCompareCommand:
         assert result.exit_code != 0
 
     @patch("src.cli.commands.compare.compare_strategies")
-    def test_compare_with_all_options(self, mock_compare, runner, tmp_path):
+    def test_compare_with_all_options(
+        self, mock_compare: MagicMock, runner: CliRunner, tmp_path: Path
+    ) -> None:
         """Test compare with all options combined."""
         mock_compare.return_value = {}
 
@@ -175,7 +180,7 @@ class TestCompareCommand:
 class TestOptimizeCommand:
     """Test Parameter Optimization CLI command."""
 
-    def test_optimize_help(self, runner):
+    def test_optimize_help(self, runner: CliRunner) -> None:
         """Test help message."""
         result = runner.invoke(optimize, ["--help"])
         assert result.exit_code == 0

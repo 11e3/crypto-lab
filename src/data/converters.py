@@ -56,7 +56,7 @@ def csv_to_parquet(
 
     Args:
         csv_path: Path to source CSV file
-        output_dir: Directory to save parquet file (defaults to data/raw/)
+        output_dir: Directory to save parquet file (defaults to ``data/raw/``)
         interval: Upbit interval name (day, week, minute240). If None, tries to infer from path
 
     Returns:

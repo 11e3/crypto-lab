@@ -12,6 +12,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import pandas as pd
 import pyupbit
 
 from src.config.loader import get_config
@@ -197,7 +198,7 @@ class TradingBotFacade:
             except Exception as e:
                 logger.error(f"Error checking holdings for {ticker}: {e}", exc_info=True)
 
-    def _calculate_sma_exit(self, df) -> float | None:
+    def _calculate_sma_exit(self, df: pd.DataFrame | None) -> float | None:
         """
         Calculate SMA for exit condition.
 

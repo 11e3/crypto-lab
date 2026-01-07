@@ -559,13 +559,16 @@ class MarketRegimeCondition(Condition):
 # These aliases are provided for backward compatibility but will be removed in a future version.
 # Please update your code to use the Condition classes directly.
 import warnings  # noqa: E402
+from typing import Any, TypeVar, cast  # noqa: E402
+
+T = TypeVar("T")
 
 
-def _create_deprecated_alias(condition_class, filter_name: str):
+def _create_deprecated_alias(condition_class: type[T], filter_name: str) -> type[T]:
     """Create a deprecated alias with warning."""
 
-    class DeprecatedFilter(condition_class):
-        def __init__(self, *args, **kwargs):
+    class DeprecatedFilter(condition_class):  # type: ignore[valid-type, misc]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             warnings.warn(
                 f"{filter_name} is deprecated. Use {condition_class.__name__} instead.",
                 DeprecationWarning,
@@ -575,7 +578,7 @@ def _create_deprecated_alias(condition_class, filter_name: str):
 
     DeprecatedFilter.__name__ = filter_name
     DeprecatedFilter.__qualname__ = filter_name
-    return DeprecatedFilter
+    return cast(type[T], DeprecatedFilter)
 
 
 # Create deprecated aliases with warnings

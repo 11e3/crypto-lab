@@ -5,6 +5,7 @@ Implements trend-following momentum strategy using RSI, MACD, and moving average
 """
 
 from collections.abc import Sequence
+from typing import Any
 
 import pandas as pd
 
@@ -180,7 +181,7 @@ class SimpleMomentumStrategy(MomentumStrategy):
     def __init__(
         self,
         name: str = "SimpleMomentum",
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         # Only use price above SMA condition
         super().__init__(

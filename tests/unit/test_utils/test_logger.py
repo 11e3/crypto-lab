@@ -3,6 +3,7 @@ Unit tests for logger utility module.
 """
 
 import logging
+from pathlib import Path
 from unittest.mock import patch
 
 from src.utils.logger import (
@@ -28,7 +29,7 @@ class TestSetupLogging:
         setup_logging()
         setup_logging()  # Should not raise error
 
-    def test_setup_logging_with_log_file(self, tmp_path) -> None:
+    def test_setup_logging_with_log_file(self, tmp_path: Path) -> None:
         """Test setup_logging with log_file parameter (covers lines 117-120)."""
 
         log_file = tmp_path / "test.log"
@@ -37,7 +38,7 @@ class TestSetupLogging:
         # Verify log file was created
         assert log_file.exists()
 
-    def test_setup_logging_with_log_file_nested_path(self, tmp_path) -> None:
+    def test_setup_logging_with_log_file_nested_path(self, tmp_path: Path) -> None:
         """Test setup_logging with log_file in nested directory (covers line 117 mkdir)."""
 
         log_file = tmp_path / "logs" / "nested" / "test.log"

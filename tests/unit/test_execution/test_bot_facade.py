@@ -9,7 +9,7 @@ from src.execution.order_manager import Order
 
 
 @pytest.fixture
-def mock_config():
+def mock_config() -> MagicMock:
     """Mock configuration dictionary."""
     config_mock = MagicMock()
 
@@ -55,7 +55,7 @@ def mock_config():
 
 
 @pytest.fixture
-def mock_components():
+def mock_components() -> dict[str, MagicMock]:
     """Return a dictionary of mocked components."""
     return {
         "exchange": MagicMock(),
@@ -69,7 +69,7 @@ def mock_components():
 
 
 @pytest.fixture
-def bot(mock_config, mock_components):
+def bot(mock_config: MagicMock, mock_components: dict[str, MagicMock]) -> TradingBotFacade:
     """Create a TradingBotFacade instance with mocked dependencies."""
     with (
         patch("src.execution.bot_facade.get_config", return_value=mock_config),
@@ -93,14 +93,16 @@ def bot(mock_config, mock_components):
 
 
 class TestTradingBotFacade:
-    def test_initialization(self, bot, mock_config):
+    def test_initialization(self, bot: TradingBotFacade, mock_config: MagicMock) -> None:
         """Test if the bot initializes correctly with configs."""
         assert bot.tickers == ["KRW-BTC", "KRW-ETH"]
         assert bot.exchange is not None
         assert bot.position_manager is not None
         mock_config.get_trading_config.assert_called()
 
-    def test_get_krw_balance(self, bot, mock_components):
+    def test_get_krw_balance(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test KRW balance retrieval."""
         # Success case
         balance_mock = MagicMock()
@@ -114,7 +116,9 @@ class TestTradingBotFacade:
         mock_components["exchange"].get_balance.side_effect = Exception("API Error")
         assert bot.get_krw_balance() == 0.0
 
-    def test_initialize_targets(self, bot, mock_components):
+    def test_initialize_targets(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test target initialization for tickers."""
         # Setup metrics return
         mock_metrics = {
@@ -132,14 +136,16 @@ class TestTradingBotFacade:
         assert bot.target_info["KRW-BTC"] == mock_metrics
         assert mock_components["signal_handler"].calculate_metrics.call_count == len(bot.tickers)
 
-    def test_check_existing_holdings_recovery(self, bot, mock_components):
+    def test_check_existing_holdings_recovery(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test recovery of existing positions on startup."""
         # Scenario: User holds KRW-BTC
         balance_btc = MagicMock()
         balance_btc.available = 0.1
 
         # Configure exchange mock
-        def get_balance_side_effect(currency):
+        def get_balance_side_effect(currency: str) -> MagicMock:
             if currency == "BTC":
                 return balance_btc
             return MagicMock(available=0)
@@ -156,7 +162,9 @@ class TestTradingBotFacade:
         assert call_args["amount"] == 0.1
         assert call_args["entry_price"] == 50000000.0
 
-    def test_calculate_buy_amount(self, bot, mock_components):
+    def test_calculate_buy_amount(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test position sizing calculation."""
         # Setup: 100k KRW balance, 3 max slots, 1 currently used
         balance_krw = MagicMock()
@@ -179,7 +187,9 @@ class TestTradingBotFacade:
         balance_krw.available = 100000.0
         assert bot._calculate_buy_amount() == 0.0
 
-    def test_process_ticker_update_entry(self, bot, mock_components):
+    def test_process_ticker_update_entry(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test entry signal processing."""
         ticker = "KRW-BTC"
         current_price = 50000000.0
@@ -215,7 +225,9 @@ class TestTradingBotFacade:
                 "BUY", ticker, current_price, target=ANY, noise=ANY
             )
 
-    def test_process_ticker_update_advanced_order_trigger(self, bot, mock_components):
+    def test_process_ticker_update_advanced_order_trigger(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test if advanced orders (e.g., Stop Loss) trigger a sell."""
         ticker = "KRW-BTC"
         current_price = 45000000.0  # Price dropped
@@ -252,7 +264,9 @@ class TestTradingBotFacade:
             ticker=ticker
         )
 
-    def test_process_exits_signal(self, bot, mock_components):
+    def test_process_exits_signal(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test exit signal processing."""
         ticker = "KRW-BTC"
 
@@ -282,7 +296,9 @@ class TestTradingBotFacade:
         mock_components["telegram"].send_trade_signal.assert_called()
         assert mock_components["telegram"].send_trade_signal.call_args[0][0] == "EXIT"
 
-    def test_daily_reset(self, bot, mock_components):
+    def test_daily_reset(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test daily reset routine."""
         with (
             patch.object(bot, "_process_exits") as mock_exits,
@@ -293,7 +309,9 @@ class TestTradingBotFacade:
             mock_exits.assert_called_once()
             mock_targets.assert_called_once()
 
-    def test_recalculate_targets(self, bot, mock_components):
+    def test_recalculate_targets(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test recalculating targets."""
         bot.tickers = ["KRW-BTC"]
         mock_metrics = {"target": 100, "k": 0.5, "sma": 90, "sma_trend": 95}
@@ -304,7 +322,7 @@ class TestTradingBotFacade:
         assert bot.target_info["KRW-BTC"] == mock_metrics
         mock_components["telegram"].send.assert_called()
 
-    def test_sma_exit_calculation(self, bot):
+    def test_sma_exit_calculation(self, bot: TradingBotFacade) -> None:
         """Test helper method for SMA exit calculation."""
         # Case 1: Insufficient data
         assert bot._calculate_sma_exit(pd.DataFrame()) is None
@@ -316,7 +334,9 @@ class TestTradingBotFacade:
         sma = bot._calculate_sma_exit(df)
         assert sma == 100.0
 
-    def test_sell_all_exception(self, bot, mock_components):
+    def test_sell_all_exception(
+        self, bot: TradingBotFacade, mock_components: dict[str, MagicMock]
+    ) -> None:
         """Test error handling in sell_all."""
         ticker = "KRW-BTC"
         mock_components["order_manager"].sell_all.side_effect = Exception("Sell Failed")
@@ -326,7 +346,7 @@ class TestTradingBotFacade:
         assert result is False
         mock_components["position_manager"].remove_position.assert_not_called()
 
-    def test_create_bot_factory(self, mock_config):
+    def test_create_bot_factory(self, mock_config: MagicMock) -> None:
         """Test the create_bot factory function."""
         with (
             patch("src.execution.bot_facade.get_config", return_value=mock_config),

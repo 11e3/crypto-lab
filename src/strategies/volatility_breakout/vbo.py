@@ -6,14 +6,14 @@ conditions and filters that can be added or removed.
 """
 
 from collections.abc import Sequence
+from typing import Any
 
 import pandas as pd
 
 from src.strategies.base import Condition, Strategy
-from src.strategies.volatility_breakout.conditions import (
+from src.strategies.volatility_breakout.conditions import (  # Backward compatibility aliases
     BreakoutCondition,
     NoiseCondition,
-    # Backward compatibility aliases
     PriceBelowSMACondition,
     SMABreakoutCondition,
     TrendCondition,
@@ -186,7 +186,7 @@ class MinimalVBO(VanillaVBO):
     def __init__(
         self,
         name: str = "MinimalVBO",
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         # Only use breakout condition, no market conditions
         from src.strategies.volatility_breakout.conditions import BreakoutCondition
@@ -211,7 +211,7 @@ class StrictVBO(VanillaVBO):
         name: str = "StrictVBO",
         max_noise: float = 0.6,
         min_volatility_pct: float = 0.01,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         from src.strategies.volatility_breakout.conditions import (
             NoiseThresholdCondition,

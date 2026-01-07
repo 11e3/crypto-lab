@@ -6,7 +6,7 @@ Provides publish-subscribe pattern for loose coupling between components.
 
 from collections import defaultdict
 from collections.abc import Callable
-from typing import TypeVar
+from typing import TypeVar, overload
 
 from src.execution.events import Event, EventType
 from src.utils.logger import get_logger
@@ -29,11 +29,25 @@ class EventBus:
         self._subscribers: dict[EventType, list[Callable[[Event], None]]] = defaultdict(list)
         self._global_subscribers: list[Callable[[Event], None]] = []
 
+    @overload
+    def subscribe(
+        self,
+        event_type: EventType | None = None,
+        handler: None = None,
+    ) -> Callable[[Callable[[Event], None]], Callable[[Event], None]]: ...
+
+    @overload
+    def subscribe(
+        self,
+        event_type: EventType | None = None,
+        handler: Callable[[Event], None] = ...,
+    ) -> Callable[[Event], None]: ...
+
     def subscribe(
         self,
         event_type: EventType | None = None,
         handler: Callable[[Event], None] | None = None,
-    ) -> Callable:
+    ) -> Callable[[Event], None] | Callable[[Callable[[Event], None]], Callable[[Event], None]]:
         """
         Subscribe to events.
 
@@ -44,16 +58,18 @@ class EventBus:
             handler: Handler function (required if not used as decorator)
 
         Returns:
-            Decorator function if used as decorator, None otherwise
+            Decorator function if used as decorator, handler otherwise
 
-        Examples:
-            # As decorator
-            @event_bus.subscribe(EventType.ORDER_PLACED)
-            def handle_order(event: OrderEvent):
-                ...
+        Example:
+            As decorator::
 
-            # Direct call
-            event_bus.subscribe(EventType.ORDER_PLACED, handle_order)
+                @event_bus.subscribe(EventType.ORDER_PLACED)
+                def handle_order(event: OrderEvent):
+                    ...
+
+            Direct call::
+
+                event_bus.subscribe(EventType.ORDER_PLACED, handle_order)
         """
         if handler is None:
             # Used as decorator

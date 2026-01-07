@@ -11,7 +11,7 @@ from src.strategies.base import OHLCV
 
 
 @pytest.fixture
-def sample_ohlcv():
+def sample_ohlcv() -> OHLCV:
     """Create sample OHLCV data."""
     return OHLCV(
         date=date(2024, 1, 1), open=100.0, high=105.0, low=95.0, close=102.0, volume=1000.0
@@ -19,7 +19,7 @@ def sample_ohlcv():
 
 
 @pytest.fixture
-def sample_history():
+def sample_history() -> pd.DataFrame:
     """Create sample price history."""
     dates = pd.date_range("2024-01-01", periods=50)
     return pd.DataFrame(
@@ -37,7 +37,7 @@ def sample_history():
 class TestMomentumConditions:
     """Test momentum strategy conditions."""
 
-    def test_price_above_sma_entry(self, sample_ohlcv, sample_history):
+    def test_price_above_sma_entry(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test price above SMA entry condition."""
         from src.strategies.momentum.conditions import PriceAboveSMACondition
 
@@ -51,7 +51,7 @@ class TestMomentumConditions:
         indicators = {"sma": 105.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_price_below_sma_exit(self, sample_ohlcv, sample_history):
+    def test_price_below_sma_exit(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test price below SMA exit condition."""
         from src.strategies.momentum.conditions import PriceBelowSMACondition
 
@@ -65,7 +65,7 @@ class TestMomentumConditions:
         indicators = {"sma": 100.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_rsi_oversold_entry(self, sample_ohlcv, sample_history):
+    def test_rsi_oversold_entry(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test RSI oversold entry condition."""
         from src.strategies.momentum.conditions import RSIOversoldCondition
 
@@ -79,7 +79,7 @@ class TestMomentumConditions:
         indicators = {"rsi": 50.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_rsi_overbought_exit(self, sample_ohlcv, sample_history):
+    def test_rsi_overbought_exit(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test RSI overbought exit condition."""
         from src.strategies.momentum.conditions import RSIOverboughtCondition
 
@@ -93,7 +93,7 @@ class TestMomentumConditions:
         indicators = {"rsi": 50.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_macd_bullish(self, sample_ohlcv, sample_history):
+    def test_macd_bullish(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test MACD bullish condition."""
         from src.strategies.momentum.conditions import MACDBullishCondition
 
@@ -107,7 +107,7 @@ class TestMomentumConditions:
         indicators = {"macd": 0.1, "macd_signal": 0.5}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_macd_bearish(self, sample_ohlcv, sample_history):
+    def test_macd_bearish(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test MACD bearish condition."""
         from src.strategies.momentum.conditions import MACDBearishCondition
 
@@ -121,7 +121,7 @@ class TestMomentumConditions:
         indicators = {"macd": 0.5, "macd_signal": 0.2}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_momentum_strength(self, sample_ohlcv, sample_history):
+    def test_momentum_strength(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test momentum strength condition."""
         from src.strategies.momentum.conditions import MomentumStrengthCondition
 
@@ -143,7 +143,7 @@ class TestMomentumConditions:
 class TestMeanReversionConditions:
     """Test mean reversion strategy conditions."""
 
-    def test_bollinger_lower_band(self, sample_ohlcv, sample_history):
+    def test_bollinger_lower_band(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test Bollinger lower band entry condition."""
         from src.strategies.mean_reversion.conditions import BollingerLowerBandCondition
 
@@ -157,7 +157,7 @@ class TestMeanReversionConditions:
         indicators = {"bb_lower": 90.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_bollinger_upper_band(self, sample_ohlcv, sample_history):
+    def test_bollinger_upper_band(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test Bollinger upper band exit condition."""
         from src.strategies.mean_reversion.conditions import BollingerUpperBandCondition
 
@@ -171,7 +171,7 @@ class TestMeanReversionConditions:
         indicators = {"bb_upper": 110.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_price_above_sma_exit(self, sample_ohlcv, sample_history):
+    def test_price_above_sma_exit(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test price above SMA for mean reversion exit."""
         from src.strategies.mean_reversion.conditions import PriceAboveSMACondition
 
@@ -185,7 +185,7 @@ class TestMeanReversionConditions:
         indicators = {"sma": 105.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_price_below_sma_entry(self, sample_ohlcv, sample_history):
+    def test_price_below_sma_entry(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test price below SMA for mean reversion entry."""
         from src.strategies.mean_reversion.conditions import PriceBelowSMACondition
 
@@ -199,7 +199,9 @@ class TestMeanReversionConditions:
         indicators = {"sma": 100.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_rsi_oversold_entry_mean_reversion(self, sample_ohlcv, sample_history):
+    def test_rsi_oversold_entry_mean_reversion(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test RSI oversold for mean reversion entry."""
         from src.strategies.mean_reversion.conditions import RSIOversoldCondition
 
@@ -213,7 +215,9 @@ class TestMeanReversionConditions:
         indicators = {"rsi": 50.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_rsi_overbought_exit_mean_reversion(self, sample_ohlcv, sample_history):
+    def test_rsi_overbought_exit_mean_reversion(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test RSI overbought for mean reversion exit."""
         from src.strategies.mean_reversion.conditions import RSIOverboughtCondition
 
@@ -227,7 +231,9 @@ class TestMeanReversionConditions:
         indicators = {"rsi": 50.0}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_mean_reversion_strength(self, sample_ohlcv, sample_history):
+    def test_mean_reversion_strength(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test mean reversion strength condition."""
         from src.strategies.mean_reversion.conditions import MeanReversionStrengthCondition
 
@@ -245,7 +251,9 @@ class TestMeanReversionConditions:
 class TestPairTradingConditions:
     """Test pair trading strategy conditions."""
 
-    def test_spread_zscore_oversold(self, sample_ohlcv, sample_history):
+    def test_spread_zscore_oversold(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test spread Z-score oversold condition."""
         from src.strategies.pair_trading.conditions import SpreadZScoreCondition
 
@@ -259,7 +267,9 @@ class TestPairTradingConditions:
         indicators = {"z_score": 0.5}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_spread_zscore_overbought(self, sample_ohlcv, sample_history):
+    def test_spread_zscore_overbought(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test spread Z-score overbought condition."""
         from src.strategies.pair_trading.conditions import SpreadZScoreCondition
 
@@ -273,7 +283,7 @@ class TestPairTradingConditions:
         indicators = {"z_score": 0.5}
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_spread_mean_reversion(self, sample_ohlcv, sample_history):
+    def test_spread_mean_reversion(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test spread mean reversion condition."""
         from src.strategies.pair_trading.conditions import SpreadMeanReversionCondition
 
@@ -289,7 +299,7 @@ class TestPairTradingConditions:
         result = condition.evaluate(sample_ohlcv, sample_history, indicators)
         assert isinstance(result, bool)
 
-    def test_spread_deviation(self, sample_ohlcv, sample_history):
+    def test_spread_deviation(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test spread deviation condition."""
         from src.strategies.pair_trading.conditions import SpreadDeviationCondition
 
@@ -312,7 +322,7 @@ class TestPairTradingConditions:
 class TestConditionsWithMissingIndicators:
     """Test conditions handle missing indicators gracefully."""
 
-    def test_momentum_missing_sma(self, sample_ohlcv, sample_history):
+    def test_momentum_missing_sma(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test momentum condition with missing SMA."""
         from src.strategies.momentum.conditions import PriceAboveSMACondition
 
@@ -322,7 +332,7 @@ class TestConditionsWithMissingIndicators:
         # Should return False when indicator missing
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_momentum_missing_rsi(self, sample_ohlcv, sample_history):
+    def test_momentum_missing_rsi(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test momentum condition with missing RSI."""
         from src.strategies.momentum.conditions import RSIOversoldCondition
 
@@ -331,7 +341,7 @@ class TestConditionsWithMissingIndicators:
 
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_momentum_missing_macd(self, sample_ohlcv, sample_history):
+    def test_momentum_missing_macd(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
         """Test momentum condition with missing MACD."""
         from src.strategies.momentum.conditions import MACDBullishCondition
 
@@ -340,7 +350,9 @@ class TestConditionsWithMissingIndicators:
 
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_mean_reversion_missing_bollinger(self, sample_ohlcv, sample_history):
+    def test_mean_reversion_missing_bollinger(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test mean reversion condition with missing Bollinger bands."""
         from src.strategies.mean_reversion.conditions import BollingerLowerBandCondition
 
@@ -349,7 +361,9 @@ class TestConditionsWithMissingIndicators:
 
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
-    def test_pair_trading_missing_zscore(self, sample_ohlcv, sample_history):
+    def test_pair_trading_missing_zscore(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test pair trading condition with missing Z-score."""
         from src.strategies.pair_trading.conditions import SpreadZScoreCondition
 
@@ -362,7 +376,9 @@ class TestConditionsWithMissingIndicators:
 class TestConditionIntegration:
     """Integration tests combining multiple conditions."""
 
-    def test_momentum_entry_signals(self, sample_ohlcv, sample_history):
+    def test_momentum_entry_signals(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test multiple momentum entry signals together."""
         from src.strategies.momentum.conditions import (
             MACDBullishCondition,
@@ -381,7 +397,9 @@ class TestConditionIntegration:
         assert rsi_oversold is True
         assert macd_bullish is True
 
-    def test_mean_reversion_entry_signals(self, sample_ohlcv, sample_history):
+    def test_mean_reversion_entry_signals(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test multiple mean reversion entry signals together."""
         from src.strategies.mean_reversion.conditions import (
             BollingerLowerBandCondition,
@@ -402,7 +420,9 @@ class TestConditionIntegration:
         assert rsi_oversold is True
         assert below_sma is True
 
-    def test_pair_trading_spread_signals(self, sample_ohlcv, sample_history):
+    def test_pair_trading_spread_signals(
+        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
+    ) -> None:
         """Test pair trading signals."""
         from src.strategies.pair_trading.conditions import SpreadZScoreCondition
 

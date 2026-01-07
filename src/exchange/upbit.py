@@ -2,6 +2,7 @@
 Upbit exchange implementation.
 """
 
+import logging
 from datetime import datetime
 from typing import cast
 
@@ -18,7 +19,7 @@ from src.exchange.base import Exchange
 from src.exchange.types import Balance, Order, OrderSide, OrderStatus, OrderType, Ticker
 
 
-def _get_logger():
+def _get_logger() -> logging.Logger:
     """Lazy import logger to avoid circular imports."""
     from src.utils.logger import get_logger
 

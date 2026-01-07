@@ -6,6 +6,7 @@ Assumes prices will revert to their mean after deviating.
 """
 
 from collections.abc import Sequence
+from typing import Any
 
 import pandas as pd
 
@@ -180,7 +181,7 @@ class SimpleMeanReversionStrategy(MeanReversionStrategy):
     def __init__(
         self,
         name: str = "SimpleMeanReversion",
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         # Only use Bollinger Bands
         super().__init__(

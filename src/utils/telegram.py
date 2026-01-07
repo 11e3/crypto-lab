@@ -5,6 +5,7 @@ Provides functions to send messages via Telegram bot.
 """
 
 import os
+from typing import Any
 
 import requests
 
@@ -105,7 +106,7 @@ class TelegramNotifier:
         action: str,
         ticker: str,
         price: float,
-        **kwargs,
+        **kwargs: Any,
     ) -> bool:
         """
         Send formatted trade signal message.

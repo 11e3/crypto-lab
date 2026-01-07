@@ -87,7 +87,7 @@ def test_generate_html_report(
     sample_backtest_report: BacktestReport,
     sample_backtest_config: BacktestConfig,
     tmp_path: Path,
-):
+) -> None:
     """Test generating a full HTML report."""
     save_path = tmp_path / "report.html"
     tickers = ["KRW-BTC", "KRW-ETH"]
@@ -140,7 +140,9 @@ def test_generate_html_report(
     assert '<td class="negative">1</td>' in html_content
 
 
-def test_generate_html_report_no_trades(sample_backtest_config: BacktestConfig, tmp_path: Path):
+def test_generate_html_report_no_trades(
+    sample_backtest_config: BacktestConfig, tmp_path: Path
+) -> None:
     """Test generating a report with no trades."""
     dates = pd.to_datetime(pd.date_range("2024-01-01", periods=20, freq="D")).date
     equity_curve = np.linspace(1_000_000, 1_000_000, 20)  # Flat equity

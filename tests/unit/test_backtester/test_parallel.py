@@ -4,6 +4,7 @@ Tests for parallel backtesting functionality.
 
 import multiprocessing as mp
 from datetime import date
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,7 +25,7 @@ from src.strategies.base import Strategy
 
 
 @pytest.fixture
-def mock_config():
+def mock_config() -> BacktestConfig:
     return BacktestConfig(
         initial_capital=10000.0,
         fee_rate=0.001,
@@ -36,7 +37,7 @@ def mock_config():
 
 
 @pytest.fixture
-def mock_strategy():
+def mock_strategy() -> MagicMock:
     """Create a mock strategy."""
     strategy = MagicMock(spec=Strategy)
     strategy.name = "TestStrategy"
@@ -49,7 +50,7 @@ def mock_strategy():
 
 
 @pytest.fixture
-def mock_result():
+def mock_result() -> BacktestResult:
     """Create a mock BacktestResult."""
     result = BacktestResult()
     result.strategy_name = "TestStrategy"
@@ -60,7 +61,7 @@ def mock_result():
 
 
 @pytest.fixture
-def sample_task(mock_strategy, mock_config):
+def sample_task(mock_strategy: MagicMock, mock_config: BacktestConfig) -> ParallelBacktestTask:
     """Create a sample ParallelBacktestTask."""
     return ParallelBacktestTask(
         name="TestTask",
@@ -82,7 +83,7 @@ def sample_task(mock_strategy, mock_config):
 class TestParallelBacktestTask:
     """Test ParallelBacktestTask dataclass."""
 
-    def test_task_creation(self, sample_task):
+    def test_task_creation(self, sample_task: ParallelBacktestTask) -> None:
         """Test task creation with all parameters."""
         assert sample_task.name == "TestTask"
         assert sample_task.tickers == ["KRW-BTC", "KRW-ETH"]
@@ -91,13 +92,15 @@ class TestParallelBacktestTask:
         assert sample_task.start_date == date(2023, 1, 1)
         assert sample_task.end_date == date(2023, 12, 31)
 
-    def test_task_repr(self, sample_task):
+    def test_task_repr(self, sample_task: ParallelBacktestTask) -> None:
         """Test task string representation."""
         repr_str = repr(sample_task)
         assert "TestTask" in repr_str
         assert "KRW-BTC" in repr_str
 
-    def test_task_without_optional_params(self, mock_strategy, mock_config):
+    def test_task_without_optional_params(
+        self, mock_strategy: MagicMock, mock_config: BacktestConfig
+    ) -> None:
         """Test task creation without optional parameters."""
         task = ParallelBacktestTask(
             name="SimpleTask",
@@ -120,7 +123,12 @@ class TestRunSingleBacktest:
     """Test single backtest worker function."""
 
     @patch("src.backtester.parallel.run_backtest")
-    def test_run_single_backtest_success(self, mock_run_backtest, sample_task, mock_result):
+    def test_run_single_backtest_success(
+        self,
+        mock_run_backtest: MagicMock,
+        sample_task: ParallelBacktestTask,
+        mock_result: BacktestResult,
+    ) -> None:
         """Test successful single backtest execution."""
         mock_run_backtest.return_value = mock_result
 
@@ -137,7 +145,9 @@ class TestRunSingleBacktest:
         assert call_kwargs["end_date"] == sample_task.end_date
 
     @patch("src.backtester.parallel.run_backtest")
-    def test_run_single_backtest_exception(self, mock_run_backtest, sample_task):
+    def test_run_single_backtest_exception(
+        self, mock_run_backtest: MagicMock, sample_task: ParallelBacktestTask
+    ) -> None:
         """Test single backtest with exception handling."""
         mock_run_backtest.side_effect = ValueError("Test error")
 
@@ -157,24 +167,30 @@ class TestRunSingleBacktest:
 class TestParallelBacktestRunner:
     """Test ParallelBacktestRunner class."""
 
-    def test_runner_initialization_default(self):
+    def test_runner_initialization_default(self) -> None:
         """Test runner initialization with default worker count."""
         runner = ParallelBacktestRunner()
         assert runner.n_workers == max(1, mp.cpu_count() - 1)
 
-    def test_runner_initialization_custom_workers(self):
+    def test_runner_initialization_custom_workers(self) -> None:
         """Test runner initialization with custom worker count."""
         runner = ParallelBacktestRunner(n_workers=2)
         assert runner.n_workers == 2
 
-    def test_runner_initialization_single_worker(self):
+    def test_runner_initialization_single_worker(self) -> None:
         """Test runner initialization with single worker."""
         runner = ParallelBacktestRunner(n_workers=1)
         assert runner.n_workers == 1
 
     @patch("src.backtester.parallel._run_single_backtest")
     @patch("multiprocessing.Pool")
-    def test_run_empty_tasks(self, mock_pool_class, mock_run, mock_config, mock_strategy):
+    def test_run_empty_tasks(
+        self,
+        mock_pool_class: MagicMock,
+        mock_run: MagicMock,
+        mock_config: BacktestConfig,
+        mock_strategy: MagicMock,
+    ) -> None:
         """Test run with empty task list."""
         runner = ParallelBacktestRunner(n_workers=2)
         result = runner.run([])
@@ -183,7 +199,9 @@ class TestParallelBacktestRunner:
         mock_pool_class.assert_not_called()
 
     @patch("src.backtester.parallel._run_single_backtest")
-    def test_run_sequential_empty_tasks(self, mock_run, mock_config, mock_strategy):
+    def test_run_sequential_empty_tasks(
+        self, mock_run: MagicMock, mock_config: BacktestConfig, mock_strategy: MagicMock
+    ) -> None:
         """Test sequential run with empty task list."""
         runner = ParallelBacktestRunner(n_workers=2)
         result = runner.run_sequential([])
@@ -192,7 +210,9 @@ class TestParallelBacktestRunner:
         mock_run.assert_not_called()
 
     @patch("src.backtester.parallel._run_single_backtest")
-    def test_run_sequential_single_task(self, mock_run, sample_task, mock_result):
+    def test_run_sequential_single_task(
+        self, mock_run: MagicMock, sample_task: ParallelBacktestTask, mock_result: BacktestResult
+    ) -> None:
         """Test sequential run with single task."""
         mock_run.return_value = ("TestTask", mock_result)
         runner = ParallelBacktestRunner(n_workers=2)
@@ -204,7 +224,13 @@ class TestParallelBacktestRunner:
         mock_run.assert_called_once_with(sample_task)
 
     @patch("src.backtester.parallel._run_single_backtest")
-    def test_run_sequential_multiple_tasks(self, mock_run, mock_config, mock_strategy, mock_result):
+    def test_run_sequential_multiple_tasks(
+        self,
+        mock_run: MagicMock,
+        mock_config: BacktestConfig,
+        mock_strategy: MagicMock,
+        mock_result: BacktestResult,
+    ) -> None:
         """Test sequential run with multiple tasks."""
         task1 = ParallelBacktestTask(
             name="Task1",
@@ -237,7 +263,9 @@ class TestParallelBacktestRunner:
         assert mock_run.call_count == 2
 
     @patch("src.backtester.parallel._run_single_backtest")
-    def test_run_sequential_with_progress_callback(self, mock_run, sample_task, mock_result):
+    def test_run_sequential_with_progress_callback(
+        self, mock_run: MagicMock, sample_task: ParallelBacktestTask, mock_result: BacktestResult
+    ) -> None:
         """Test sequential run with progress callback."""
         mock_run.return_value = ("TestTask", mock_result)
         runner = ParallelBacktestRunner(n_workers=1)
@@ -249,7 +277,9 @@ class TestParallelBacktestRunner:
         callback.assert_called_once_with("TestTask", mock_result)
 
     @patch("src.backtester.parallel._run_single_backtest")
-    def test_run_with_progress_callback(self, mock_run, sample_task, mock_result):
+    def test_run_with_progress_callback(
+        self, mock_run: MagicMock, sample_task: ParallelBacktestTask, mock_result: BacktestResult
+    ) -> None:
         """Test parallel run with progress callback."""
         mock_run.return_value = ("TestTask", mock_result)
         runner = ParallelBacktestRunner(n_workers=1)
@@ -278,7 +308,9 @@ class TestCompareStrategies:
     """Test strategy comparison functionality."""
 
     @patch("src.backtester.parallel.ParallelBacktestRunner.run")
-    def test_compare_strategies(self, mock_runner_run, mock_config):
+    def test_compare_strategies(
+        self, mock_runner_run: MagicMock, mock_config: BacktestConfig
+    ) -> None:
         """Test comparing multiple strategies."""
         strategy1 = MagicMock(spec=Strategy)
         strategy1.name = "Strategy1"
@@ -308,7 +340,9 @@ class TestCompareStrategies:
         assert "Strategy2" in results
 
     @patch("src.backtester.parallel.ParallelBacktestRunner.run")
-    def test_compare_single_strategy(self, mock_runner_run, mock_config, mock_strategy):
+    def test_compare_single_strategy(
+        self, mock_runner_run: MagicMock, mock_config: BacktestConfig, mock_strategy: MagicMock
+    ) -> None:
         """Test comparing single strategy."""
         result = BacktestResult()
         result.strategy_name = "TestStrategy"
@@ -334,10 +368,12 @@ class TestOptimizeParameters:
     """Test parameter optimization functionality."""
 
     @patch("src.backtester.parallel.ParallelBacktestRunner.run")
-    def test_optimize_parameters_simple_grid(self, mock_runner_run, mock_config, mock_strategy):
+    def test_optimize_parameters_simple_grid(
+        self, mock_runner_run: MagicMock, mock_config: BacktestConfig, mock_strategy: MagicMock
+    ) -> None:
         """Test parameter optimization with simple grid."""
 
-        def strategy_factory(params):
+        def strategy_factory(params: dict[str, Any]) -> MagicMock:
             strategy = MagicMock(spec=Strategy)
             strategy.name = f"Strategy_{params['param1']}"
             return strategy
@@ -366,10 +402,12 @@ class TestOptimizeParameters:
         assert len(tasks) == 4  # 2 x 2 combinations
 
     @patch("src.backtester.parallel.ParallelBacktestRunner.run")
-    def test_optimize_parameters_single_param(self, mock_runner_run, mock_config, mock_strategy):
+    def test_optimize_parameters_single_param(
+        self, mock_runner_run: MagicMock, mock_config: BacktestConfig, mock_strategy: MagicMock
+    ) -> None:
         """Test parameter optimization with single parameter."""
 
-        def strategy_factory(params):
+        def strategy_factory(params: dict[str, Any]) -> MagicMock:
             strategy = MagicMock(spec=Strategy)
             strategy.name = f"Strategy_{params['sma']}"
             return strategy
@@ -394,10 +432,12 @@ class TestOptimizeParameters:
         assert len(tasks) == 3  # 3 values for single parameter
 
     @patch("src.backtester.parallel.ParallelBacktestRunner.run")
-    def test_optimize_parameters_three_dimensions(self, mock_runner_run, mock_config):
+    def test_optimize_parameters_three_dimensions(
+        self, mock_runner_run: MagicMock, mock_config: BacktestConfig
+    ) -> None:
         """Test parameter optimization with three-dimensional grid."""
 
-        def strategy_factory(params):
+        def strategy_factory(params: dict[str, Any]) -> MagicMock:
             strategy = MagicMock(spec=Strategy)
             strategy.name = f"S_{params['a']}_{params['b']}_{params['c']}"
             return strategy
@@ -433,7 +473,9 @@ class TestParallelIntegration:
     """Integration tests for parallel backtesting."""
 
     @patch("src.backtester.parallel.run_backtest")
-    def test_sequential_backtest_workflow(self, mock_run_backtest, mock_config, mock_strategy):
+    def test_sequential_backtest_workflow(
+        self, mock_run_backtest: MagicMock, mock_config: BacktestConfig, mock_strategy: MagicMock
+    ) -> None:
         """Test complete sequential backtest workflow."""
         result = BacktestResult()
         result.strategy_name = "TestStrategy"
@@ -455,7 +497,9 @@ class TestParallelIntegration:
         assert results["Test"].total_trades == 5
 
     @patch("src.backtester.parallel.run_backtest")
-    def test_error_handling_in_sequential(self, mock_run_backtest, mock_config, mock_strategy):
+    def test_error_handling_in_sequential(
+        self, mock_run_backtest: MagicMock, mock_config: BacktestConfig, mock_strategy: MagicMock
+    ) -> None:
         """Test error handling in sequential execution."""
         mock_run_backtest.side_effect = [
             BacktestResult(),  # Success

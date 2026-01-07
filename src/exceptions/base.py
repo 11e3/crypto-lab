@@ -2,6 +2,8 @@
 Base exception classes for the trading system.
 """
 
+from typing import Any
+
 
 class TradingSystemError(Exception):
     """
@@ -11,7 +13,7 @@ class TradingSystemError(Exception):
     generic error handling and consistent error reporting.
     """
 
-    def __init__(self, message: str, details: dict | None = None) -> None:
+    def __init__(self, message: str, details: dict[str, Any] | None = None) -> None:
         """
         Initialize trading system error.
 

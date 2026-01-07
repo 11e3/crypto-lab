@@ -13,7 +13,7 @@ from src.execution.signal_handler import SignalHandler
 
 
 # Deprecated: Import with warning
-def __getattr__(name: str):
+def __getattr__(name: str) -> type:
     """Lazy import for deprecated TradingBot with warning."""
     if name == "TradingBot":
         warnings.warn(

@@ -1,12 +1,24 @@
-0-=0# 🚀 Crypto Quant System
+# 🚀 Crypto Quant System
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
+<!-- Status Badges -->
+![Python](https://img.shields.io/badge/Python-3.14+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Tests](https://img.shields.io/badge/Tests-495%20passing-brightgreen.svg)
-![Coverage](https://img.shields.io/badge/Coverage-80%25-success.svg)
-![Code Style](https://img.shields.io/badge/Code%20Style-Ruff-black.svg)
+
+<!-- CI/CD Badges -->
+![CI](https://github.com/11e3/crypto-quant-system/actions/workflows/ci.yml/badge.svg)
+![CodeQL](https://github.com/11e3/crypto-quant-system/actions/workflows/codeql.yml/badge.svg)
+![Docs](https://github.com/11e3/crypto-quant-system/actions/workflows/docs.yml/badge.svg)
+
+<!-- Quality Badges -->
+![Coverage](https://codecov.io/gh/11e3/crypto-quant-system/branch/main/graph/badge.svg)
+![Code Style](https://img.shields.io/badge/Code%20Style-Ruff%20%2B%20Black-black.svg)
+![Type Check](https://img.shields.io/badge/Type%20Check-Mypy-blue.svg)
+
+<!-- Project Badges -->
+![Tests](https://img.shields.io/badge/Tests-908%20passed-green.svg)
+![Coverage Threshold](https://img.shields.io/badge/Coverage%20Threshold-87.31%25-brightgreen.svg)
 
 **변동성 돌파 전략을 사용한 암호화폐 자동 거래 시스템**
 
@@ -20,12 +32,20 @@
 
 Crypto Quant System은 여러 암호화폐 거래소(Upbit 등)를 지원하는 프로덕션 준비가 완료된 자동 거래 시스템입니다. 포괄적인 백테스팅 기능, 실시간 거래 실행, 그리고 광범위한 성능 분석을 갖춘 정교한 변동성 돌파(VBO) 전략을 구현합니다.
 
+### 💼 요약
+
+- 재현 가능한 데모: `examples/`와 `deploy/docker-compose.yml`로 5분 내 실행
+- 신뢰성 가시화: 테스트/커버리지/타입 검사 CI, 보안 스캔(CodeQL)
+- 설계 품질: 이벤트 버스·주문/포지션·전략 인터페이스 중심의 모듈 구조
+- 문서 접근성: Sphinx 기반 API/가이드, GitHub Pages 배포
+- 성과 제시: 테어시트/벤치마크와 거래비용 반영 결과 보고
+
 ### 🎯 주요 특징
 
 - **고성능 백테스팅**: 빠른 과거 데이터 분석을 위한 pandas/numpy 기반 벡터화 엔진
 - **모듈식 전략 시스템**: 유연한 전략 설계를 위한 구성 가능한 조건 및 필터
 - **프로덕션 준비 완료**: 완전한 오류 처리, 로깅, 모니터링 및 Docker 배포
-- **충분한 테스트**: 495개 이상의 테스트 케이스로 80% 이상의 테스트 커버리지
+- **충분한 테스트**: 900개 이상의 테스트 케이스로 80% 이상의 테스트 커버리지
 - **현대적 Python**: 타입 힌트, Pydantic 설정, SOLID 원칙, 클린 아키텍처
 
 ## ✨ 기능
@@ -74,18 +94,19 @@ Crypto Quant System은 여러 암호화폐 거래소(Upbit 등)를 지원하는 
 
 ```bash
 # 저장소 클론
-git clone https://github.com/your-username/crypto-quant-system.git
+git clone https://github.com/11e3/crypto-quant-system.git
 cd crypto-quant-system
 
-# uv 설치 (설치되지 않은 경우)
-# Windows:
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-# Linux/macOS:
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# 가상환경 생성 (Windows)
+python -m venv .venv
+.\.venv\Scripts\activate
 
-# 의존성 설치
-uv sync --extra dev
+# 의존성 설치 (개발용 extras 포함)
+pip install -U pip
+pip install -e .[dev]
 ```
+
+참고: `uv`를 사용하는 고속 설치를 선호한다면 `uv sync --extra dev`를 이용할 수 있습니다.
 
 ### 백테스팅
 
@@ -210,10 +231,10 @@ uv run pytest --cov=src --cov-report=html
 uv run pytest tests/unit/test_strategy.py
 ```
 
-**테스트 통계:**
-- 총 테스트: 495개 이상
-- 커버리지: 80% 이상 (목표: 80%)
-- 테스트 유형: 단위, 통합, 픽스처
+**테스트 원칙:**
+- 커버리지 목표: 80%+ 유지, 핵심 모듈은 85%+ 지향
+- 테스트 유형: 단위, 통합, 회귀, 프로퍼티 기반 테스트
+- CI: 린트/타입 검사/테스트/커버리지 업로드를 자동화
 
 ## � 코드 품질 검사
 
@@ -289,21 +310,119 @@ docker-compose up -d
 - ✅ **문서**: 포괄적인 문서 및 독스트링
 - ✅ **자동화**: Pre-commit hook으로 커밋 전 품질 검사
 
-## ⚠️ 면책 조항
+## ⚠️ 면책 조항 및 위험 공고
 
 **이 소프트웨어는 교육 및 연구 목적으로만 제공됩니다.**
 
-- 암호화폐 거래는 상당한 손실 위험이 수반됩니다
-- 과거 성과는 미래 결과를 보장하지 않습니다
-- 실거래 전에 항상 백테스팅으로 충분히 테스트하세요
-- 본인의 책임 하에 사용하세요
-- 작성자는 어떠한 금융 손실에 대해서도 책임지지 않습니다
+### 주요 위험
+
+- 🔴 **자본 손실 위험**: 투자한 자본을 **완전히 잃을 수 있습니다**
+- 🔴 **극변동성**: 암호화폐는 하루에 20-30% 이상 변동 가능
+- 🔴 **보장 없음**: 과거 성과는 미래 결과를 **절대 보장하지 않습니다**
+- 🔴 **시스템 위험**: 소프트웨어 버그, API 장애, 거래소 폐쇄 가능성
+
+### 필수 읽기
+
+사용 전에 반드시 읽어주세요:
+- 📖 [면책조항 (DISCLAIMER.md)](DISCLAIMER.md) - 자세한 위험 경고
+- 📖 [데이터 사용 정책 (DATA_USAGE_POLICY.md)](DATA_USAGE_POLICY.md) - 개인정보 보호
+- 📖 [보안 정책 (SECURITY.md)](SECURITY.md) - API 키 보안 관행
+
+### 책임 사항
+
+**당신의 책임:**
+- ✅ 실거래 전에 항상 모의 거래(Paper Trading)로 충분히 테스트
+- ✅ 여유 자금(잃어도 상관없는 금액)으로만 거래
+- ✅ 정기적으로 시스템 성과 모니터링
+- ✅ 법적/세금 책임은 사용자가 부담
+
+**작성자/기여자는 책임지지 않습니다:**
+- ❌ 금융 손실
+- ❌ 거래소 문제로 인한 피해
+- ❌ 소프트웨어 버그로 인한 오류 거래
+- ❌ 세금/규제 준수 실패
 
 ## 📄 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
-## 🙏 감사의 말
+## 🔐 보안 및 준수
+
+### 보안 기능
+
+- ✅ **환경 변수 기반 설정**: API 키는 소스 코드에 포함되지 않음
+- ✅ **타입 안전성**: MyPy 검증으로 타입 오류 방지
+- ✅ **코드 분석**: CodeQL을 통한 보안 취약점 자동 스캔
+- ✅ **종속성 검사**: Bandit로 보안 문제 감지
+- ✅ **데이터 보호**: 거래 기록 암호화 권장
+
+### 보안 취약점 신고
+
+보안 문제 발견 시:
+1. ❌ 공개 이슈 생성 금지
+2. ✅ [GitHub Security Advisory](https://github.com/11e3/crypto-quant-system/security/advisories/new) 사용
+3. ✅ 또는 메인테이너에게 직접 연락
+
+자세한 내용: [SECURITY.md](SECURITY.md)
+
+### 준법 사항
+
+**사용자는 다음을 준수해야 합니다:**
+
+- 🇰🇷 한국: 특정금융정보법 (거래소 선택)
+- 🇺🇸 미국: FinCEN, CFTC 규정
+- 🇪🇺 유럽: MiFID II, GDPR 준수
+- 📋 국제: 해당 국가의 암호화폐 거래 규정
+
+**세금:**
+- 💰 거래 수익은 과세 대상
+- 📊 거래 기록 7년 보관 권장
+- ⚠️ 세금 신고는 사용자 책임
+
+## � 포트폴리오 & 학습 자료
+
+### 📖 Jupyter Notebooks
+시스템 사용 방법을 배우기 위한 **실습 가이드**:
+
+- **[01-Backtesting-Case-Study.ipynb](notebooks/01-Backtesting-Case-Study.ipynb)**
+  - 변동성 돌파 전략 실행 및 분석
+  - 자산 곡선, 드로우다운, 거래 통계
+  - 성능 지표 해석 (Sharpe, Sortino, Calmar)
+
+- **[02-Portfolio-Optimization.ipynb](notebooks/02-Portfolio-Optimization.ipynb)**
+  - 포트폴리오 구성: MPT vs 리스크 패리티 vs 켈리
+  - 거래비용 모델링
+  - 효율적 변경선(Efficient Frontier) 생성
+
+- **[03-Live-Trading-Analysis.ipynb](notebooks/03-Live-Trading-Analysis.ipynb)**
+  - 실시간 거래 시뮬레이션
+  - 위험 관리 메커니즘
+  - 라이브 거래 체크리스트
+
+👉 **[전체 노트북 가이드](notebooks/README.md)** 참조
+
+### 📊 성과 예시
+
+예제 코드 실행 결과:
+```
+초기 자본: 1,000,000 KRW
+최종 자산: 1,254,891 KRW
+수익률: +25.5%
+거래 수: 4,786회
+승률: 35.4%
+Sharpe 비율: 1.82
+최대 낙폭: -12.3%
+```
+
+### 🎓 학습 경로
+
+1. **기초** (1주): [README.md 읽기, 예제 실행](#-quick-start)
+2. **백테스팅** (1주): [노트북 01 - 백테스팅 사례 연구](notebooks/01-Backtesting-Case-Study.ipynb)
+3. **포트폴리오** (1주): [노트북 02 - 포트폴리오 최적화](notebooks/02-Portfolio-Optimization.ipynb)
+4. **라이브** (1주): [노트북 03 - 실거래 시뮬레이션](notebooks/03-Live-Trading-Analysis.ipynb)
+5. **실습** (진행 중): [사용자 정의 전략 개발](#-contributing)
+
+## �🙏 감사의 말
 
 - Upbit API 통합을 위한 [pyupbit](https://github.com/sharebook-kr/pyupbit)
 - 다양한 거래소 지원 확장 가능한 아키텍처

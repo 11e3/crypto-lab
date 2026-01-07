@@ -62,7 +62,7 @@ def optimize_dtypes(df: pd.DataFrame) -> pd.DataFrame:
     for col in df.columns:
         col_type = df[col].dtype
 
-        if col_type is not object:
+        if not isinstance(col_type, type(object)):
             c_min: Any = df[col].min()
             c_max: Any = df[col].max()
 
