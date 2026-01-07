@@ -39,23 +39,23 @@ class OptimizationResult:
 class ParameterOptimizer:
     """
     Optimize strategy parameters using various search methods.
-    
+
     파라미터 최적화의 목표:
     - 전략의 핵심 파라미터(SMA 기간, 노이즈 필터, ATR 배수 등)를 체계적으로 조정
     - 최고 수익률(Sharpe Ratio, CAGR 등)을 달성하는 최적 파라미터 조합 탐색
     - 과적합(Overfitting) 회피 = 과거 데이터에만 맞춘 파라미터 제거
-    
+
     수익 메커니즘:
     1. 파라미터 = 전략의 기술적 설정 값
        예: SMA(20) → SMA(30) = 신호 빈도 감소, 신뢰도 증가
     2. 각 파라미터 조합마다 백테스트 실행
     3. 지정된 메트릭(Sharpe Ratio 등) 계산
     4. 최고 점수 파라미터 조합 선택
-    
+
     최적화 방식:
     - Grid Search: 모든 조합 시도 (철저하지만 느림)
     - Random Search: 일부 조합만 무작위 선택 (빠르지만 최적 놓칠 수 있음)
-    
+
     주의사항:
     - 모수가 많으면 조합 수가 폭증 (5개 모수 × 10값 각 = 100,000 조합)
     - 과적합: 특정 기간 최적값이 다른 기간에는 실패할 수 있음
@@ -102,12 +102,12 @@ class ParameterOptimizer:
     ) -> OptimizationResult:
         """
         Optimize parameters using specified method.
-        
+
         파라미터 최적화 메인 함수:
         - param_grid의 모든 조합(또는 일부)에 대해 백테스트 실행
         - 지정된 메트릭 최적화
         - 최고 성능 파라미터 반환
-        
+
         최적화 대상 메트릭:
         - sharpe_ratio: 변동성 대비 수익 (위험조정수익 최대화)
         - cagr: 연율수익률 (절대 수익 최대화)
@@ -115,14 +115,14 @@ class ParameterOptimizer:
         - calmar_ratio: CAGR/MDD (수익 대비 리스크)
         - profit_factor: 총수익/총손실 (거래 품질)
         - win_rate: 승률 (신호 정확도)
-        
+
         예시:
         param_grid = {
             'sma_period': [10, 20, 30, 40],  # SMA 기간 4가지
             'lookback': [5, 10, 15],          # Lookback 기간 3가지
         }
         → 4 × 3 = 12 조합 백테스트
-        
+
         최고 점수 조합의 백테스트 결과를 반환
 
         Args:
@@ -162,33 +162,33 @@ class ParameterOptimizer:
         maximize: bool,
     ) -> OptimizationResult:
         """Perform grid search over parameter space.
-        
+
         모든 파라미터 조합을 체계적으로 탐색:
-        
+
         동작:
         1. param_grid의 모든 값 조합 생성 (Cartesian product)
         2. 각 조합마다 전략 객체 생성 및 백테스트 실행
         3. 병렬 처리로 속도 향상 (n_workers 병렬 작업)
         4. 지정된 메트릭으로 점수 계산
         5. 최고 점수 조합 반환
-        
+
         예시:
         param_grid = {
             'sma_period': [10, 20],
             'lookback': [5, 10],
         }
         조합: (10, 5), (10, 10), (20, 5), (20, 10) = 4개
-        
+
         각 조합별 백테스트 → 결과 비교 → 최적값 선택
-        
+
         장점:
         - 모든 조합을 시도하므로 최적값 발견 확실
         - 공간을 전체적으로 이해 가능
-        
+
         단점:
         - 조합 수가 지수로 증가 (5 파라미터 × 10값 = 100,000 조합)
         - 시간 오래 소요 (병렬 처리로 완화)
-        
+
         병렬 처리 효과:
         - 1개 작업 = 5분
         - 100개 조합 = 500분 (순차) vs 50분 (10 workers)
@@ -266,34 +266,34 @@ class ParameterOptimizer:
         n_iter: int,
     ) -> OptimizationResult:
         """Perform random search over parameter space.
-        
+
         파라미터 공간에서 일부 조합을 무작위로 탐색:
-        
+
         동작:
         1. n_iter번 반복
         2. 각 반복마다 param_grid의 각 파라미터에서 무작위로 값 선택
         3. 그 조합으로 전략 생성 및 백테스트 실행
         4. 결과 수집 및 정렬
         5. 최고 점수 조합 반환
-        
+
         무작위 선택 예시:
         param_grid = {'sma_period': [10, 20, 30], 'lookback': [5, 10, 15]}
-        
+
         반복1: sma_period=20, lookback=5 → 백테스트
         반복2: sma_period=10, lookback=15 → 백테스트
         반복3: sma_period=30, lookback=10 → 백테스트
         ... (n_iter번 반복)
-        
+
         특징:
         - Grid Search보다 빠름 (조합 수 제한)
         - 최적값을 놓칠 수 있지만, 다양한 조합 탐색
         - 탐색 공간이 넓을 때(100개 조합 이상) 추천
-        
+
         사용 시나리오:
         - 파라미터가 많거나 값의 범위가 넓을 때
         - 대략적인 최적값만 필요할 때
         - 계산 자원 제약이 있을 때
-        
+
         예시:
         n_iter=100, n_workers=10 → 약 10분 (기존 1000분)
         """

@@ -30,27 +30,27 @@ class VanillaVBO(Strategy):
        target = 어제 시가 + (어제 고저 범위) × K
        K = (어제 고가 - 어제 저가) / (더 큰 고저 범위)
        → 변동성이 크면 더 높은 목표가 = 더 보수적인 진입
-       
+
     2. 고가 돌파 매수(Breakout)
        진입조건: 당일 고가 ≥ target
        의미: 변동성 시작 신호 + 추세 전환 신호
-       
+
     3. SMA 필터 (추세 필터)
        target > SMA → 상승 추세 확인
        → 추세 없이 변동성만 있는 경우 제거 (거짓신호 제거)
-       
+
     4. 트렌드 필터 (장기 추세)
        target > SMA_Trend → 장기 상승추세 확인
        → 단기 노이즈 제거, 강한 추세만 거래
-       
+
     5. 노이즈 필터 (변동성 안정성)
        short_noise < long_noise → 단기 변동성 < 장기 평균
        → 변동성이 정상범위 내 = 신호 신뢰도 높음
-       
+
     6. SMA 퇴출 (손실 제한)
        종가 < SMA → 추세 반전 신호
        → 즉시 매도로 손실 최소화
-    
+
     수익률 최대화 포인트:
     - K값 조정: K↑ = 진입 어려움(승률↑ 거래수↓), K↓ = 진입 쉬움(거래수↑ 손실↑)
     - SMA 기간: 길수록 추세 신호 정확도 ↑, 짧을수록 거래 빈도 ↑
@@ -138,7 +138,7 @@ class VanillaVBO(Strategy):
 
     def required_indicators(self) -> list[str]:
         """Return list of required indicators.
-        
+
         VBO 전략에서 필요한 모든 지표 목록:
         - noise: 변동성 기반 K값
         - short_noise: 단기 평균 변동성 (민감도 높음)
@@ -164,28 +164,28 @@ class VanillaVBO(Strategy):
 
     def calculate_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calculate all VBO indicators.
-        
+
         VBO 전략의 핵심 지표 계산:
-        
+
         1. 변동성 K값 (noise)
            K = (고가 - 저가) / max(고가, 저가)
            범위: 0 < K < 1
            의미: 일일 변동성의 비율
-           
+
         2. 목표가(target)
            target = 시가_오늘 + (고가 - 저가)_어제 × K
            = 어제의 범위만큼 위로 올린 오늘의 시가
            의미: 변동성이 어제와 비슷하면 이 정도 올라올 것이라는 예상
-           
+
         3. SMA(short_noise_period) = 단기 이동평균
            단기 추세 파악 및 퇴출 신호
-           
+
         4. SMA_Trend(trend_sma_period) = 장기 이동평균
            장기 추세 확인 및 추세필터
-           
+
         5. Short_Noise = 최근 K값들의 평균
            recent volatility 측정
-           
+
         6. Long_Noise = 전체 K값들의 평균
            historical volatility baseline
         """
@@ -203,23 +203,23 @@ class VanillaVBO(Strategy):
         Generate entry/exit signals using vectorized operations.
 
         신호 생성의 핵심 로직:
-        
+
         [진입 신호(entry_signal)] 생성
         조건1: 고가 >= 목표가 (변동성 돌파)
         조건2: 목표가 > SMA (상승추세)
         조건3: 목표가 > SMA_Trend (장기 상승추세)
         조건4: short_noise < long_noise (안정적 변동성)
         → 모든 조건 AND 결합 (엄격한 필터링)
-        
+
         예시:
         - 고가=$100, 목표가=$98, SMA=$97, SMA_Trend=$96
         - short_noise=0.02, long_noise=0.025
         → 모든 조건 만족 → 매수 신호 발생
-        
+
         [퇴출 신호(exit_signal)] 생성
         조건: 종가 < SMA (추세 반전)
         → 빠른 손실 차단
-        
+
         신호의 품질이 수익률 직결:
         - False positives 많으면: 손실 거래 증가
         - False negatives 많으면: 수익 거래 놓침

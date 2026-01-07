@@ -131,23 +131,23 @@ class BacktestResult:
 
     def summary(self) -> str:
         """Generate summary string.
-        
+
         백테스트 결과를 읽기 쉬운 형식으로 표시:
-        
+
         [CAGR (연율수익률)]
         의미: 매년 복리로 받은 평균 수익률
         해석:
         - 10% = 우수 (S&P 500 평균)
         - 20% = 매우 우수
         - 50% 이상 = 과적합 가능성 검토
-        
+
         [MDD (최대낙폭)]
         의미: 최악의 상황에서 본 최대 손실률
         해석:
         - 20% = 정상 수준
         - 40% = 높은 위험
         - 60% 이상 = 매우 위험한 전략
-        
+
         [Calmar Ratio]
         의미: CAGR / MDD (수익대비리스크)
         해석:
@@ -155,7 +155,7 @@ class BacktestResult:
         - 0.5 ~ 1.0 = 중간 수준
         - 1.0 ~ 2.0 = 양호
         - 2.0 이상 = 우수 (높은 샤프비)
-        
+
         [Sharpe Ratio]
         의미: 변동성 대비 초과수익
         해석:
@@ -163,7 +163,7 @@ class BacktestResult:
         - 0.5 ~ 1.0 = 중간
         - 1.0 ~ 2.0 = 양호
         - 2.0 이상 = 우수
-        
+
         [승률(Win Rate)]
         의미: 수익이 나는 거래의 비율
         해석:
@@ -171,14 +171,14 @@ class BacktestResult:
         - 55% ~ 60% = 양호
         - 60% 이상 = 우수
         - 40% 이하 = 전략 재검토 필요
-        
+
         [총 거래수]
         의미: 전체 기간동안의 총 거래 횟수
         해석:
         - 적음 (< 10) = 신호 부족, 데이터 부족 가능
         - 보통 (10~50) = 정상적인 거래빈도
         - 많음 (> 50) = 높은 거래빈도 → 수수료 영향 확인
-        
+
         [최종 자본(Final Equity)]
         의미: 백테스트 마지막 날의 포트폴리오 가치
         계산: 초기자본 × (1 + total_return/100)
@@ -215,16 +215,16 @@ class VectorizedBacktestEngine:
     Vectorized backtesting engine using pandas/numpy.
 
     수익률 계산의 핵심 엔진:
-    
+
     동작 메커니즘:
     1. 진입가 = target price (VBO) + slippage 수수료
-    2. 퇴출가 = close price (종가) - slippage 수수료  
+    2. 퇴출가 = close price (종가) - slippage 수수료
     3. 거래당 수익(PnL) = (퇴출가 - 진입가) × 거래량 - 수수료
     4. 수익률(PnL%) = ((퇴출가 - 진입가) / 진입가 - 수수료율) × 100
     5. 누적수익 = 초기자본 + 모든 거래의 수익 합
     6. 포지션 사이징: position_sizing 방식(equal, volatility, kelly 등)에 따라
                     각 신호에서 매수 수량 결정 → 수익 최대화
-    
+
     주요 계산 항목:
     - 총수익률(total_return): 최종값/초기값 - 1
     - CAGR(연율수익): 기간에 따른 연간 수익률
@@ -232,7 +232,7 @@ class VectorizedBacktestEngine:
     - Sharpe Ratio: 수익/변동성 → 위험조정수익률
     - Win Rate: 수익 거래 비율 → 승률
     - Profit Factor: 총수익/총손실 → 거래 품질
-    
+
     Pre-computes all signals and uses array operations for simulation.
     """
 
@@ -281,22 +281,22 @@ class VectorizedBacktestEngine:
     ) -> pd.DataFrame:
         """
         Add entry/exit price columns with slippage.
-        
+
         수익률 계산의 기본 요소 추가:
-        
+
         진입가(entry_price) = target price + slippage
         - VBO 전략: target(돌파가) 사용 → 더 정확한 진입가
         - 기타 전략: close(종가) 사용
         - Slippage 추가: 실제 거래 시 예상과 다른 가격에 체결되는 현상 모의
-        
+
         퇴출가(exit_price) = close price - slippage
         - 항상 종가 기반
         - Slippage 차감: 매도 시 불리한 가격에서 체결되는 현상 반영
-        
+
         수익 계산 공식:
         거래수익 = (퇴출가 - 진입가) × 거래량 - 수수료
         거래수익률 = ((퇴출가 - 진입가) / 진입가 - 수수료율) × 100
-        
+
         예시 (진입가 100, 퇴출가 105, 수수료율 0.1%):
         - 거래수익률 = ((105-100)/100 - 0.001) × 100 = 4.9%
 
@@ -342,34 +342,34 @@ class VectorizedBacktestEngine:
         asset_returns: dict[str, list[float]] | None = None,
     ) -> BacktestResult:
         """Calculate performance metrics using vectorized operations.
-        
+
         수익성 평가 메트릭 계산 (벡터화된 고속 처리):
-        
+
         1. 총수익률(total_return)
            = (최종자본 / 초기자본 - 1) × 100
            의미: 전체 운용 기간에서의 수익률 (%)
            예: 초기 100만원 → 최종 150만원 = 50% 수익
-        
+
         2. CAGR(연율수익률)
            = (최종자본 / 초기자본) ^ (365 / 운용일수) - 1
            의미: 매년 평균 복리 수익률 (위험 조정 가능)
            예: 3년에 50% 수익 = 연 14.7% CAGR
-        
+
         3. MDD(최대낙폭)
            = min((피크가 - 현재값) / 피크가) × 100
            의미: 최악의 경우 최대 손실 (리스크 측정)
            예: 최고 100만원에서 60만원으로 하락 = 40% MDD
-        
+
         4. Calmar Ratio
            = CAGR / MDD
            의미: 수익 대비 리스크 비율 (높을수록 좋음)
            예: CAGR 15% / MDD 20% = 0.75 Calmar
-        
+
         5. Sharpe Ratio
            = (평균 일수익 / 수익 표준편차) × √252
            의미: 변동성 대비 초과수익 (위험조정수익)
            예: Sharpe 1.5 = 매년 변동성의 1.5배 초과수익
-        
+
         6. 거래 통계
            - Win Rate: 수익 거래 비율 (%)
            - Profit Factor: 총수익 / 총손실 (>1.5 양호)
@@ -502,14 +502,14 @@ class VectorizedBacktestEngine:
                 result.winning_trades = (closed["pnl"] > 0).sum()
                 # 패배 = PnL <= 0 (거래가 손실 또는 손익없음)
                 result.losing_trades = (closed["pnl"] <= 0).sum()
-                
+
                 # 승률(Win Rate) 계산
                 # 의미: 수익이 나는 거래의 비율 (%)
                 # 의의: 높을수록 전략의 신호 정확도 높음
                 # 예: 10거래 중 7거래 수익 = 70% 승률
                 # 목표: 최소 50% 이상 (손익분기), 60% 이상 우수
                 result.win_rate = (result.winning_trades / len(closed)) * 100
-                
+
                 # 거래당 평균수익률
                 # 의미: 한 거래에서 평균적으로 얻는 수익률 (%)
                 # 계산: 모든 거래 수익률의 평균

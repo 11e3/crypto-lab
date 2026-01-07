@@ -170,9 +170,9 @@ class Strategy(ABC):
     Strategies combine conditions to generate trading signals based on:
     - 진입 조건(entry_conditions): 매수 신호 생성 위한 기술적 조건들의 AND 조합
     - 퇴출 조건(exit_conditions): 매도 신호 생성 위한 조건들의 AND 조합
-    
+
     모든 조건(마켓 필터 포함)은 entry/exit conditions로 처리됨.
-    
+
     수익 메커니즘:
     1. entry_conditions 모두 만족 → BUY 신호 발생 → 진입가격 = target(VBO) or close
     2. exit_conditions 만족 → SELL 신호 발생 → 퇴출가격 = close price
@@ -194,7 +194,7 @@ class Strategy(ABC):
                             예: [고가>목표가, 목표가>SMA(20), 노이즈필터]
             exit_conditions: 퇴출 신호 생성 조건들 (AND 결합)
                             예: [종가<SMA(20)]
-                            
+
         Note:
             - 조건들은 AND 연산으로 결합됨 (모두 만족해야 신호 발생)
             - entry_conditions의 강도가 수익성에 직결: 엄격할수록 거래수 감소, 승률 상승
@@ -216,10 +216,10 @@ class Strategy(ABC):
     def required_indicators(self) -> list[str]:
         """
         Return list of required indicator names for this strategy.
-        
+
         수익 계산에 필수적인 지표들의 이름 반환.
         이 지표들이 calculate_indicators()에서 계산되어야 함.
-        
+
         예시:
         - ['sma', 'target', 'short_noise', 'long_noise'] (VBO 전략)
         - ['momentum', 'rsi'] (모멘텀 전략)
@@ -234,11 +234,11 @@ class Strategy(ABC):
     def calculate_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Calculate all required indicators for the strategy.
-        
+
         이 메서드에서 계산된 지표들이 수익률 계산에 직결됨.
         - 정확한 지표 계산 = 수익률 최대화
         - 잘못된 지표 = 신호 왜곡 = 손실 발생
-        
+
         각 지표는 다음을 만족해야 함:
         1. 정확한 계산식: SMA(n)은 정확한 이동평균, ATR(n)은 정확한 ATR
         2. 적절한 lookback: 지표 필요 기간(예: SMA(20)은 최소 20일)
@@ -249,7 +249,7 @@ class Strategy(ABC):
 
         Returns:
             DataFrame with added indicator columns (sma, target, momentum, rsi, etc.)
-            
+
         Note:
             - DataFrame은 반드시 복사본을 반환해야 원본 데이터 보존
             - 지표 열 이름은 required_indicators()의 반환값과 정확히 일치해야 함
@@ -264,13 +264,13 @@ class Strategy(ABC):
         신호 생성은 수익률의 핵심:
         - entry_signal: 매수 신호 (정확한 타이밍 = 더 좋은 진입가)
         - exit_signal: 매도 신호 (리스크 관리 = 손실 최소화)
-        
+
         기본 VBO 신호 로직:
         1. 진입(entry_signal): 고가>=목표가 AND 목표가>SMA AND 필터조건
            → 하한선(목표가)을 돌파할 때만 진입 (노이즈 제거)
         2. 퇴출(exit_signal): 종가<SMA
            → 추세 전환 시점에 자동 퇴출 (손실 제한)
-        
+
         Override this method for custom vectorized signal logic.
         Default implementation uses standard VBO signals.
 
@@ -279,7 +279,7 @@ class Strategy(ABC):
 
         Returns:
             DataFrame with added 'entry_signal' and 'exit_signal' boolean columns
-            
+
         Note:
             신호의 정확도가 전체 전략 수익성을 결정함:
             - 거래 빈도: 신호 수 = 거래 횟수 = 승률 × 거래당평균수익
