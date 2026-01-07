@@ -167,8 +167,16 @@ class Strategy(ABC):
     """
     Abstract base class for trading strategies.
 
-    Strategies combine conditions to generate trading signals.
-    All conditions (including market filters) are handled as entry/exit conditions.
+    Strategies combine conditions to generate trading signals based on:
+    - 진입 조건(entry_conditions): 매수 신호 생성 위한 기술적 조건들의 AND 조합
+    - 퇴출 조건(exit_conditions): 매도 신호 생성 위한 조건들의 AND 조합
+    
+    모든 조건(마켓 필터 포함)은 entry/exit conditions로 처리됨.
+    
+    수익 메커니즘:
+    1. entry_conditions 모두 만족 → BUY 신호 발생 → 진입가격 = target(VBO) or close
+    2. exit_conditions 만족 → SELL 신호 발생 → 퇴출가격 = close price
+    3. 수익률(PnL%) = ((exit_price - entry_price) / entry_price - fee) * 100
     """
 
     def __init__(
@@ -178,17 +186,28 @@ class Strategy(ABC):
         exit_conditions: list[Condition] | None = None,
     ) -> None:
         """
-        Initialize strategy.
+        Initialize strategy with conditions.
 
         Args:
-            name: Strategy name
-            entry_conditions: Conditions for entry signals (includes market filters)
-            exit_conditions: Conditions for exit signals
+            name: Strategy name (defaults to class name)
+            entry_conditions: 진입 신호 생성 조건들 (기술적 지표 기반, AND 결합)
+                            예: [고가>목표가, 목표가>SMA(20), 노이즈필터]
+            exit_conditions: 퇴출 신호 생성 조건들 (AND 결합)
+                            예: [종가<SMA(20)]
+                            
+        Note:
+            - 조건들은 AND 연산으로 결합됨 (모두 만족해야 신호 발생)
+            - entry_conditions의 강도가 수익성에 직결: 엄격할수록 거래수 감소, 승률 상승
+            - exit_conditions의 엄격도가 리스크 관리에 영향: 느슨할수록 손실 확대 가능
         """
         self.name = name or self.__class__.__name__
+        # entry_conditions: AND로 결합된 진입 조건들
+        # 모든 조건이 동시에 만족되어야만 BUY 신호 발생
         self.entry_conditions = CompositeCondition(
             entry_conditions or [], operator="AND", name="EntryConditions"
         )
+        # exit_conditions: AND로 결합된 퇴출 조건들
+        # 모든 조건이 동시에 만족되어야만 SELL 신호 발생
         self.exit_conditions = CompositeCondition(
             exit_conditions or [], operator="AND", name="ExitConditions"
         )
@@ -196,10 +215,18 @@ class Strategy(ABC):
     @abstractmethod
     def required_indicators(self) -> list[str]:
         """
-        Return list of required indicator names.
+        Return list of required indicator names for this strategy.
+        
+        수익 계산에 필수적인 지표들의 이름 반환.
+        이 지표들이 calculate_indicators()에서 계산되어야 함.
+        
+        예시:
+        - ['sma', 'target', 'short_noise', 'long_noise'] (VBO 전략)
+        - ['momentum', 'rsi'] (모멘텀 전략)
+        - ['atr', 'high_20', 'low_20'] (변동성 돌파 전략)
 
         Returns:
-            List of indicator names this strategy needs
+            List of indicator names required for signal generation
         """
         pass
 
@@ -207,12 +234,26 @@ class Strategy(ABC):
     def calculate_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Calculate all required indicators for the strategy.
+        
+        이 메서드에서 계산된 지표들이 수익률 계산에 직결됨.
+        - 정확한 지표 계산 = 수익률 최대화
+        - 잘못된 지표 = 신호 왜곡 = 손실 발생
+        
+        각 지표는 다음을 만족해야 함:
+        1. 정확한 계산식: SMA(n)은 정확한 이동평균, ATR(n)은 정확한 ATR
+        2. 적절한 lookback: 지표 필요 기간(예: SMA(20)은 최소 20일)
+        3. NaN 처리: 부족한 데이터는 NaN으로, 나중에 forward fill이나 dropna 처리됨
 
         Args:
-            df: DataFrame with OHLCV data
+            df: DataFrame with OHLCV columns (open, high, low, close, volume)
 
         Returns:
-            DataFrame with added indicator columns
+            DataFrame with added indicator columns (sma, target, momentum, rsi, etc.)
+            
+        Note:
+            - DataFrame은 반드시 복사본을 반환해야 원본 데이터 보존
+            - 지표 열 이름은 required_indicators()의 반환값과 정확히 일치해야 함
+            - 지표 계산이 수익률 계산의 기반이므로 정확성이 가장 중요
         """
         pass
 
@@ -220,35 +261,57 @@ class Strategy(ABC):
         """
         Generate entry/exit signals using vectorized operations.
 
+        신호 생성은 수익률의 핵심:
+        - entry_signal: 매수 신호 (정확한 타이밍 = 더 좋은 진입가)
+        - exit_signal: 매도 신호 (리스크 관리 = 손실 최소화)
+        
+        기본 VBO 신호 로직:
+        1. 진입(entry_signal): 고가>=목표가 AND 목표가>SMA AND 필터조건
+           → 하한선(목표가)을 돌파할 때만 진입 (노이즈 제거)
+        2. 퇴출(exit_signal): 종가<SMA
+           → 추세 전환 시점에 자동 퇴출 (손실 제한)
+        
         Override this method for custom vectorized signal logic.
         Default implementation uses standard VBO signals.
 
         Args:
-            df: DataFrame with OHLCV and indicators
+            df: DataFrame with OHLCV and indicators (sma, target, noise 등)
 
         Returns:
-            DataFrame with 'entry_signal' and 'exit_signal' columns
+            DataFrame with added 'entry_signal' and 'exit_signal' boolean columns
+            
+        Note:
+            신호의 정확도가 전체 전략 수익성을 결정함:
+            - 거래 빈도: 신호 수 = 거래 횟수 = 승률 × 거래당평균수익
+            - 신호 품질: False Signal 많으면 손실, 정확한 신호면 수익 증가
         """
         df = df.copy()
 
         # Default: use indicator-based signals
-        # Entry: high >= target AND target > sma AND filters pass
+        # 진입 신호: 변동성 돌파(고가 >= 목표가)와 추세필터(목표가 > SMA) 결합
+        # → 상한선(저항) 돌파 시 거래량 급증 시점에 진입
         entry_breakout = df["high"] >= df["target"]
+        # 추세 필터: 목표가가 SMA를 위에 있어야 상승추세
         entry_sma = df["target"] > df["sma"]
 
-        # Default filters
+        # 마켓 필터: 노이즈 레벨이 낮을 때만 거래 (변동성 필터)
         has_trend_filter = "sma_trend" in df.columns
         has_noise_filter = "short_noise" in df.columns and "long_noise" in df.columns
 
+        # 초기 진입 신호 = 고가돌파 AND 추세필터
         entry_signal = entry_breakout & entry_sma
 
+        # 추가 필터 적용: sma_trend는 장기 추세 확인
         if has_trend_filter:
             entry_signal = entry_signal & (df["target"] > df["sma_trend"])
 
+        # 노이즈 필터: short_noise < long_noise이면 변동성이 낮음 (안정적)
+        # → 거짓신호 많은 고변동성 구간 제거 (수익성 개선)
         if has_noise_filter:
             entry_signal = entry_signal & (df["short_noise"] < df["long_noise"])
 
-        # Exit: close < sma
+        # 퇴출 신호: 종가가 SMA 아래로 내려오면 추세 반전으로 판단하고 즉시 매도
+        # → 손실 방지 (리스크 관리), 추세 전환 시 빠른 탈출
         exit_signal = df["close"] < df["sma"]
 
         if "entry_signal" not in df.columns:

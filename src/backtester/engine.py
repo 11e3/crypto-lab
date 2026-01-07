@@ -130,7 +130,59 @@ class BacktestResult:
     risk_metrics: PortfolioRiskMetrics | None = None
 
     def summary(self) -> str:
-        """Generate summary string."""
+        """Generate summary string.
+        
+        백테스트 결과를 읽기 쉬운 형식으로 표시:
+        
+        [CAGR (연율수익률)]
+        의미: 매년 복리로 받은 평균 수익률
+        해석:
+        - 10% = 우수 (S&P 500 평균)
+        - 20% = 매우 우수
+        - 50% 이상 = 과적합 가능성 검토
+        
+        [MDD (최대낙폭)]
+        의미: 최악의 상황에서 본 최대 손실률
+        해석:
+        - 20% = 정상 수준
+        - 40% = 높은 위험
+        - 60% 이상 = 매우 위험한 전략
+        
+        [Calmar Ratio]
+        의미: CAGR / MDD (수익대비리스크)
+        해석:
+        - < 0.5 = 리스크 크다 (좋지 않음)
+        - 0.5 ~ 1.0 = 중간 수준
+        - 1.0 ~ 2.0 = 양호
+        - 2.0 이상 = 우수 (높은 샤프비)
+        
+        [Sharpe Ratio]
+        의미: 변동성 대비 초과수익
+        해석:
+        - 0.5 미만 = 낮음
+        - 0.5 ~ 1.0 = 중간
+        - 1.0 ~ 2.0 = 양호
+        - 2.0 이상 = 우수
+        
+        [승률(Win Rate)]
+        의미: 수익이 나는 거래의 비율
+        해석:
+        - 50% = 손익분기
+        - 55% ~ 60% = 양호
+        - 60% 이상 = 우수
+        - 40% 이하 = 전략 재검토 필요
+        
+        [총 거래수]
+        의미: 전체 기간동안의 총 거래 횟수
+        해석:
+        - 적음 (< 10) = 신호 부족, 데이터 부족 가능
+        - 보통 (10~50) = 정상적인 거래빈도
+        - 많음 (> 50) = 높은 거래빈도 → 수수료 영향 확인
+        
+        [최종 자본(Final Equity)]
+        의미: 백테스트 마지막 날의 포트폴리오 가치
+        계산: 초기자본 × (1 + total_return/100)
+        """
         final_equity = self.equity_curve[-1] if len(self.equity_curve) > 0 else 0
         summary = (
             f"\n{'=' * 50}\n"
@@ -162,6 +214,25 @@ class VectorizedBacktestEngine:
     """
     Vectorized backtesting engine using pandas/numpy.
 
+    수익률 계산의 핵심 엔진:
+    
+    동작 메커니즘:
+    1. 진입가 = target price (VBO) + slippage 수수료
+    2. 퇴출가 = close price (종가) - slippage 수수료  
+    3. 거래당 수익(PnL) = (퇴출가 - 진입가) × 거래량 - 수수료
+    4. 수익률(PnL%) = ((퇴출가 - 진입가) / 진입가 - 수수료율) × 100
+    5. 누적수익 = 초기자본 + 모든 거래의 수익 합
+    6. 포지션 사이징: position_sizing 방식(equal, volatility, kelly 등)에 따라
+                    각 신호에서 매수 수량 결정 → 수익 최대화
+    
+    주요 계산 항목:
+    - 총수익률(total_return): 최종값/초기값 - 1
+    - CAGR(연율수익): 기간에 따른 연간 수익률
+    - MDD(낙폭): 피크 대비 최대 하락률 → 리스크 측정
+    - Sharpe Ratio: 수익/변동성 → 위험조정수익률
+    - Win Rate: 수익 거래 비율 → 승률
+    - Profit Factor: 총수익/총손실 → 거래 품질
+    
     Pre-computes all signals and uses array operations for simulation.
     """
 
@@ -170,7 +241,11 @@ class VectorizedBacktestEngine:
         Initialize backtest engine.
 
         Args:
-            config: Backtesting configuration
+            config: Backtesting configuration containing:
+                - initial_capital: 초기 자본 (수익 계산 기준)
+                - fee_rate: 수수료율 (각 거래마다 적용)
+                - slippage_rate: 슬리페이지율 (진출입가 왜곡)
+                - position_sizing: 거래당 수량 계산 방식
         """
         self.config = config or BacktestConfig()
         self.advanced_order_manager = AdvancedOrderManager()
@@ -206,9 +281,27 @@ class VectorizedBacktestEngine:
     ) -> pd.DataFrame:
         """
         Add entry/exit price columns with slippage.
+        
+        수익률 계산의 기본 요소 추가:
+        
+        진입가(entry_price) = target price + slippage
+        - VBO 전략: target(돌파가) 사용 → 더 정확한 진입가
+        - 기타 전략: close(종가) 사용
+        - Slippage 추가: 실제 거래 시 예상과 다른 가격에 체결되는 현상 모의
+        
+        퇴출가(exit_price) = close price - slippage
+        - 항상 종가 기반
+        - Slippage 차감: 매도 시 불리한 가격에서 체결되는 현상 반영
+        
+        수익 계산 공식:
+        거래수익 = (퇴출가 - 진입가) × 거래량 - 수수료
+        거래수익률 = ((퇴출가 - 진입가) / 진입가 - 수수료율) × 100
+        
+        예시 (진입가 100, 퇴출가 105, 수수료율 0.1%):
+        - 거래수익률 = ((105-100)/100 - 0.001) × 100 = 4.9%
 
         Args:
-            df: DataFrame with signals
+            df: DataFrame with signals (entry_signal, exit_signal)
 
         Returns:
             DataFrame with price columns added
@@ -222,17 +315,21 @@ class VectorizedBacktestEngine:
             df = df.copy()
 
         # Whipsaw: entry occurs but close < sma on same bar
+        # → 같은 일에 진입과 퇴출 신호 동시 발생 (거래 무효화 또는 손실)
         df["is_whipsaw"] = df["entry_signal"] & df["exit_signal"]
 
         # Entry price: use 'target' if available (VBO strategy), otherwise use 'close'
         if "target" in df.columns:
             # VBO strategy: use target price with slippage
+            # target = high(20) - 변동성 = 저항선(돌파가)
+            # slippage 추가 = 더 비싼 가격에서 매수 (리얼리스틱한 시뮬레이션)
             df["entry_price"] = df["target"] * (1 + self.config.slippage_rate)
         else:
             # Other strategies (momentum, etc.): use close price with slippage
             df["entry_price"] = df["close"] * (1 + self.config.slippage_rate)
 
         # Exit price (close with slippage)
+        # slippage 차감 = 더 싼 가격에서 매도 (매도 손실 발생)
         df["exit_price"] = df["close"] * (1 - self.config.slippage_rate)
 
         return df
@@ -244,7 +341,49 @@ class VectorizedBacktestEngine:
         trades_df: pd.DataFrame,
         asset_returns: dict[str, list[float]] | None = None,
     ) -> BacktestResult:
-        """Calculate performance metrics using vectorized operations."""
+        """Calculate performance metrics using vectorized operations.
+        
+        수익성 평가 메트릭 계산 (벡터화된 고속 처리):
+        
+        1. 총수익률(total_return)
+           = (최종자본 / 초기자본 - 1) × 100
+           의미: 전체 운용 기간에서의 수익률 (%)
+           예: 초기 100만원 → 최종 150만원 = 50% 수익
+        
+        2. CAGR(연율수익률)
+           = (최종자본 / 초기자본) ^ (365 / 운용일수) - 1
+           의미: 매년 평균 복리 수익률 (위험 조정 가능)
+           예: 3년에 50% 수익 = 연 14.7% CAGR
+        
+        3. MDD(최대낙폭)
+           = min((피크가 - 현재값) / 피크가) × 100
+           의미: 최악의 경우 최대 손실 (리스크 측정)
+           예: 최고 100만원에서 60만원으로 하락 = 40% MDD
+        
+        4. Calmar Ratio
+           = CAGR / MDD
+           의미: 수익 대비 리스크 비율 (높을수록 좋음)
+           예: CAGR 15% / MDD 20% = 0.75 Calmar
+        
+        5. Sharpe Ratio
+           = (평균 일수익 / 수익 표준편차) × √252
+           의미: 변동성 대비 초과수익 (위험조정수익)
+           예: Sharpe 1.5 = 매년 변동성의 1.5배 초과수익
+        
+        6. 거래 통계
+           - Win Rate: 수익 거래 비율 (%)
+           - Profit Factor: 총수익 / 총손실 (>1.5 양호)
+           - Avg Trade Return: 거래당 평균 수익률 (%)
+
+        Args:
+            equity_curve: 날짜별 자본금 배열 (최초값부터 최종값까지)
+            dates: 날짜 배열
+            trades_df: 모든 거래 기록 DataFrame
+            asset_returns: 자산별 수익률 dict (포트폴리오 리스크 계산용)
+
+        Returns:
+            BacktestResult with all computed metrics
+        """
         result = BacktestResult(
             equity_curve=equity_curve,
             dates=dates,
@@ -257,26 +396,36 @@ class VectorizedBacktestEngine:
         initial = self.config.initial_capital
         final = equity_curve[-1]
 
-        # Total return
+        # 총수익률 계산
+        # 의미: 초기 자본 대비 최종 자본의 수익률
+        # 예: 100 → 150 = 50% 수익
         result.total_return = (final / initial - 1) * 100
 
-        # CAGR
+        # CAGR 계산 (연율수익률)
+        # 의미: 매년 복리로 받은 평균 수익률
+        # 공식: (최종/초기)^(365일/운용일수) - 1
         total_days = (dates[-1] - dates[0]).days
         if total_days > 0 and initial > 0 and final > 0:
             result.cagr = ((final / initial) ** (365.0 / total_days) - 1) * 100
 
-        # MDD (vectorized)
+        # MDD 계산 (최대낙폭)
+        # 누적최대값에서 현재값까지의 낙폭 계산 (벡터화)
+        # 의미: 최악의 시나리오 = 최고점에서 최저점으로의 하락률
         cummax = np.maximum.accumulate(equity_curve)
         drawdown = (cummax - equity_curve) / cummax
         result.mdd = np.nanmax(drawdown) * 100
 
-        # Calmar Ratio
+        # Calmar Ratio 계산
+        # 의미: CAGR / MDD = 수익성 / 위험성 (높을수록 좋은 거래)
         result.calmar_ratio = result.cagr / result.mdd if result.mdd > 0 else 0.0
 
-        # Sharpe Ratio (vectorized)
+        # Sharpe Ratio 계산 (벡터화)
+        # 일별 수익률 = (일 말 자본 - 일 초 자본) / 일 초 자본
         returns = np.diff(equity_curve) / equity_curve[:-1]
         daily_returns = np.insert(returns, 0, 0)  # First day has 0 return
         if len(returns) > 0 and np.std(returns) > 0:
+            # Sharpe = (평균수익 / 수익표준편차) × √252 (연율화)
+            # 의미: 변동성 대비 초과수익 (1.0 이상 양호, 2.0 이상 우수)
             result.sharpe_ratio = (np.mean(returns) / np.std(returns)) * np.sqrt(
                 ANNUALIZATION_FACTOR
             )
@@ -340,17 +489,42 @@ class VectorizedBacktestEngine:
             logger.warning(f"Failed to calculate risk metrics: {e}")
             result.risk_metrics = None
 
-        # Trade statistics
+        # Trade statistics (거래 통계)
+        # 거래 성질: PnL(손익), 승패, 수익률 등 분석
         if len(trades_df) > 0:
+            # 종료된 거래만 집계 (exit_date가 있는 거래)
             closed = trades_df[trades_df["exit_date"].notna()]
             result.total_trades = len(closed)
 
             if len(closed) > 0:
+                # 거래 분류
+                # 승리 = PnL > 0 (거래가 이익)
                 result.winning_trades = (closed["pnl"] > 0).sum()
+                # 패배 = PnL <= 0 (거래가 손실 또는 손익없음)
                 result.losing_trades = (closed["pnl"] <= 0).sum()
+                
+                # 승률(Win Rate) 계산
+                # 의미: 수익이 나는 거래의 비율 (%)
+                # 의의: 높을수록 전략의 신호 정확도 높음
+                # 예: 10거래 중 7거래 수익 = 70% 승률
+                # 목표: 최소 50% 이상 (손익분기), 60% 이상 우수
                 result.win_rate = (result.winning_trades / len(closed)) * 100
+                
+                # 거래당 평균수익률
+                # 의미: 한 거래에서 평균적으로 얻는 수익률 (%)
+                # 계산: 모든 거래 수익률의 평균
+                # 예: [5%, -2%, 3%, 8%] → 평균 3.5%
                 result.avg_trade_return = closed["pnl_pct"].mean()
 
+                # Profit Factor 계산
+                # 의미: 총 수익 / 총 손실 (비율)
+                # 의의: 거래 시스템의 전체 수익성 판단
+                # 해석:
+                #   - < 1.0: 손실이 수익보다 큼 (좋지 않음)
+                #   - 1.0 ~ 1.5: 중간 수준
+                #   - 1.5 ~ 2.0: 양호
+                #   - > 2.0: 우수 (권장)
+                # 예: 수익 1000 / 손실 500 = 2.0 (우수)
                 total_profit = closed.loc[closed["pnl"] > 0, "pnl"].sum()
                 total_loss = abs(closed.loc[closed["pnl"] <= 0, "pnl"].sum())
                 result.profit_factor = total_profit / total_loss if total_loss > 0 else float("inf")
@@ -626,22 +800,30 @@ class VectorizedBacktestEngine:
                         asset_returns[tickers[t_idx]].append(daily_return)
                     previous_closes[t_idx] = current_close
 
-            # ---- PROCESS EXITS ----
+            # ---- PROCESS EXITS (퇴출 신호 처리) ----
+            # 기존 포지션이 있는 자산만 선택
             in_position = position_amounts > 0
+            # 퇴출 신호 + 포지션 있음 + 유효한 데이터 → 매도 실행
             should_exit = exit_signals[:, d_idx] & in_position & valid_data
 
             if np.any(should_exit):
                 exit_idx = np.where(should_exit)[0]
                 for t_idx in exit_idx:
-                    # Execute exit
+                    # 매도 실행
+                    # exit_price = close * (1 - slippage) = 실제 받을 금액
                     exit_price = exit_prices[t_idx, d_idx]
                     amount = position_amounts[t_idx]
+                    # 매도 수익 = 거래량 × 퇴출가 × (1 - 수수료율)
+                    # 예: 1 BTC × 10,000 USD × (1 - 0.1%) = 9,990 USD
                     revenue = amount * exit_price * (1 - fee_rate)
                     cash += revenue
 
-                    # Record trade
+                    # 거래 기록 저장 (백테스트 리포트 및 분석용)
                     entry_price = position_entry_prices[t_idx]
+                    # PnL(손익) = 매도 수익 - 매수 비용
                     pnl = revenue - (amount * entry_price)
+                    # PnL%(손익률) = (퇴출가/진입가 - 1) × 100
+                    # 예: (10,500/10,000 - 1) × 100 = 5% 수익
                     pnl_pct = (exit_price / entry_price - 1) * 100
 
                     trades_list.append(
@@ -652,8 +834,8 @@ class VectorizedBacktestEngine:
                             "exit_date": current_date,
                             "exit_price": exit_price,
                             "amount": amount,
-                            "pnl": pnl,
-                            "pnl_pct": pnl_pct,
+                            "pnl": pnl,  # 절대 손익
+                            "pnl_pct": pnl_pct,  # 퍼센트 손익
                             "is_whipsaw": False,
                         }
                     )
@@ -666,12 +848,15 @@ class VectorizedBacktestEngine:
                     position_entry_prices[t_idx] = 0
                     position_entry_dates[t_idx] = -1
 
-            # ---- PROCESS ENTRIES ----
+            # ---- PROCESS ENTRIES (진입 신호 처리) ----
+            # 포지션이 없는 자산만 선택 (중복 진입 방지)
             not_in_position = position_amounts == 0
+            # 진입 신호 + 포지션 없음 + 유효한 데이터 → 매수 실행
             can_enter = entry_signals[:, d_idx] & not_in_position & valid_data
 
             if np.any(can_enter):
-                # Sort by noise (prefer lower noise) if available, otherwise use entry order
+                # 우선순위 정렬: 노이즈가 낮은 자산부터 매수
+                # 낮은 노이즈 = 거짓신호 적음 = 높은 신뢰도
                 candidate_idx = np.where(can_enter)[0]
                 if np.any(~np.isnan(short_noises[candidate_idx, d_idx])):
                     noise_values = short_noises[candidate_idx, d_idx]
@@ -680,7 +865,13 @@ class VectorizedBacktestEngine:
                     sorted_order = np.argsort(noise_values)
                     candidate_idx = candidate_idx[sorted_order]
 
-                # Calculate position sizes for all candidates at once if using dynamic sizing
+                # 포지션 사이징 계산 (수익 최대화의 핵심)
+                # 각 거래에서 얼마나 많은 자본을 투입할지 결정
+                # 방식별 특징:
+                # - equal: 모든 거래에 같은 금액 (단순)
+                # - volatility: 변동성 낮을수록 더 많이 투입 (위험 조정)
+                # - kelly: 승률/손익비 기반으로 최적 비율 계산 (고급)
+                # - mpt: 포트폴리오 최적화로 각 자산의 최적 비중 계산 (여러 자산)
                 position_sizes: dict[str, float] = {}
                 if self.config.position_sizing != "equal" and len(candidate_idx) > 1:
                     # Check if using portfolio optimization methods
@@ -689,7 +880,9 @@ class VectorizedBacktestEngine:
                     )
 
                     if optimization_method in ["mpt", "risk_parity"]:
-                        # Portfolio optimization methods
+                        # 포트폴리오 최적화 메서드
+                        # 여러 자산을 동시에 보유할 때 각 자산의 최적 비중 계산
+                        # 목표: 같은 수익으로 변동성 최소화 (효율적 프론티어)
                         candidate_tickers = [tickers[idx] for idx in candidate_idx]
 
                         # Get historical returns for optimization
