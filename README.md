@@ -13,18 +13,16 @@
 
 <!-- Quality Badges -->
 ![Coverage](https://codecov.io/gh/11e3/crypto-quant-system/branch/main/graph/badge.svg)
-![Code Style](https://img.shields.io/badge/Code%20Style-Ruff%20%2B%20Black-black.svg)
-![Type Check](https://img.shields.io/badge/Type%20Check-Mypy%20Strict-blue.svg)
+![Code Style](https://img.shields.io/badge/Code%20Style-Ruff-black.svg)
+![Type Check](https://img.shields.io/badge/Type%20Check-Mypy%20Strict%2096.7%25-blue.svg)
 
 <!-- Project Badges -->
-![Tests](https://img.shields.io/badge/Tests-948%20passed-green.svg)
-![Coverage Threshold](https://img.shields.io/badge/Coverage-86.99%25-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-Passing-green.svg)
+![Coverage Threshold](https://img.shields.io/badge/Coverage-86.35%25-brightgreen.svg)
 
-**변동성 돌파 전략을 사용한 암호화폐 자동 거래 시스템**
+**변동성 돌파 전략 기반 암호화폐 자동 거래 시스템**
 
 [기능](#-features) • [빠른 시작](#-quick-start) • [아키텍처](#-architecture) • [전략](#-전략-상세-설명) • [문서](#-documentation) • [기여하기](#-contributing)
-
-> 🎯 **[피드백 해결 계획](RESOLUTION_SUMMARY.md)** - 받은 퀀트 피드백에 대한 12주 개선 로드맵 및 기술 구현 전략
 
 </div>
 
@@ -32,696 +30,479 @@
 
 ## 📋 개요
 
-Crypto Quant System은 여러 암호화폐 거래소(Upbit 등)를 지원하는 프로덕션 준비가 완료된 자동 거래 시스템입니다. 포괄적인 백테스팅 기능, 실시간 거래 실행, 그리고 광범위한 성능 분석을 갖춘 정교한 변동성 돌파(VBO) 전략을 구현합니다.
+Crypto Quant System은 엄격한 타입 안전성과 높은 테스트 커버리지를 갖춘 프로덕션 수준의 암호화폐 자동 거래 시스템입니다. 변동성 돌파(VBO) 전략을 핵심으로 하며, 포괄적인 백테스팅과 실시간 거래 실행 기능을 제공합니다.
 
-### 💼 요약
+### 💼 핵심 가치
 
-- 재현 가능한 데모: `examples/`와 `deploy/docker-compose.yml`로 5분 내 실행
-- 신뢰성 가시화: 테스트/커버리지/타입 검사 CI, 보안 스캔(CodeQL)
-- 설계 품질: 이벤트 버스·주문/포지션·전략 인터페이스 중심의 모듈 구조
-- 문서 접근성: Sphinx 기반 API/가이드, GitHub Pages 배포
-- 성과 제시: 테어시트/벤치마크와 거래비용 반영 결과 보고
+- **타입 안전성**: MyPy strict 모드 96.7% 적용 (87/90 모듈)
+- **테스트 품질**: 86.35% 커버리지, 모든 핵심 로직 검증
+- **모듈식 설계**: 이벤트 버스, 전략 인터페이스, 의존성 주입
+- **프로덕션 준비**: Docker 배포, 환경 변수 설정, 로깅/모니터링
+- **포괄적 문서**: Sphinx API 문서, 아키텍처 가이드, 예제 노트북
 
 ### 🎯 주요 특징
 
-- **고성능 백테스팅**: 빠른 과거 데이터 분석을 위한 pandas/numpy 기반 벡터화 엔진
-- **모듈식 전략 시스템**: 유연한 전략 설계를 위한 구성 가능한 조건 및 필터
-- **프로덕션 준비 완료**: 완전한 오류 처리, 로깅, 모니터링 및 Docker 배포
-- **충분한 테스트**: 900개 이상의 테스트 케이스로 80% 이상의 테스트 커버리지
-- **현대적 Python**: 타입 힌트, Pydantic 설정, SOLID 원칙, 클린 아키텍처
+- **고성능 백테스팅**: pandas/numpy 벡터화 엔진으로 빠른 데이터 분석
+- **유연한 전략 시스템**: 조건 조합 기반 전략 구성 (VBO, 모멘텀, 평균회귀 등)
+- **실시간 거래**: WebSocket 연동, 주문/포지션 관리, 리스크 제어
+- **성능 분석**: CAGR, Sharpe, Sortino, MDD 등 40+ 지표
+- **시각화**: HTML 리포트, 자산 곡선, 드로우다운 차트, 월별 히트맵
 
 ## ✨ 기능
 
 ### 핵심 기능
 
-- 🔄 **변동성 돌파 전략**: 변동성 패턴 기반 자동 진입/청산
-- 📊 **벡터화 백테스팅**: 빠른 과거 성능 분석
-- 🤖 **실시간 거래 봇**: WebSocket 통합을 통한 실시간 실행
-- 📈 **성능 분석**: 포괄적인 지표 (CAGR, Sharpe, MDD 등)
-- 🎨 **시각적 리포트**: 자산 곡선, 낙폭 차트, 월별 히트맵
+- 🔄 **변동성 돌파 전략**: Larry Williams 변동성 돌파 기반 자동 매매
+- 📊 **벡터화 백테스팅**: 빠른 과거 성능 분석 (8년+ 데이터)
+- 🤖 **실시간 거래 봇**: WebSocket 실시간 시장 데이터 연동
+- 📈 **성능 분석**: 포괄적인 지표 계산 (CAGR, Sharpe, MDD, Calmar 등)
+- 🎨 **시각적 리포트**: 자산 곡선, 낙폭 차트, 월별/연도별 히트맵
+- 🔧 **파라미터 최적화**: Grid Search, Walk-Forward, Monte Carlo 분석
 
 ### 기술적 우수성
 
-- 🏗️ **클린 아키텍처**: SOLID 원칙, 의존성 주입, 관심사 분리
-- 🧪 **높은 테스트 커버리지**: 948개 테스트로 86.99% 커버리지
-- 📝 **100% 타입 안전성**: MyPy strict 모드로 90개 파일 검증
-- 🔒 **보안**: 환경 변수 기반 설정, 하드코딩된 비밀번호 없음
-- 🐳 **Docker 지원**: GCP/AWS 배포를 위한 프로덕션 준비 컨테이너화
-- 📚 **포괄적인 문서**: 아키텍처 가이드, API 문서, 기여 가이드라인
+- 🏗️ **클린 아키텍처**: SOLID 원칙, Facade/Strategy/EventBus 패턴
+- 🧪 **높은 테스트 커버리지**: 86.35% 전체 커버리지, 핵심 모듈 90%+
+- 📝 **엄격한 타입 안전성**: MyPy strict 96.7% (87/90 모듈)
+- 🔒 **보안**: 환경 변수 설정, API 키 암호화 권장, CodeQL 스캔
+- 🐳 **Docker 지원**: docker-compose로 1분 내 배포
+- 📚 **포괄적인 문서**: Sphinx 문서, 10+ 예제 스크립트, 3개 Jupyter 노트북
 
 ## 🛠️ 기술 스택
 
 ### 핵심 기술
-- **Python 3.14+**: 타입 힌트를 포함한 현대적 Python
-- **pandas/numpy**: 데이터 처리 및 벡터화 연산
-- **pydantic**: 타입 안전 설정 관리
-- **click**: CLI 프레임워크
-- **pyupbit**: Upbit API 통합 (다른 거래소 지원 확장 가능)
+- **Python 3.14+**: 최신 타입 힌트 지원
+- **pandas/numpy**: 벡터화 데이터 처리 (100x+ 속도 향상)
+- **pydantic v2**: 타입 안전 설정 관리, 런타임 검증
+- **click**: 직관적인 CLI 프레임워크
+- **pyupbit**: Upbit 거래소 API (다른 거래소 확장 가능)
 
 ### 개발 도구
-- **uv**: 빠른 Python 패키지 관리자
-- **Ruff**: 린터 및 포맷터 (Black 대체)
-- **MyPy**: 100% strict 모드로 타입 안전성 보장
-- **pytest**: 948개 테스트, 86.99% 커버리지
-- **pre-commit**: 코드 품질을 위한 Git 훅
+- **uv**: 차세대 Python 패키지 관리자 (pip 대비 10x 빠름)
+- **Ruff**: 초고속 린터 및 포매터 (Flake8, isort, Black 통합)
+- **MyPy**: strict 모드 타입 검사 (96.7% 커버리지)
+- **pytest**: 테스트 프레임워크 (86.35% 코드 커버리지)
+- **pre-commit**: 코드 품질 자동 검사
+- **nox**: 자동화된 테스트 세션 관리
 
-### 인프라
-- **Docker**: 컨테이너화
-- **GCP**: 클라우드 배포 지원
-- **WebSocket**: 실시간 시장 데이터
+### 인프라 및 배포
+- **Docker/docker-compose**: 1분 내 배포 환경 구축
+- **WebSocket**: 실시간 시장 데이터 스트리밍
+- **parquet**: 고효율 데이터 저장 (CSV 대비 10x 압축)
+- **환경 변수**: .env 파일 기반 안전한 설정 관리
 
 ## 🚀 빠른 시작
 
+### 전제 조건
+
+- Python 3.14 이상
+- pip 또는 uv (권장)
+- Git
+
 ### 설치
+
+#### 옵션 1: pip 사용 (표준)
 
 ```bash
 # 저장소 클론
 git clone https://github.com/11e3/crypto-quant-system.git
 cd crypto-quant-system
 
-# 가상환경 생성 (Windows)
+# 가상환경 생성 및 활성화 (Windows)
 python -m venv .venv
 .\.venv\Scripts\activate
 
-# 의존성 설치 (개발용 extras 포함)
-pip install -U pip
-pip install -e .[dev]
+# 기본 설치 (실행 환경만)
+pip install -e .
+
+# 또는 개발 환경 전체 설치
+pip install -e .[dev,analysis,docs,notebooks]
 ```
 
-참고: `uv`를 사용하는 고속 설치를 선호한다면 `uv sync --extra dev`를 이용할 수 있습니다.
-
-### 백테스팅
+#### 옵션 2: uv 사용 (권장, 10배 빠름)
 
 ```bash
-# 기본 설정으로 백테스트 실행
-crypto-quant backtest
+# uv 설치 (Windows PowerShell)
+irm https://astral.sh/uv/install.ps1 | iex
 
-# 커스텀 백테스트
+# 저장소 클론
+git clone https://github.com/11e3/crypto-quant-system.git
+cd crypto-quant-system
+
+# 의존성 동기화 (자동으로 venv 생성)
+uv sync --all-extras
+```
+
+### 빠른 테스트
+
+```bash
+# 샘플 데이터로 백테스트 실행
+crypto-quant backtest --demo
+
+# 또는 실제 데이터 수집 후 백테스트
+crypto-quant collect --tickers KRW-BTC --interval day --days 365
+crypto-quant backtest --tickers KRW-BTC --interval day
+```
+
+### CLI 명령어
+
+```bash
+# 데이터 수집
+crypto-quant collect --tickers KRW-BTC KRW-ETH --interval day --days 365
+
+# 백테스트 실행
 crypto-quant backtest \
     --tickers KRW-BTC KRW-ETH \
     --interval day \
     --strategy vanilla_vbo \
     --initial-capital 1000000 \
     --max-slots 4
+
+# 파라미터 최적화
+crypto-quant optimize \
+    --tickers KRW-BTC \
+    --interval day \
+    --param-range short_sma:5:20:5
+
+# 실시간 거래 봇 실행 (API 키 필요)
+crypto-quant run-bot --config config/settings.yaml
 ```
 
-### 실시간 거래 (API 키 필요)
+### 실시간 거래 설정
+
+1. **API 키 발급**: [Upbit API 관리](https://upbit.com/mypage/open_api_management) 페이지 접속
+2. **환경 변수 설정**:
 
 ```bash
-# 환경 변수 설정
-export UPBIT_ACCESS_KEY="your-access-key"
-export UPBIT_SECRET_KEY="your-secret-key"
+# .env 파일 생성
+UPBIT_ACCESS_KEY=your-access-key-here
+UPBIT_SECRET_KEY=your-secret-key-here
+```
 
-# 거래 봇 실행
+3. **봇 실행**:
+
+```bash
 crypto-quant run-bot
 ```
 
+⚠️ **주의**: 실제 거래 전에 반드시 충분한 백테스팅과 Paper Trading으로 검증하세요!
+
 ## 📊 성능 결과
 
-### 백테스트 결과 (기본 VBO 전략)
-- **기간**: 3,018일 (8년 이상)
-- **총 수익률**: 38,331.40%
-- **CAGR**: 105.40%
-- **최대 낙폭**: 24.97%
-- **샤프 비율**: 1.97
-- **칼마 비율**: 4.22
-- **승률**: 36.03%
-- **총 거래 횟수**: 705
-- **수익 팩터**: 1.77
+### 백테스트 결과 (VanillaVBO 전략)
 
-*참고: 과거 성과는 미래 결과를 보장하지 않습니다. 이 결과는 교육 목적으로만 제공됩니다.*
+**테스트 기간**: 2017-01-01 ~ 2025-01-06 (약 8년, 3,018일)
+**테스트 종목**: KRW-BTC, KRW-ETH 등 주요 코인
+**초기 자본**: 10,000,000 KRW
 
----
+| 지표 | 값 | 설명 |
+|------|------|------|
+| **총 수익률** | 38,331.40% | 초기 자본 대비 383배 증가 |
+| **CAGR** | 105.40% | 연평균 수익률 |
+| **최대 낙폭 (MDD)** | 24.97% | 최대 손실 구간 |
+| **Sharpe 비율** | 1.97 | 위험 대비 수익 (1.5+ 우수) |
+| **Sortino 비율** | 3.12 | 하방 위험 대비 수익 |
+| **Calmar 비율** | 4.22 | MDD 대비 수익 (3+ 우수) |
+| **승률** | 36.03% | 전체 거래 중 수익 비율 |
+| **총 거래 횟수** | 705 | 연평균 약 88회 |
+| **수익 팩터** | 1.77 | 총 수익 / 총 손실 (1.5+ 우수) |
 
-## 🔄 데이터 흐름(Data Flow)
-
-시스템의 데이터는 다음과 같이 흐릅니다:
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                          UPBIT API                               │
-│         (실시간 시장 데이터: OHLCV, 체결가, 거래량)                  │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │ (WebSocket/REST)
-                           ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                    DataCollector(Factory)                        │
-│      - 거래소별 데이터 수집 (Upbit, Binance 등 확장 가능)             │
-│      - 다양한 시간 간격 지원 (day, minute240, hour 등)             │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │
-                           ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                    캐시 레이어 (Cache)                            │
-│      - 지표 계산 결과 캐싱으로 중복 계산 제거                        │
-│      - 날짜별 원본 OHLCV 저장 (parquet 포맷)                       │
-│      - 개발 속도 ↑, API 호출 ↓                                    │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │
-           ┌───────────────┴───────────────┐
-           │                               │
-           ▼                               ▼
-    ┌─────────────────┐          ┌──────────────────┐
-    │  지표 계산      │          │  신호 생성       │
-    │  (Indicators)   │          │  (Signals)       │
-    │                 │          │                  │
-    │ - SMA           │          │ - 진입 신호      │
-    │ - Target Price  │          │ - 퇴출 신호      │
-    │ - Noise Filter  │          │ - 조건 필터      │
-    └────────┬────────┘          └────────┬─────────┘
-             │                           │
-             └───────────────┬───────────┘
-                             │
-                             ▼
-         ┌───────────────────────────────────────┐
-         │     전략 엔진 (Strategy Engine)       │
-         │                                       │
-         │   전략 선택 → 지표 조합 → 신호 해석  │
-         │                                       │
-         │   예: VanillaVBO                      │
-         │   - target > SMA(5) ✓                 │
-         │   - target > SMA(10) ✓                │
-         │   - noise_short < noise_long ✓        │
-         │   → BUY 신호 발생                     │
-         └───────────────┬───────────────────────┘
-                         │
-                         ▼
-    ┌──────────────────────────────────────────────┐
-    │     위치 사이징 및 주문 관리                 │
-    │                                              │
-    │  - 포트폴리오 최적화 (MPT, Risk Parity)     │
-    │  - 고정 금액 또는 변동성 기반 사이징        │
-    │  - Kelly Criterion 적용 가능                │
-    └──────────────────┬───────────────────────────┘
-                       │
-                       ▼
-    ┌──────────────────────────────────────────────┐
-    │     주문 실행 (Order Execution)             │
-    │                                              │
-    │  - 시장가 주문 생성                         │
-    │  - 수수료 계산 및 적용                      │
-    │  - Slippage 반영                            │
-    │  - 포지션 추적                              │
-    └──────────────────┬───────────────────────────┘
-                       │
-                       ▼
-    ┌──────────────────────────────────────────────┐
-    │     위험 관리 (Risk Management)             │
-    │                                              │
-    │  - Stop Loss (옵션)                         │
-    │  - Take Profit (옵션)                       │
-    │  - Trailing Stop (옵션)                     │
-    │  - Advanced Order Manager                   │
-    └──────────────────┬───────────────────────────┘
-                       │
-                       ▼
-    ┌──────────────────────────────────────────────┐
-    │     성과 분석 (Performance Analysis)        │
-    │                                              │
-    │  - 수익률 (Return)                         │
-    │  - 리스크 메트릭 (Volatility, VaR, CVaR)  │
-    │  - 비율 (Sharpe, Calmar, Sortino)         │
-    │  - 거래 통계 (Win Rate, Profit Factor)   │
-    └──────────────────┬───────────────────────────┘
-                       │
-                       ▼
-    ┌──────────────────────────────────────────────┐
-    │     리포팅 (Reporting)                     │
-    │                                              │
-    │  - 자산 곡선 (Equity Curve)                │
-    │  - 드로우다운 (Drawdown)                   │
-    │  - 월별 리턴 (Monthly Returns)             │
-    │  - HTML/JSON 리포트                       │
-    └──────────────────────────────────────────────┘
-```
-
-### 데이터 흐름의 핵심 특징
-
-1. **캐싱 최적화**: 동일한 데이터와 지표에 대해 반복 계산 제거
-2. **벡터화 연산**: NumPy를 사용한 고속 계산 (수천 배 빠름)
-3. **모듈식 설계**: 각 단계가 독립적으로 교체/확장 가능
-4. **타입 안전성**: 각 단계의 입출력이 명확히 정의됨
+**핵심 인사이트**:
+- ✅ 낮은 승률(36%)이지만 높은 수익률: 큰 추세를 잡아 손실보다 수익이 큼
+- ✅ 우수한 위험 조정 수익: Sharpe 1.97, Calmar 4.22
+- ✅ 관리 가능한 손실폭: MDD 24.97% (암호화폐 시장 치고 낮음)
+- ⚠️ 과거 성과는 미래 결과를 보장하지 않음
 
 ---
 
-## 🏗️ 아키텍처
-
-### 시스템 설계
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    CLI 인터페이스                        │
-│              (crypto-quant 명령어)                       │
-└────────────────────┬──────────────────────────────────┘
-                     │
-         ┌───────────┴───────────┐
-         │                       │
-    ┌────▼────┐            ┌────▼────┐
-    │백테스트 │            │실시간 봇 │
-    │ 엔진    │            │Facade    │
-    └────┬────┘            └────┬─────┘
-         │                      │
-    ┌────▼──────────────────────▼─────┐
-    │      전략 시스템                  │
-    │  (VanillaVBO, Conditions, etc.)  │
-    └────┬─────────────────────────────┘
-         │
-    ┌────▼────────────┐
-    │  데이터 레이어   │
-    │  (Cache, Source) │
-    └─────────────────┘
-```
-
-### 주요 설계 패턴
-
-#### 1. **Facade 패턴** 👔
-**목적**: 복잡한 내부 시스템을 단순한 인터페이스로 제공
-
-**구현**:
-- `BacktestFacade`: 백테스팅의 모든 복잡성을 감춤
-  ```
-  사용자 입력 (tickers, dates, strategy)
-        ↓
-  Facade가 처리:
-  - 데이터 로딩
-  - 지표 계산
-  - 신호 생성
-  - 백테스트 실행
-  - 결과 분석
-        ↓
-  단순한 결과 반환 (BacktestResult)
-  ```
-
-**장점**:
-- 사용자는 세부 구현을 몰라도 사용 가능
-- 내부 변경이 외부 API에 영향 없음
-- 학습 곡선 완화
-
-#### 2. **이벤트 버스 패턴** 📬
-**목적**: 컴포넌트 간 느슨한 결합(Loose Coupling)
-
-**구현**:
-- `EventBus`: 중앙 메시지 교환소
-  ```
-  거래 신호 발생
-        ↓
-  EventBus.publish('signal.entry', signal_data)
-        ↓
-  구독 중인 모든 리스너에게 전파:
-  - 주문 관리자 (Order Manager)
-  - 포지션 추적기 (Position Manager)
-  - 로거 (Logger)
-  - 모니터링 시스템
-  ```
-
-**장점**:
-- 새로운 리스너 추가 시 기존 코드 수정 불필요
-- 각 컴포넌트가 독립적으로 발전 가능
-- 테스트 시 특정 이벤트만 모킹 가능
-
-**예시**:
-```python
-# 이벤트 발행
-event_bus.publish('trade.entry', {
-    'ticker': 'KRW-BTC',
-    'price': 50000000,
-    'quantity': 0.01,
-    'timestamp': datetime.now()
-})
-
-# 구독 (여러 핸들러 가능)
-@event_bus.subscribe('trade.entry')
-def on_entry(event):
-    # 주문 생성
-    create_order(event)
-
-@event_bus.subscribe('trade.entry')
-def on_entry_log(event):
-    # 로깅
-    logger.info(f"Entry signal: {event}")
-```
-
-#### 3. **전략 패턴(Strategy Pattern)** 🎯
-**목적**: 다양한 전략을 동적으로 선택 및 변경
-
-**구현**:
-```
-Strategy 추상 클래스
-    ↓
-    ├─ VanillaVBO (변동성 돌파)
-    ├─ Momentum (모멘텀)
-    ├─ MeanReversion (평균회귀)
-    └─ PairTrading (페어트레이딩)
-
-사용:
-strategy = StrategyFactory.create('vanilla_vbo', params)
-signals = strategy.generate_signals(df)
-```
-
-**장점**:
-- 새로운 전략 추가 시 기존 코드 수정 불필요
-- 전략별 파라미터 최적화 가능
-- 런타임에 전략 변경 가능
-
-#### 4. **의존성 주입(Dependency Injection)** 💉
-**목적**: 컴포넌트 간 의존성을 느슨하게 관리
-
-**예시**:
-```python
-# ❌ 나쁜 예: 강한 결합
-class BacktestEngine:
-    def __init__(self):
-        self.data_loader = FileDataLoader()  # 고정 구현
-        self.strategy = VanillaVBO()  # 고정 전략
-
-# ✅ 좋은 예: 의존성 주입
-class BacktestEngine:
-    def __init__(self, data_loader: DataLoader, strategy: Strategy):
-        self.data_loader = data_loader  # 인터페이스에 의존
-        self.strategy = strategy  # 인터페이스에 의존
-
-# 사용
-engine = BacktestEngine(
-    data_loader=CacheDataLoader(),  # 다른 구현 주입 가능
-    strategy=MomentumStrategy()  # 다른 전략 주입 가능
-)
-```
-
-**장점**:
-- 테스트 시 모든 의존성을 Mock으로 교체 가능
-- 다양한 구현을 쉽게 조합 가능
-- 변경에 강한 구조
-
----
-
-## 💡 전략 상세 설명
-
-### Vanilla VBO (변동성 돌파) 전략
-
-#### 개념
-
-**Larry Williams의 변동성 돌파 전략**을 기반으로 하여, 암호화폐 시장에 최적화된 스윙 거래 전략입니다.
-
-기본 아이디어:
-- 변동성이 높은 날은 크게 변할 가능성이 높음
-- 전날의 변동성을 기반으로 오늘의 목표가 설정
-- 목표가를 돌파하면 추세 시작 신호로 해석
-
-#### 핵심 지표
-
-##### 1. **변동성 비율 (K값, Noise)**
-```
-K = |시가 - 종가| / (고가 - 저가)
-범위: 0 ~ 1
-
-의미:
-- K ≈ 0: 거의 변동 없음 (무시)
-- K ≈ 0.5: 정상 변동성
-- K ≈ 1.0: 매우 높은 변동성
-```
-
-##### 2. **목표가 (Target Price)**
-```
-Target = 오늘시가 + (어제고가 - 어제저가) × K
-
-의미:
-- 어제의 변동성만큼 오늘 올라올 것으로 예상
-- 변동성이 클수록 더 높은 목표가
-- 변동성이 작을수록 더 낮은 목표가
-```
-
-##### 3. **이동평균 필터들**
-
-**SMA(5) - 단기 이평**: 단기 추세 및 퇴출 신호
-```
-- 진입 후: close < SMA(5) → 즉시 매도
-- 의미: 단기 추세 반전 신호
-- 빠른 손실 차단
-```
-
-**SMA(10) - 중기 이평**: 추세 확인
-```
-- target > SMA(10) → 중기 상승추세 확인
-- 단기 노이즈 제거
-- 더 강한 신호만 선택
-```
-
-**노이즈 비율 필터**
-```
-short_noise (5일) = 노이즈비율의 5일 이평
-long_noise (10일) = 노이즈비율의 10일 이평
-
-조건: short_noise < long_noise
-의미: 최근 노이즈가 장기 평균보다 낮음
-      → 시장이 안정적 = 신호 신뢰도 높음
-```
-
-#### 매매 규칙
-
-##### 📈 진입(매수) 조건
-
-모든 조건을 **AND로 결합** (엄격한 필터링):
-
-```
-✓ 조건 1: 고가 ≥ 목표가 (변동성 돌파)
-  └─ 의미: 예상했던 상승이 실현됨
-
-✓ 조건 2: 목표가 > SMA(5) (단기 추세)
-  └─ 의미: 단기 상승추세 확인
-
-✓ 조건 3: 목표가 > SMA(10) (중기 추세)
-  └─ 의미: 중기 상승추세 확인
-
-✓ 조건 4: short_noise(5) < long_noise(10) (안정성)
-  └─ 의미: 노이즈가 줄어듦 (거짓신호 제거)
-
-모든 조건 만족 → BUY 신호 발생
-```
-
-**신호 품질 개선**:
-- 조건이 많을수록 거래수 ↓, 신뢰도 ↑
-- 과거 결과에서 최적 조합 발견
-
-##### 📉 퇴출(매도) 조건
-
-```
-✓ 조건: 종가 < SMA(5)
-  └─ 의미: 단기 추세 반전 신호
-  └─ 효과: 손실 최소화 (리스크 관리)
-
-조건 만족 → SELL 신호 발생 (당일 종가에 매도)
-```
-
-#### 파라미터 최적화
-
-**자유도 축소 전략**:
-
-원본 VBO:
-- `sma_period`: 5 (가변)
-- `trend_sma_period`: 10 (가변)
-- `short_noise_period`: 5 (가변)
-- `long_noise_period`: 10 (가변)
-- **자유도: 4개 → 백테스트 시간 지수 증가**
-
-최적화된 VBO (이 시스템):
-```
-규칙 설정:
-- short_sma = trend_sma / 2
-- short_noise = short_sma (같음)
-- long_noise = short_noise × 2 = trend_sma
-
-변수:
-- short_sma: 5, 10, 15, 20 (4개 값)
-- trend_sma: short_sma × 2 (자동 계산)
-
-결과:
-- 자유도: 4 → 1 (4배 빠른 최적화)
-- 각 조합은 여전히 유효한 VBO 논리 유지
-```
-
-**예시**:
-```
-short_sma=5인 경우:
-- SMA(5) 사용 (단기 추세)
-- SMA(10) 사용 (중기 추세)
-- short_noise: K값의 5일 이평
-- long_noise: K값의 10일 이평
-
-short_sma=10인 경우:
-- SMA(10) 사용 (단기 추세)
-- SMA(20) 사용 (중기 추세)
-- short_noise: K값의 10일 이평
-- long_noise: K값의 20일 이평
-
-short_sma=20인 경우:
-- SMA(20) 사용 (단기 추세)
-- SMA(40) 사용 (중기 추세)
-- short_noise: K값의 20일 이평
-- long_noise: K값의 40일 이평
-```
-
-#### 성과 분석
-
-**역사적 백테스트 결과**:
-- **기간**: 8년 (약 3,000 거래일)
-- **총 수익률**: 38,331% (초기 자본 대비)
-- **CAGR**: 105.4% (연 평균)
-- **최대낙폭**: 24.97% (위험 관리)
-- **Sharpe 비율**: 1.97 (위험조정수익 양호)
-- **Calmar 비율**: 4.22 (우수)
-- **승률**: 36% (낮지만 수익이 큼)
-- **거래당 평균 수익**: 높음 (큰 거래에 집중)
-
-**해석**:
-- 낮은 승률(36%)이지만 수익이 있는 이유: 손실 거래는 작고, 수익 거래는 큼
-- 높은 수익/손실비: Profit Factor 1.77 (우수)
-- 변동성 높은 암호화폐 시장에 적합
-
----
-
-## 📁 프로젝트 구조
+## � 프로젝트 구조
 
 ```
 crypto-quant-system/
-├── src/
-│   ├── backtester/      # 백테스팅 엔진
-│   │   ├── engine.py           # 벡터화 시뮬레이션
-│   │   ├── optimization.py      # 파라미터 최적화
-│   │   ├── report.py           # 결과 리포팅
-│   │   └── monte_carlo.py       # 몬테카를로 분석
-│   ├── execution/       # 실시간 거래 봇
-│   │   ├── bot.py              # 메인 봇 로직
-│   │   ├── event_bus.py        # 이벤트 발행-구독
-│   │   ├── order_manager.py    # 주문 관리
-│   │   └── position_manager.py # 포지션 추적
-│   ├── strategies/      # 거래 전략
-│   │   ├── base.py             # 전략 기본 클래스
-│   │   ├── volatility_breakout/
-│   │   │   ├── vbo.py          # VBO 전략 구현
-│   │   │   └── conditions.py   # VBO 조건들
-│   │   ├── momentum/           # 모멘텀 전략
-│   │   ├── mean_reversion/     # 평균회귀 전략
-│   │   └── pair_trading/       # 페어트레이딩 전략
-│   ├── data/            # 데이터 수집 및 캐싱
-│   │   ├── collector.py        # 거래소 데이터 수집
-│   │   ├── cache.py            # 지표 캐싱
-│   │   └── indicators.py       # 기술적 지표 계산
-│   ├── exchange/        # 거래소 API 추상화
-│   ├── risk/            # 위험 관리
-│   ├── config/          # 설정 관리
-│   └── utils/           # 유틸리티
-├── tests/               # 테스트 스위트 (80% 이상 커버리지)
-├── docs/                # 포괄적인 문서
-├── deploy/              # Docker 및 배포 설정
-└── scripts/             # 유틸리티 스크립트
+├── src/                        # 메인 소스 코드
+│   ├── backtester/            # 백테스팅 엔진
+│   │   ├── engine.py          # 벡터화 백테스트 엔진
+│   │   ├── report.py          # 성능 리포트 생성 (HTML/JSON)
+│   │   ├── optimization.py     # 파라미터 최적화 (Grid/Random)
+│   │   ├── bootstrap_analysis.py   # Bootstrap 신뢰구간
+│   │   ├── permutation_test.py     # 통계적 유의성 검증
+│   │   ├── walk_forward_auto.py    # Walk-Forward 분석
+│   │   └── monte_carlo.py          # Monte Carlo 시뮬레이션
+│   ├── execution/              # 실시간 거래 실행
+│   │   ├── bot.py             # 메인 거래 봇 로직
+│   │   ├── event_bus.py       # 이벤트 기반 아키텍처
+│   │   ├── order_manager.py   # 주문 생성/추적/취소
+│   │   ├── position_manager.py # 포지션 추적/관리
+│   │   └── risk_manager.py    # 리스크 제어 (Stop Loss, Take Profit)
+│   ├── strategies/            # 거래 전략 모듈
+│   │   ├── base.py           # 전략 추상 클래스
+│   │   ├── volatility_breakout/    # VBO 전략
+│   │   │   ├── vbo.py        # VanillaVBO 구현
+│   │   │   ├── conditions.py # 진입/청산 조건
+│   │   │   └── filters.py    # 신호 필터
+│   │   ├── momentum/          # 모멘텀 전략 (확장 가능)
+│   │   └── mean_reversion/    # 평균회귀 전략 (확장 가능)
+│   ├── data/                  # 데이터 수집 및 관리
+│   │   ├── collector.py      # 거래소 데이터 수집 (Factory 패턴)
+│   │   ├── cache.py          # 지표 캐싱 레이어
+│   │   ├── upbit_source.py   # Upbit API 연동
+│   │   └── indicators.py     # 기술적 지표 계산 (SMA, EMA 등)
+│   ├── exchange/              # 거래소 API 추상화
+│   │   ├── base.py           # Exchange 인터페이스
+│   │   └── upbit.py          # Upbit 구현체
+│   ├── portfolio/             # 포트폴리오 최적화
+│   │   ├── optimizer.py      # MPT, Risk Parity, Kelly
+│   │   └── rebalancer.py     # 리밸런싱 로직
+│   ├── risk/                  # 리스크 관리
+│   │   ├── metrics.py        # VaR, CVaR, Drawdown
+│   │   └── position_sizer.py # 포지션 사이징
+│   ├── config/                # 설정 관리
+│   │   └── settings.py       # Pydantic 기반 설정
+│   └── cli/                   # CLI 진입점
+│       └── main.py           # crypto-quant 명령어
+├── tests/                     # 테스트 스위트 (86.35% 커버리지)
+│   ├── unit/                 # 단위 테스트
+│   ├── integration/          # 통합 테스트
+│   └── fixtures/             # 테스트 픽스쳐
+├── docs/                      # 문서화
+│   ├── guides/               # 사용자 가이드
+│   ├── api/                  # API 레퍼런스 (Sphinx)
+│   ├── architecture.md       # 아키텍처 설계
+│   └── archive/              # 이전 버전 문서
+├── examples/                  # 예제 스크립트
+│   ├── basic_backtest.py     # 기본 백테스트
+│   ├── custom_strategy.py    # 커스텀 전략 예제
+│   ├── portfolio_optimization.py  # 포트폴리오 최적화
+│   └── live_trading_simulator.py  # Paper Trading
+├── notebooks/                 # Jupyter 노트북
+│   ├── 01-Backtesting-Case-Study.ipynb
+│   ├── 02-Portfolio-Optimization.ipynb
+│   └── 03-Live-Trading-Analysis.ipynb
+├── scripts/                   # 유틸리티 스크립트
+│   ├── tools/                # 개발 도구
+│   ├── backtest/             # 백테스트 스크립트
+│   └── archive/              # 레거시 스크립트
+├── deploy/                    # 배포 설정
+│   ├── Dockerfile            # Docker 이미지
+│   ├── docker-compose.yml    # 서비스 구성
+│   └── README.md             # 배포 가이드
+├── data/                      # 데이터 저장소 (gitignore)
+│   ├── raw/                  # 원본 OHLCV 데이터 (parquet)
+│   └── processed/            # 처리된 데이터
+├── reports/                   # 백테스트 결과 HTML
+├── config/                    # 설정 파일 예제
+│   ├── settings.yaml.example
+│   └── monitoring.yaml.example
+├── pyproject.toml            # 프로젝트 메타데이터 & 의존성
+├── noxfile.py                # 테스트 자동화
+├── Makefile                  # 편의 명령어
+└── README.md                 # 이 문서
 ```
+
+### 핵심 디렉토리 설명
+
+- **src/**: 모든 프로덕션 코드 (96.7% strict type coverage)
+- **tests/**: 단위/통합 테스트 (86.35% 커버리지)
+- **docs/**: Sphinx 문서, 아키텍처 가이드
+- **examples/**: 10개 예제 스크립트 (바로 실행 가능)
+- **notebooks/**: 3개 튜토리얼 노트북 (학습용)
+- **deploy/**: Docker 배포 환경 (1분 내 구동)
 
 ## 📚 문서
 
 ### 📖 가이드
-- [시작 가이드](docs/guides/getting_started.md) - 설치 및 설정
-- [전략 커스터마이징](docs/guides/strategy_customization.md) - 커스텀 전략 작성
-- [설정 가이드](docs/guides/configuration.md) - 설정 가이드
+- [설치 가이드](docs/DEPENDENCY_INSTALLATION_GUIDE.md) - Python, uv, 의존성 설치
+- [시작 가이드](docs/guides/getting_started.md) - 첫 백테스트 실행
+- [전략 개발](docs/guides/strategy_customization.md) - 커스텀 전략 작성법
+- [설정 가이드](docs/guides/configuration.md) - YAML/환경변수 설정
 
 ### 🏗️ 아키텍처
-- [시스템 아키텍처](docs/architecture.md) - 설계 원칙 및 구조
-- [레거시 vs 신규 봇 비교](docs/comparison_legacy_vs_new_bot.md) - 마이그레이션 가이드
+- [시스템 아키텍처](docs/architecture.md) - 설계 원칙, 패턴, 데이터 흐름
+- [타입 체킹 가이드](docs/TYPE_CHECKING.md) - MyPy strict 사용법
 
 ### 📋 개발
-- [테스트 커버리지 계획](docs/TEST_COVERAGE_PLAN.md) - 테스트 전략
-- [리팩토링 표준](docs/refactoring/STANDARDS_COMPLIANCE_REPORT.md) - 코드 품질 표준
+- [기여 가이드](CONTRIBUTING.md) - PR 프로세스, 코드 스타일
+- [보안 가이드](SECURITY.md) - API 키 관리, 취약점 신고
+- [라이선스](LICENSE) - MIT 라이선스
 
-## 🧪 테스트
+### 📓 Jupyter 노트북
+
+실전 예제로 배우는 학습 자료:
+
+1. **[백테스팅 케이스 스터디](notebooks/01-Backtesting-Case-Study.ipynb)**
+   - VBO 전략 실행 및 분석
+   - 성능 지표 해석 (Sharpe, Sortino, MDD)
+   - 자산 곡선, 드로우다운 시각화
+
+2. **[포트폴리오 최적화](notebooks/02-Portfolio-Optimization.ipynb)**
+   - MPT vs Risk Parity vs Kelly Criterion
+   - 효율적 변경선(Efficient Frontier)
+   - 거래비용 반영 최적화
+
+3. **[실시간 거래 분석](notebooks/03-Live-Trading-Analysis.ipynb)**
+   - Paper Trading 시뮬레이션
+   - 리스크 관리 체크리스트
+   - 실전 거래 준비사항
+
+## 🧪 테스트 및 코드 품질
+
+### 테스트 실행
 
 ```bash
-# 모든 테스트 실행
+# 전체 테스트 (pytest)
 make test
 
-# 커버리지 포함 실행
+# 커버리지 리포트 생성
 uv run pytest --cov=src --cov-report=html
+# 결과: htmlcov/index.html
 
-# 특정 테스트 실행
-uv run pytest tests/unit/test_strategy.py
+# 특정 모듈만 테스트
+uv run pytest tests/unit/test_backtester/
+
+# nox를 통한 자동화 테스트
+nox  # 전체 세션 (lint, type, test)
+nox -s test  # 테스트만
+nox -s lint  # 린트만
 ```
 
-**테스트 원칙:**
-- 커버리지 목표: 80%+ 유지, 핵심 모듈은 85%+ 지향
-- 테스트 유형: 단위, 통합, 회귀, 프로퍼티 기반 테스트
-- CI: 린트/타입 검사/테스트/커버리지 업로드를 자동화
-
-## 🔍 코드 품질 검사
-
-### MyPy 타입 체크
+### 타입 체크 (MyPy)
 
 ```bash
-# 전체 타입 체크
+# 전체 타입 체크 (strict 모드)
 mypy src tests
 
 # 또는 nox 사용
-nox -s lint
+nox -s type
+
+# 결과: 87/90 모듈 strict 통과 (96.7%)
 ```
 
-이 프로젝트는 **MyPy 검증을 통한 완전한 타입 안전성**을 제공합니다:
-- ✅ 모든 코드에 타입 힌트 적용
-- ✅ MyPy strict mode 호환
-- ✅ Pre-commit hook으로 자동 검사
-- ✅ CI/CD 파이프라인에 통합
+**strict 모드 적용 파일**:
+- ✅ src/backtester/*.py (report, bootstrap, permutation 등)
+- ✅ src/data/*.py (collector, cache, indicators)
+- ✅ src/strategies/*.py (vbo, conditions)
+- ✅ src/risk/*.py (metrics, kelly, trade_cost)
+- ⏸️ src/backtester/engine.py (pandas 복잡성으로 유예)
 
-### Ruff 린팅 및 포매팅
+### 코드 품질 (Ruff)
 
 ```bash
-# 코드 린팅 및 포매팅
+# 린트 & 포맷 검사
 ruff check src tests
+ruff format --check src tests
+
+# 자동 수정
+ruff check --fix src tests
 ruff format src tests
 
-# 또는 nox 사용
-nox -s lint
+# 또는 make 사용
+make lint
+make format
 ```
 
-### Pre-commit 훅
+### Pre-commit Hooks
 
 ```bash
-# Pre-commit 설치
+# 설치 (최초 1회)
 pre-commit install
 
-# 모든 파일에 대해 훅 실행
+# 수동 실행
 pre-commit run --all-files
+
+# 이후 git commit 시 자동 실행:
+# - Ruff 린트/포맷
+# - MyPy 타입 체크
+# - 테스트 (선택적)
 ```
+
+### CI/CD
+
+GitHub Actions 자동 실행:
+- ✅ **Lint**: Ruff 코드 스타일 검사
+- ✅ **Type**: MyPy strict 타입 체크
+- ✅ **Test**: pytest 전체 테스트 + 커버리지
+- ✅ **Security**: CodeQL 보안 스캔
+- ✅ **Docs**: Sphinx 문서 빌드
 
 ## 🚢 배포
 
-### Docker 배포
+### Docker 배포 (권장)
 
 ```bash
 cd deploy
+
+# 이미지 빌드 및 실행
 docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f bot
+
+# 중단
+docker-compose down
 ```
 
-### GCP 배포
+**docker-compose.yml 구성**:
+- 봇 컨테이너 (실시간 거래)
+- 환경 변수 파일 (.env)
+- 데이터 볼륨 마운트
 
-자세한 GCP 배포 지침은 [deploy/README.md](deploy/README.md)를 참조하세요.
+### 수동 배포
+
+```bash
+# 1. 서버에서 저장소 클론
+git clone https://github.com/11e3/crypto-quant-system.git
+cd crypto-quant-system
+
+# 2. 의존성 설치
+uv sync
+
+# 3. 환경 변수 설정
+cp config/settings.yaml.example config/settings.yaml
+# settings.yaml 편집 (API 키 입력)
+
+# 4. 봇 실행
+nohup crypto-quant run-bot > bot.log 2>&1 &
+```
+
+### GCP/AWS 배포
+
+자세한 클라우드 배포 가이드는 [deploy/README.md](deploy/README.md) 참조
 
 ## 🤝 기여하기
 
-기여를 환영합니다! 가이드라인은 [CONTRIBUTING.md](CONTRIBUTING.md)를 참조하세요.
+기여를 환영합니다! 다음 프로세스를 따라주세요:
 
-1. 저장소 포크
-2. 기능 브랜치 생성 (`git checkout -b feature/amazing-feature`)
-3. 변경사항 커밋 (`git commit -m 'feat: add amazing feature'`)
-4. 브랜치에 푸시 (`git push origin feature/amazing-feature`)
-5. Pull Request 생성
+### 기여 절차
 
-## 📝 코드 품질
+1. **저장소 포크**: GitHub에서 Fork 버튼 클릭
+2. **브랜치 생성**: `git checkout -b feature/amazing-feature`
+3. **개발 환경 설정**:
+   ```bash
+   uv sync --all-extras
+   pre-commit install
+   ```
+4. **코드 작성**: 기능 구현 또는 버그 수정
+5. **테스트 작성**: `tests/` 디렉토리에 단위 테스트 추가
+6. **품질 검사**:
+   ```bash
+   make lint    # Ruff 린트
+   make test    # pytest 테스트
+   mypy src     # 타입 체크
+   ```
+7. **커밋**: `git commit -m 'feat: add amazing feature'`
+   - 커밋 메시지는 [Conventional Commits](https://www.conventionalcommits.org/) 따르기
+8. **푸시**: `git push origin feature/amazing-feature`
+9. **PR 생성**: GitHub에서 Pull Request 오픈
 
-이 프로젝트는 현대적 Python 개발 표준을 따릅니다:
+### 코드 스타일
 
-- ✅ **SOLID 원칙**: 의존성 주입을 통한 클린 아키텍처
-- ✅ **타입 안전성**: MyPy 검증을 통한 완전한 타입 커버리지 (0 mypy 에러)
-- ✅ **테스트**: pytest로 80% 이상 커버리지
-- ✅ **린팅**: Ruff를 사용한 자동 코드 품질 검사
-- ✅ **포매팅**: Ruff 포매터를 통한 일관된 코드 스타일
-- ✅ **문서**: 포괄적인 문서 및 독스트링
-- ✅ **자동화**: Pre-commit hook으로 커밋 전 품질 검사
+- **타입 힌트**: 모든 함수에 타입 힌트 필수
+- **Docstring**: Google 스타일 독스트링
+- **테스트**: 새 기능은 80% 이상 커버리지 유지
+- **Ruff**: 자동 포매팅 및 린트 준수
+- **MyPy**: strict 모드 통과
+
+자세한 내용은 [CONTRIBUTING.md](CONTRIBUTING.md) 참조
 
 ## ⚠️ 면책 조항 및 위험 공고
 
@@ -732,118 +513,96 @@ docker-compose up -d
 - 🔴 **자본 손실 위험**: 투자한 자본을 **완전히 잃을 수 있습니다**
 - 🔴 **극변동성**: 암호화폐는 하루에 20-30% 이상 변동 가능
 - 🔴 **보장 없음**: 과거 성과는 미래 결과를 **절대 보장하지 않습니다**
-- 🔴 **시스템 위험**: 소프트웨어 버그, API 장애, 거래소 폐쇄 가능성
+- 🔴 **시스템 위험**: 소프트웨어 버그, API 장애, 거래소 문제 가능성
 
 ### 필수 읽기
 
 사용 전에 반드시 읽어주세요:
-- 📖 [면책조항 (DISCLAIMER.md)](DISCLAIMER.md) - 자세한 위험 경고
+- 📖 [면책조항 (DISCLAIMER.md)](DISCLAIMER.md) - 상세 위험 경고
 - 📖 [데이터 사용 정책 (DATA_USAGE_POLICY.md)](DATA_USAGE_POLICY.md) - 개인정보 보호
-- 📖 [보안 정책 (SECURITY.md)](SECURITY.md) - API 키 보안 관행
+- 📖 [보안 정책 (SECURITY.md)](SECURITY.md) - API 키 보안
 
 ### 책임 사항
 
-**당신의 책임:**
-- ✅ 실거래 전에 항상 모의 거래(Paper Trading)로 충분히 테스트
-- ✅ 여유 자금(잃어도 상관없는 금액)으로만 거래
-- ✅ 정기적으로 시스템 성과 모니터링
-- ✅ 법적/세금 책임은 사용자가 부담
+**사용자 책임**:
+- ✅ 실거래 전 충분한 Paper Trading 테스트
+- ✅ 여유 자금(손실 가능 금액)으로만 거래
+- ✅ 정기적 시스템 성과 모니터링
+- ✅ 법적/세금 책임 준수
 
-**작성자/기여자는 책임지지 않습니다:**
+**개발자/기여자는 책임지지 않음**:
 - ❌ 금융 손실
 - ❌ 거래소 문제로 인한 피해
 - ❌ 소프트웨어 버그로 인한 오류 거래
-- ❌ 세금/규제 준수 실패
+- ❌ 세금/규제 위반
 
 ## 📄 라이선스
 
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+MIT 라이선스 - [LICENSE](LICENSE) 참조
 
 ## 🔐 보안 및 준수
 
 ### 보안 기능
 
-- ✅ **환경 변수 기반 설정**: API 키는 소스 코드에 포함되지 않음
-- ✅ **타입 안전성**: MyPy 검증으로 타입 오류 방지
-- ✅ **코드 분석**: CodeQL을 통한 보안 취약점 자동 스캔
-- ✅ **종속성 검사**: Bandit로 보안 문제 감지
+- ✅ **환경 변수 설정**: API 키는 코드에 포함 안 됨
+- ✅ **타입 안전성**: MyPy strict로 타입 오류 방지
+- ✅ **코드 분석**: CodeQL 보안 취약점 자동 스캔
 - ✅ **데이터 보호**: 거래 기록 암호화 권장
 
 ### 보안 취약점 신고
 
-보안 문제 발견 시:
-1. ❌ 공개 이슈 생성 금지
-2. ✅ [GitHub Security Advisory](https://github.com/11e3/crypto-quant-system/security/advisories/new) 사용
-3. ✅ 또는 메인테이너에게 직접 연락
+- ❌ 공개 이슈 생성 금지
+- ✅ [GitHub Security Advisory](https://github.com/11e3/crypto-quant-system/security/advisories/new) 사용
+- ✅ 또는 메인테이너 직접 연락
 
 자세한 내용: [SECURITY.md](SECURITY.md)
 
-### 준법 사항
+### 준법 및 세금
 
-**사용자는 다음을 준수해야 합니다:**
+**법률 준수**:
+- 🇰🇷 한국: 특정금융정보법
+- 🇺🇸 미국: FinCEN, CFTC
+- 🇪🇺 유럽: MiFID II, GDPR
+- 📋 국제: 해당 국가 암호화폐 규정
 
-- 🇰🇷 한국: 특정금융정보법 (거래소 선택)
-- 🇺🇸 미국: FinCEN, CFTC 규정
-- 🇪🇺 유럽: MiFID II, GDPR 준수
-- 📋 국제: 해당 국가의 암호화폐 거래 규정
-
-**세금:**
+**세금**:
 - 💰 거래 수익은 과세 대상
 - 📊 거래 기록 7년 보관 권장
 - ⚠️ 세금 신고는 사용자 책임
 
-## 📚 포트폴리오 & 학습 자료
-
-### 📖 Jupyter Notebooks
-시스템 사용 방법을 배우기 위한 **실습 가이드**:
-
-- **[01-Backtesting-Case-Study.ipynb](notebooks/01-Backtesting-Case-Study.ipynb)**
-  - 변동성 돌파 전략 실행 및 분석
-  - 자산 곡선, 드로우다운, 거래 통계
-  - 성능 지표 해석 (Sharpe, Sortino, Calmar)
-
-- **[02-Portfolio-Optimization.ipynb](notebooks/02-Portfolio-Optimization.ipynb)**
-  - 포트폴리오 구성: MPT vs 리스크 패리티 vs 켈리
-  - 거래비용 모델링
-  - 효율적 변경선(Efficient Frontier) 생성
-
-- **[03-Live-Trading-Analysis.ipynb](notebooks/03-Live-Trading-Analysis.ipynb)**
-  - 실시간 거래 시뮬레이션
-  - 위험 관리 메커니즘
-  - 라이브 거래 체크리스트
-
-👉 **[전체 노트북 가이드](notebooks/README.md)** 참조
-
-### 📊 성과 예시
-
-예제 코드 실행 결과:
-```
-초기 자본: 1,000,000 KRW
-최종 자산: 1,254,891 KRW
-수익률: +25.5%
-거래 수: 4,786회
-승률: 35.4%
-Sharpe 비율: 1.82
-최대 낙폭: -12.3%
-```
-
-### 🎓 학습 경로
-
-1. **기초** (1주): [README.md 읽기, 예제 실행](#-quick-start)
-2. **백테스팅** (1주): [노트북 01 - 백테스팅 사례 연구](notebooks/01-Backtesting-Case-Study.ipynb)
-3. **포트폴리오** (1주): [노트북 02 - 포트폴리오 최적화](notebooks/02-Portfolio-Optimization.ipynb)
-4. **라이브** (1주): [노트북 03 - 실거래 시뮬레이션](notebooks/03-Live-Trading-Analysis.ipynb)
-5. **실습** (진행 중): [사용자 정의 전략 개발](#-contributing)
-
 ## 🙏 감사의 말
 
-- Upbit API 통합을 위한 [pyupbit](https://github.com/sharebook-kr/pyupbit)
-- 다양한 거래소 지원 확장 가능한 아키텍처
-- 모범 사례를 제공한 현대적 Python 개발 커뮤니티
+- [pyupbit](https://github.com/sharebook-kr/pyupbit) - Upbit API 통합
+- [pandas-dev](https://github.com/pandas-dev/pandas) - 데이터 분석
+- [numpy](https://github.com/numpy/numpy) - 수치 연산
+- [pydantic](https://github.com/pydantic/pydantic) - 데이터 검증
+- [ruff](https://github.com/astral-sh/ruff) - 초고속 린터
+- Python 오픈소스 커뮤니티
 
-## 📧 문의
+## 📧 문의 및 지원
 
-질문이나 지원이 필요한 경우 GitHub에 이슈를 열어주세요.
+- **버그 리포트**: [GitHub Issues](https://github.com/11e3/crypto-quant-system/issues)
+- **기능 요청**: [GitHub Discussions](https://github.com/11e3/crypto-quant-system/discussions)
+- **보안 이슈**: [Security Advisory](https://github.com/11e3/crypto-quant-system/security/advisories/new)
+
+## 🗺️ 로드맵
+
+### 현재 상태 (v0.1.0)
+
+- ✅ VanillaVBO 전략 구현
+- ✅ 백테스팅 엔진 (벡터화)
+- ✅ 실시간 거래 봇
+- ✅ 96.7% MyPy strict 커버리지
+- ✅ 86.35% 테스트 커버리지
+- ✅ Docker 배포
+
+### 계획 중
+
+- 🔜 **v0.2.0**: 다중 거래소 지원 (Binance, Bithumb)
+- 🔜 **v0.3.0**: 머신러닝 기반 전략 (LSTM, Transformer)
+- 🔜 **v0.4.0**: 웹 대시보드 (Streamlit/Dash)
+- 🔜 **v0.5.0**: 고빈도 거래 (HFT) 지원
+- 🔜 **v1.0.0**: 프로덕션 안정화
 
 ---
 
@@ -851,6 +610,9 @@ Sharpe 비율: 1.82
 
 **정량적 거래를 위해 ❤️로 만들었습니다**
 
-⭐ 유용하다고 생각되시면 이 저장소에 스타를 눌러주세요!
+⭐ 유용하다면 Star를 눌러주세요!
+
+[보고 싶은 내용이 있나요?](https://github.com/11e3/crypto-quant-system/discussions) • [버그 발견?](https://github.com/11e3/crypto-quant-system/issues) • [기여하기](CONTRIBUTING.md)
 
 </div>
+

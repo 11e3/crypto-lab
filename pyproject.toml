@@ -112,6 +112,7 @@ exclude = [
     "tests/",
     "scripts/backtest/",
     "scripts/tools/",
+    "scripts/archive/",
     "scripts/test_",
     "scripts/run_phase",
     "create_notebooks.py",
