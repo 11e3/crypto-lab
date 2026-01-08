@@ -187,7 +187,7 @@ class DynamicSlippageModel:
         elif 0 <= condition.time_of_day < 6:
             slippage *= 1.15
 
-        return slippage
+        return float(slippage)
 
     def estimate_execution_price(
         self,
@@ -230,7 +230,7 @@ class UpbitSlippageEstimator(DynamicSlippageModel):
     - 암호화폐 특성상 변동성 높음
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             base_spread=0.01,  # Upbit 평균 스프레드
             maker_fee=0.0,
@@ -244,7 +244,7 @@ class UpbitSlippageEstimator(DynamicSlippageModel):
         entry_slippage: float,
         exit_slippage: float,
         position_size: float = 1.0,
-    ) -> dict:
+    ) -> dict[str, float]:
         """
         왕복 거래 비용 계산.
 

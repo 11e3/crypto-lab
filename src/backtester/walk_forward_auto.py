@@ -266,7 +266,7 @@ class WalkForwardAnalyzer:
         return segments
 
     def _optimize_parameters_grid(
-        self, data: pd.DataFrame, strategy_factory: Callable, param_ranges: dict[str, list[Any]]
+        self, data: pd.DataFrame, strategy_factory: Callable[..., Any], param_ranges: dict[str, list[Any]]
     ) -> dict[str, Any]:
         """
         Training 구간에서 파라미터 최적화 (Grid Search).
