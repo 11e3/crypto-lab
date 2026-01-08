@@ -27,7 +27,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.backtester.permutation_test import PermutationTester  # noqa: E402
 from src.backtester.robustness_analysis import RobustnessAnalyzer  # noqa: E402
 from src.backtester.walk_forward_auto import WalkForwardAnalyzer  # noqa: E402
-from src.strategies.volatility_breakout.vbo_v2 import VanillaVBO_v2  # noqa: E402
+from src.strategies.volatility_breakout.vbo import VanillaVBO  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -105,7 +105,7 @@ def main():
     # WFA
     wfa = WalkForwardAnalyzer(data=data, train_period=504, test_period=252, step=63)
     report_wfa = wfa.run(
-        strategy_factory=lambda p: VanillaVBO_v2(
+        strategy_factory=lambda p: VanillaVBO(
             use_improved_noise=True,
             use_adaptive_k=True,
             use_dynamic_slippage=False,
@@ -119,7 +119,7 @@ def main():
     # Robustness
     robust = RobustnessAnalyzer(
         data=data,
-        strategy_factory=lambda p: VanillaVBO_v2(
+        strategy_factory=lambda p: VanillaVBO(
             use_improved_noise=True,
             use_adaptive_k=True,
             use_dynamic_slippage=False,
@@ -136,7 +136,7 @@ def main():
     # Permutation
     perm = PermutationTester(
         data=data,
-        strategy_factory=lambda: VanillaVBO_v2(
+        strategy_factory=lambda: VanillaVBO(
             use_improved_noise=True,
             use_adaptive_k=True,
             use_dynamic_slippage=False,
@@ -169,3 +169,4 @@ def main():
 if __name__ == "__main__":
     logger.info(f"실데이터 재검증 시작: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     main()
+

@@ -3,7 +3,7 @@ Phase 1 재검증: 개선된 지표(VBO v2)로 유효성 확인
 
 비교:
 - Original (VanillaVBO): 기존 고정 K-값, 고정 슬리피지
-- Enhanced (VanillaVBO_v2): Phase 2 개선 지표, 동적 K-값, 정확한 비용
+- Enhanced (VanillaVBO): Phase 2 개선 지표, 동적 K-값, 정확한 비용
 
 목표:
 - WFA: OOS/IS 비율 > 0.3 (과적합 여부)
@@ -28,7 +28,7 @@ from src.backtester.permutation_test import PermutationTester  # noqa: E402
 from src.backtester.robustness_analysis import RobustnessAnalyzer  # noqa: E402
 from src.backtester.walk_forward_auto import WalkForwardAnalyzer  # noqa: E402
 from src.strategies.volatility_breakout.vbo import VanillaVBO  # noqa: E402
-from src.strategies.volatility_breakout.vbo_v2 import VanillaVBO_v2  # noqa: E402
+from src.strategies.volatility_breakout.vbo import VanillaVBO  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -97,11 +97,11 @@ def run_wfa_comparison():
         logger.error(f"Original WFA 실패: {e}")
         wfa_orig = None
 
-    print("\n[Enhanced VanillaVBO_v2]")
+    print("\n[Enhanced VanillaVBO]")
     try:
         analyzer_enh = WalkForwardAnalyzer(data=data, train_period=504, test_period=252, step=63)
         report_enh = analyzer_enh.run(
-            strategy_factory=lambda p: VanillaVBO_v2(
+            strategy_factory=lambda p: VanillaVBO(
                 use_improved_noise=True,
                 use_adaptive_k=True,
                 use_dynamic_slippage=False,
@@ -173,11 +173,11 @@ def run_robustness_comparison():
         logger.error(f"Original Robustness 실패: {e}")
         robust_orig = None
 
-    print("\n[Enhanced VanillaVBO_v2]")
+    print("\n[Enhanced VanillaVBO]")
     try:
         analyzer_enh = RobustnessAnalyzer(
             data=data,
-            strategy_factory=lambda p: VanillaVBO_v2(
+            strategy_factory=lambda p: VanillaVBO(
                 use_improved_noise=True,
                 use_adaptive_k=True,
                 use_dynamic_slippage=False,
@@ -247,11 +247,11 @@ def run_permutation_comparison():
         logger.error(f"Original Permutation 실패: {e}")
         perm_orig = None
 
-    print("\n[Enhanced VanillaVBO_v2]")
+    print("\n[Enhanced VanillaVBO]")
     try:
         tester_enh = PermutationTester(
             data=data,
-            strategy_factory=lambda: VanillaVBO_v2(
+            strategy_factory=lambda: VanillaVBO(
                 use_improved_noise=True,
                 use_adaptive_k=True,
                 use_dynamic_slippage=False,
@@ -363,3 +363,4 @@ if __name__ == "__main__":
         logger.warning("일부 Phase 1 재검증 실패")
 
     exit(0 if all_passed else 1)
+

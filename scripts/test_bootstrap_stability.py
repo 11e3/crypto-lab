@@ -5,6 +5,8 @@ Bootstrap 안정화 테스트 및 최적화
 1. Block length 최적화 (현재 20 → 최적값 찾기)
 2. Sample count 안정화 (100 → 500+)
 3. OHLC resampling 일관성 검증
+
+Note: Migrated from VanillaVBO to VanillaVBO with feature flags (2026-01-08)
 """
 
 from datetime import datetime
@@ -15,7 +17,7 @@ import pandas as pd
 
 from src.backtester.bootstrap_analysis import BootstrapAnalyzer
 from src.backtester.engine import BacktestConfig
-from src.strategies.volatility_breakout.vbo_v2 import VanillaVBO_v2
+from src.strategies.volatility_breakout.vbo import VanillaVBO
 
 
 def load_data() -> pd.DataFrame:
@@ -57,7 +59,7 @@ def test_block_size_sensitivity():
 
         boot = BootstrapAnalyzer(
             data=data,
-            strategy_factory=lambda: VanillaVBO_v2(
+            strategy_factory=lambda: VanillaVBO(
                 sma_period=4,
                 trend_sma_period=8,
                 use_improved_noise=True,
@@ -129,7 +131,7 @@ def test_sample_count_convergence():
 
         boot = BootstrapAnalyzer(
             data=data,
-            strategy_factory=lambda: VanillaVBO_v2(
+            strategy_factory=lambda: VanillaVBO(
                 sma_period=4,
                 trend_sma_period=8,
                 use_improved_noise=True,
@@ -192,7 +194,7 @@ def test_ohlc_consistency():
 
     boot = BootstrapAnalyzer(
         data=data,
-        strategy_factory=lambda: VanillaVBO_v2(
+        strategy_factory=lambda: VanillaVBO(
             sma_period=4,
             trend_sma_period=8,
             use_improved_noise=True,
@@ -262,3 +264,4 @@ if __name__ == "__main__":
     print("2. Sample Count: 테스트 2 결과 참조")
     print(f"3. OHLC Consistency: {'✅ PASS' if ohlc_valid else '⚠️ FAIL'}")
     print(f"\n완료: {datetime.now()}")
+

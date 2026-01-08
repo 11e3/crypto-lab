@@ -1,4 +1,7 @@
-"""Bootstrap 디버깅: 개별 샘플 검증"""
+"""Bootstrap 디버깅: 개별 샘플 검증
+
+Note: Migrated from VanillaVBO_v2 to VanillaVBO with feature flags (2026-01-08)
+"""
 
 from pathlib import Path
 
@@ -6,7 +9,7 @@ import pandas as pd
 
 from src.backtester.bootstrap_analysis import BootstrapAnalyzer
 from src.backtester.engine import BacktestConfig
-from src.strategies.volatility_breakout.vbo_v2 import VanillaVBO_v2
+from src.strategies.volatility_breakout.vbo import VanillaVBO
 
 data_path = Path("c:/workspace/dev/crypto-quant-system/data/raw/KRW-BTC_day.parquet")
 df = pd.read_parquet(data_path)
@@ -16,7 +19,7 @@ if "date" in df.columns:
 
 boot = BootstrapAnalyzer(
     data=df,
-    strategy_factory=lambda: VanillaVBO_v2(
+    strategy_factory=lambda: VanillaVBO(
         sma_period=4,
         trend_sma_period=8,
         use_improved_noise=True,
@@ -52,7 +55,7 @@ for i in range(3):
     )
 
     # 전략 실행
-    strategy = VanillaVBO_v2(
+    strategy = VanillaVBO(
         sma_period=4,
         trend_sma_period=8,
         use_improved_noise=True,

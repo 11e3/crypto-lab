@@ -6,6 +6,8 @@ Phase 2 실행 스크립트: 노이즈 필터 + 슬리피지 + 거래 비용 통
 2. DynamicSlippageModel 검증
 3. TradeCostCalculator 통합
 4. 개선 전/후 비교
+
+Note: Migrated from indicators_v2 to main indicators module (2026-01-08)
 """
 
 import logging
@@ -25,7 +27,8 @@ from src.backtester.trade_cost_calculator import (  # noqa: E402
     CostBreakdownAnalysis,
     TradeCostCalculator,
 )
-from src.utils.indicators_v2 import apply_improved_indicators  # noqa: E402
+# Migrated from indicators_v2 to main indicators module
+from src.utils.indicators import add_improved_indicators  # noqa: E402
 
 # 로깅 설정
 logging.basicConfig(
@@ -69,7 +72,7 @@ def test_improved_noise_indicator():
 
     # 1. 기본 지표 적용
     try:
-        improved_data = apply_improved_indicators(data)
+        improved_data = add_improved_indicators(data)
         logger.info("[OK] 노이즈 지표 계산 성공")
 
         # 결과 확인

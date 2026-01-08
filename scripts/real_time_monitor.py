@@ -24,7 +24,7 @@ import yaml  # noqa: E402
 from src.backtester import BacktestConfig, run_backtest  # noqa: E402
 from src.data.collector_factory import DataCollectorFactory  # noqa: E402
 from src.monitoring.alerts import format_issues, to_console, to_file  # noqa: E402
-from src.strategies.volatility_breakout.vbo_v2 import VanillaVBO_v2  # noqa: E402
+from src.strategies.volatility_breakout.vbo import VanillaVBO  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ class UpbitLiveMonitor:
         """Run backtest on live data."""
         print(f"[{self._now()}] Running backtest...")
 
-        strategy = VanillaVBO_v2(
+        strategy = VanillaVBO(
             sma_period=4,
             trend_sma_period=8,
             use_improved_noise=True,
@@ -293,3 +293,4 @@ if __name__ == "__main__":
     )
 
     monitor.monitor(args.tickers, webhook_url=args.slack)
+

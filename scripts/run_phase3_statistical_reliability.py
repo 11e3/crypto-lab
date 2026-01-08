@@ -3,6 +3,8 @@ Phase 3: Statistical Reliability Runner
 - Monte Carlo simulation (existing module)
 - Bootstrap analysis (new)
 Generates summary outputs for reliability metrics.
+
+Note: Migrated from VanillaVBO to VanillaVBO with feature flags (2026-01-08)
 """
 
 import argparse
@@ -21,7 +23,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.backtester.bootstrap_analysis import BootstrapAnalyzer  # noqa: E402
 from src.backtester.engine import BacktestConfig, BacktestResult, run_backtest  # noqa: E402
 from src.backtester.monte_carlo import MonteCarloResult, MonteCarloSimulator  # noqa: E402
-from src.strategies.volatility_breakout.vbo_v2 import VanillaVBO_v2  # noqa: E402
+from src.strategies.volatility_breakout.vbo import VanillaVBO  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -99,7 +101,7 @@ def main():
     # Use the official backtest engine for realistic metrics when parquet is provided
     if parquet_path and parquet_path.exists():
         ticker, interval = parse_ticker_interval_from_path(parquet_path)
-        strat = VanillaVBO_v2(
+        strat = VanillaVBO(
             use_improved_noise=True,
             use_adaptive_k=True,
             use_dynamic_slippage=False,
@@ -114,7 +116,7 @@ def main():
         )
     else:
         # Fallback to synthetic data if no parquet provided
-        strat = VanillaVBO_v2(
+        strat = VanillaVBO(
             use_improved_noise=True,
             use_adaptive_k=True,
             use_dynamic_slippage=False,
@@ -157,7 +159,7 @@ def main():
     # Bootstrap (new)
     boot = BootstrapAnalyzer(
         df,
-        strategy_factory=lambda: VanillaVBO_v2(
+        strategy_factory=lambda: VanillaVBO(
             use_improved_noise=True,
             use_adaptive_k=True,
             use_dynamic_slippage=False,
@@ -208,3 +210,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

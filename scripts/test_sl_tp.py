@@ -1,5 +1,7 @@
 """
 Stop-Loss / Take-Profit 구현 검증 스크립트
+
+Note: Migrated from VanillaVBO to VanillaVBO with feature flags (2026-01-08)
 """
 
 from pathlib import Path
@@ -7,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.backtester import BacktestConfig, run_backtest
-from src.strategies.volatility_breakout.vbo_v2 import VanillaVBO_v2
+from src.strategies.volatility_breakout.vbo import VanillaVBO
 
 
 def test_baseline():
@@ -16,7 +18,7 @@ def test_baseline():
     print("BASELINE: No Stop-Loss / No Take-Profit")
     print("=" * 80)
 
-    strategy = VanillaVBO_v2(
+    strategy = VanillaVBO(
         sma_period=4,
         trend_sma_period=8,
         use_improved_noise=True,
@@ -76,7 +78,7 @@ def test_with_sl_tp():
     print("WITH SL/TP: stop_loss=5%, take_profit=15%")
     print("=" * 80)
 
-    strategy = VanillaVBO_v2(
+    strategy = VanillaVBO(
         sma_period=4,
         trend_sma_period=8,
         use_improved_noise=True,
@@ -151,3 +153,4 @@ if __name__ == "__main__":
     baseline = test_baseline()
     sl_tp = test_with_sl_tp()
     compare_results(baseline, sl_tp)
+
