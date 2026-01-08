@@ -12,13 +12,12 @@
 ![Docs](https://github.com/11e3/crypto-quant-system/actions/workflows/docs.yml/badge.svg)
 
 <!-- Quality Badges -->
-![Coverage](https://codecov.io/gh/11e3/crypto-quant-system/branch/main/graph/badge.svg)
 ![Code Style](https://img.shields.io/badge/Code%20Style-Ruff-black.svg)
 ![Type Check](https://img.shields.io/badge/Type%20Check-Mypy%20Strict%2096.7%25-blue.svg)
 
 <!-- Project Badges -->
 ![Tests](https://img.shields.io/badge/Tests-Passing-green.svg)
-![Coverage Threshold](https://img.shields.io/badge/Coverage-86.35%25-brightgreen.svg)
+![Coverage](https://img.shields.io/badge/Coverage-86.35%25-brightgreen.svg)
 
 **변동성 돌파 전략 기반 암호화폐 자동 거래 시스템**
 
