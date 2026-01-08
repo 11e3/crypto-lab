@@ -14,11 +14,11 @@
 <!-- Quality Badges -->
 ![Coverage](https://codecov.io/gh/11e3/crypto-quant-system/branch/main/graph/badge.svg)
 ![Code Style](https://img.shields.io/badge/Code%20Style-Ruff%20%2B%20Black-black.svg)
-![Type Check](https://img.shields.io/badge/Type%20Check-Mypy-blue.svg)
+![Type Check](https://img.shields.io/badge/Type%20Check-Mypy%20Strict-blue.svg)
 
 <!-- Project Badges -->
-![Tests](https://img.shields.io/badge/Tests-908%20passed-green.svg)
-![Coverage Threshold](https://img.shields.io/badge/Coverage%20Threshold-87.31%25-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-948%20passed-green.svg)
+![Coverage Threshold](https://img.shields.io/badge/Coverage-86.99%25-brightgreen.svg)
 
 **변동성 돌파 전략을 사용한 암호화폐 자동 거래 시스템**
 
@@ -63,8 +63,8 @@ Crypto Quant System은 여러 암호화폐 거래소(Upbit 등)를 지원하는 
 ### 기술적 우수성
 
 - 🏗️ **클린 아키텍처**: SOLID 원칙, 의존성 주입, 관심사 분리
-- 🧪 **높은 테스트 커버리지**: 단위 및 통합 테스트로 80% 이상 커버리지
-- 📝 **타입 안전성**: MyPy 검증을 통한 완전한 타입 힌트
+- 🧪 **높은 테스트 커버리지**: 948개 테스트로 86.99% 커버리지
+- 📝 **100% 타입 안전성**: MyPy strict 모드로 90개 파일 검증
 - 🔒 **보안**: 환경 변수 기반 설정, 하드코딩된 비밀번호 없음
 - 🐳 **Docker 지원**: GCP/AWS 배포를 위한 프로덕션 준비 컨테이너화
 - 📚 **포괄적인 문서**: 아키텍처 가이드, API 문서, 기여 가이드라인
@@ -81,8 +81,8 @@ Crypto Quant System은 여러 암호화폐 거래소(Upbit 등)를 지원하는 
 ### 개발 도구
 - **uv**: 빠른 Python 패키지 관리자
 - **Ruff**: 린터 및 포맷터 (Black 대체)
-- **MyPy**: 완전한 타입 안전성을 위한 정적 타입 검사
-- **pytest**: 80% 이상 커버리지의 테스트 프레임워크
+- **MyPy**: 100% strict 모드로 타입 안전성 보장
+- **pytest**: 948개 테스트, 86.99% 커버리지
 - **pre-commit**: 코드 품질을 위한 Git 훅
 
 ### 인프라
