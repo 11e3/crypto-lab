@@ -77,6 +77,11 @@ class VanillaVBO(Strategy):
         exit_conditions: Sequence[Condition] | None = None,
         use_default_conditions: bool = True,
         exclude_current: bool = False,
+        # Phase 2 Improvements (v2 features)
+        use_improved_noise: bool = False,
+        use_adaptive_k: bool = False,
+        atr_period: int = 14,
+        base_k: float = 0.5,
     ) -> None:
         """
         Initialize Vanilla VBO strategy.
@@ -101,6 +106,10 @@ class VanillaVBO(Strategy):
                                    Recommended to use default.
             exclude_current: If True, exclude current bar from calculations (matching legacy/bt.py)
                             Use only past close data (No look-ahead bias).
+            use_improved_noise: Enable Phase 2 ATR-normalized noise (v2 feature)
+            use_adaptive_k: Enable Phase 2 dynamic K-value adjustment (v2 feature)
+            atr_period: ATR period for improved indicators (default: 14)
+            base_k: Base K value for adaptive calculation (default: 0.5)
         """
         # Store indicator parameters
         self.sma_period = sma_period
@@ -108,6 +117,12 @@ class VanillaVBO(Strategy):
         self.short_noise_period = short_noise_period
         self.long_noise_period = long_noise_period
         self.exclude_current = exclude_current
+
+        # Store Phase 2 feature flags
+        self.use_improved_noise = use_improved_noise
+        self.use_adaptive_k = use_adaptive_k
+        self.atr_period = atr_period
+        self.base_k = base_k
 
         # Build default conditions
         default_entry: list[Condition] = []
@@ -187,7 +202,8 @@ class VanillaVBO(Strategy):
         6. Long_Noise = 전체 K값들의 평균
            historical volatility baseline
         """
-        return add_vbo_indicators(
+        # Calculate base indicators
+        df = add_vbo_indicators(
             df,
             sma_period=self.sma_period,
             trend_sma_period=self.trend_sma_period,
@@ -195,6 +211,29 @@ class VanillaVBO(Strategy):
             long_noise_period=self.long_noise_period,
             exclude_current=self.exclude_current,
         )
+
+        # Apply Phase 2 improvements if enabled
+        if self.use_improved_noise or self.use_adaptive_k:
+            from src.utils.indicators import add_improved_indicators
+
+            df = add_improved_indicators(
+                df,
+                short_period=self.short_noise_period,
+                long_period=self.long_noise_period,
+                atr_period=self.atr_period,
+                base_k=self.base_k,
+            )
+
+            # Override noise and k-value with improved versions if enabled
+            if self.use_improved_noise:
+                df["short_noise"] = df["short_noise_adaptive"]
+                df["long_noise"] = df["long_noise_adaptive"]
+
+            if self.use_adaptive_k:
+                # Recalculate target with adaptive K
+                df["target"] = df["open"] + df["prev_range"] * df["k_value_adaptive"]
+
+        return df
 
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
         """
