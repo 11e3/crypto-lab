@@ -1,6 +1,6 @@
 # Code Quality Improvements
 
-개선 완료일: 2025-01-07
+개선 완료일: 2026-01-08 (최종 업데이트)
 
 ## 완료된 개선사항
 
@@ -47,6 +47,43 @@ Legacy 프로토타입 파일을 docs/archive로 이동하여 참고용으로 �
 - `legacy/requirements.txt` → `docs/archive/legacy-v1/requirements.txt`
 
 **효과**:
+- 메인 코드베이스 정리
+
+### ✅ P0-4: V2 Module Consolidation
+**상태**: 완료 (Phase 1 & 2)  
+**영향**: 코드 중복 제거, 유지보수성
+
+V2 모듈의 기능을 메인 모듈에 통합하고 feature flags로 활성화.
+
+**Phase 1 완료 (2026-01-08)**:
+- v2 모듈에 deprecation 경고 추가
+- indicators.py에 7개 Phase 2 함수 통합
+- VanillaVBO에 feature flags 추가 (`use_improved_noise`, `use_adaptive_k`)
+- 마이그레이션 가이드 작성 (363 lines)
+
+**Phase 2 완료 (2026-01-08)**:
+- 8개 스크립트 마이그레이션 완료:
+  - `scripts/run_phase2_integration.py`
+  - `scripts/debug_bootstrap.py`
+  - `scripts/test_sl_tp.py`
+  - `scripts/test_bootstrap_stability.py`
+  - `scripts/run_phase3_statistical_reliability.py`
+  - `scripts/run_phase1_revalidation.py`
+  - `scripts/run_phase1_real_data.py`
+  - `scripts/real_time_monitor.py`
+
+**효과**:
+- 코드 중복 제거 (742 lines)
+- 단일 소스 코드 유지
+- Git 기반 버전 관리
+- 하위 호환성 보장
+
+**문서**:
+- `docs/guides/V2_MIGRATION_GUIDE.md`
+- `docs/planning/V2_MODULE_CONSOLIDATION_PLAN.md`
+
+**Phase 3 계획**: v2 파일 제거 (v2.0.0, Q2 2026)
+
 - 메인 코드베이스 정리
 - 역사적 참조 가능성 유지
 - 프로젝트 구조 명확화
@@ -248,13 +285,18 @@ class VanillaVBO(Strategy):
 
 ```bash
 pytest --tb=short -q
-# 948 passed in 13.34s  (+30 tests)
-# Coverage: 86.99% (+1.4%)
+# 948 passed in 11.65s (+30 tests)
+# Coverage: 86.36%
 ```
 
 ```bash
 ruff check . --fix
 # All checks passed
+```
+
+```bash
+mypy src --strict
+# Success: no issues found in 90 source files
 ```
 
 ## 다음 단계
@@ -265,16 +307,17 @@ ruff check . --fix
    - ✅ Dead code 제거 (완료)
    - ✅ Test coverage 개선 (trade_cost_calculator 완료)
    - ✅ Type hints & Mypy strict mode (완료!)
-   - 📋 CI에서 mypy 활성화
+   - ✅ CI에서 mypy strict 활성화 (완료!)
+   - ✅ V2 모듈 deprecation (완료!)
+   - ✅ V2 스크립트 마이그레이션 (8/8 완료!)
 
 2. **계획 필요**:
    - Exception type specification (테스트 전략 수립)
-   - v2 모듈 통합 (마이그레이션 계획 완료)
-   - 대형 파일 리팩토링
+   - ⏸️ v2 모듈 제거 대기 (v2.0.0, Q2 2026)
 
 3. **장기 목표**:
-   - ~~Mypy strict 모드~~ ✅ 완료!
-   - ~~100% type hints 커버리지~~ ✅ 완료!
+   - ✅ Mypy strict 모드 (완료!)
+   - ✅ 100% type hints 커버리지 (완료!)
    - 문서화 완성
 
 ## 영향 분석
@@ -283,13 +326,17 @@ ruff check . --fix
 - ✅ 로깅 일관성 개선
 - ✅ 국제 협업 용이
 - ✅ 유지보수성 향상
+- ✅ 타입 안정성 100% (mypy strict)
+- ✅ 코드 중복 제거 (v2 통합)
 
 ### 주의사항
 - ⚠️ Exception 타입 변경 시 기존 테스트 영향
-- ⚠️ v2 모듈 제거 시 스크립트 업데이트 필요
+- ⏸️ v2 모듈은 v2.0.0까지 deprecation 기간 유지
 - ⚠️ 대규모 리팩토링은 단계적 접근 권장
 
 ## 참고 문서
 - [ORGANIZATION.md](docs/ORGANIZATION.md): 프로젝트 구조
 - [TYPE_CHECKING.md](docs/TYPE_CHECKING.md): 타입 체크 가이드
 - [MYPY_USAGE.md](docs/MYPY_USAGE.md): Mypy 사용법
+- [V2_MIGRATION_GUIDE.md](docs/guides/V2_MIGRATION_GUIDE.md): V2 마이그레이션 가이드
+- [V2_MODULE_CONSOLIDATION_PLAN.md](docs/planning/V2_MODULE_CONSOLIDATION_PLAN.md): V2 통합 계획
