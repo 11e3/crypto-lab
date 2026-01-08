@@ -3,16 +3,12 @@
 import warnings
 
 from src.strategies.volatility_breakout.conditions import (
-    NoiseFilter,  # Backward compatibility alias (deprecated)
-)
-from src.strategies.volatility_breakout.conditions import (
-    TrendFilter,  # Backward compatibility alias (deprecated)
-)
-from src.strategies.volatility_breakout.conditions import (
     BreakoutCondition,
     NoiseCondition,
+    NoiseFilter,  # Backward compatibility alias (deprecated)
     SMABreakoutCondition,
     TrendCondition,
+    TrendFilter,  # Backward compatibility alias (deprecated)
     WhipsawExitCondition,
 )
 from src.strategies.volatility_breakout.vbo import (
