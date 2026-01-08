@@ -1,4 +1,4 @@
-import nox  # type: ignore[import-untyped]
+import nox
 
 # Python version to test against
 DEFAULT_PYTHON = "3.14"
@@ -56,7 +56,7 @@ def docs(session: nox.Session) -> None:
 
     session.chdir("docs")
     # -w warnings.txt 옵션으로 경고를 파일에 저장하지만 빌드는 실패하지 않음
-    session.run("sphinx-build", "-q", "-b", "html", "-d", "_build/doctrees", ".", "_build/html")
+    session.run("sphinx-build", "-Q", "-b", "html", "-d", "_build/doctrees", ".", "_build/html")
 
     session.chdir("..")
     session.log("✓ Documentation built - open docs/_build/html/index.html")
@@ -89,7 +89,7 @@ def clean(session: nox.Session) -> None:
         try:
             shutil.rmtree(dir_name)
             session.log(f"  Removed {dir_name}/")
-        except (FileNotFoundError, NotADirectoryError):
+        except (FileNotFoundError, NotADirectoryError, OSError):
             pass
 
     # Remove files
