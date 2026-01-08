@@ -42,7 +42,7 @@ def lint(session: nox.Session) -> None:
 def tests(session: nox.Session) -> None:
     """Run test suite with coverage."""
     session.install(".[test]")
-    session.run("pytest", "src", "tests", "-q", "--tb=line")
+    session.run("pytest", "--cov=src", "-q", "--tb=line")
     session.log("✓ Tests complete")
 
 
