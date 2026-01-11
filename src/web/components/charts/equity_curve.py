@@ -1,0 +1,125 @@
+"""Equity curve chart component.
+
+Plotly 기반 인터랙티브 수익률 곡선 차트.
+"""
+
+
+import numpy as np
+import plotly.graph_objects as go
+import streamlit as st
+
+__all__ = ["render_equity_curve"]
+
+
+def render_equity_curve(
+    dates: np.ndarray,
+    equity: np.ndarray,
+    initial_capital: float = 1.0,
+    benchmark: np.ndarray | None = None,
+    benchmark_name: str = "Benchmark",
+) -> None:
+    """인터랙티브 수익률 곡선 렌더링.
+    
+    Args:
+        dates: 날짜 배열
+        equity: 포트폴리오 가치 배열
+        initial_capital: 초기 자본
+        benchmark: 벤치마크 가치 배열 (선택)
+        benchmark_name: 벤치마크 이름
+    """
+    if len(dates) == 0 or len(equity) == 0:
+        st.warning("📊 표시할 데이터가 없습니다.")
+        return
+
+    # 수익률로 변환 (%)
+    returns_pct = (equity / initial_capital - 1) * 100
+
+    fig = go.Figure()
+
+    # 포트폴리오 곡선
+    fig.add_trace(
+        go.Scatter(
+            x=dates,
+            y=equity,
+            mode="lines",
+            name="Portfolio",
+            line=dict(color="#1f77b4", width=2),
+            hovertemplate=(
+                "<b>Date</b>: %{x|%Y-%m-%d}<br>"
+                "<b>Value</b>: %{y:,.0f} KRW<br>"
+                "<b>Return</b>: %{customdata:.2f}%<extra></extra>"
+            ),
+            customdata=returns_pct,
+        )
+    )
+
+    # 벤치마크 곡선 (있는 경우)
+    if benchmark is not None and len(benchmark) == len(dates):
+        benchmark_returns = (benchmark / benchmark[0] - 1) * 100
+        fig.add_trace(
+            go.Scatter(
+                x=dates,
+                y=benchmark,
+                mode="lines",
+                name=benchmark_name,
+                line=dict(color="#ff7f0e", width=1.5, dash="dash"),
+                hovertemplate=(
+                    f"<b>{benchmark_name}</b><br>"
+                    "<b>Date</b>: %{x|%Y-%m-%d}<br>"
+                    "<b>Value</b>: %{y:,.0f}<br>"
+                    "<b>Return</b>: %{customdata:.2f}%<extra></extra>"
+                ),
+                customdata=benchmark_returns,
+            )
+        )
+
+    # 초기 자본 기준선
+    fig.add_hline(
+        y=initial_capital,
+        line_dash="dot",
+        line_color="gray",
+        annotation_text="Initial Capital",
+        annotation_position="bottom right",
+    )
+
+    # 레이아웃 설정
+    fig.update_layout(
+        title=dict(
+            text="📈 Portfolio Equity Curve",
+            font=dict(size=18),
+        ),
+        xaxis=dict(
+            title="Date",
+            showgrid=True,
+            gridcolor="rgba(128, 128, 128, 0.2)",
+            rangeslider=dict(visible=True),
+            rangeselector=dict(
+                buttons=[
+                    dict(count=1, label="1M", step="month", stepmode="backward"),
+                    dict(count=3, label="3M", step="month", stepmode="backward"),
+                    dict(count=6, label="6M", step="month", stepmode="backward"),
+                    dict(count=1, label="YTD", step="year", stepmode="todate"),
+                    dict(count=1, label="1Y", step="year", stepmode="backward"),
+                    dict(step="all", label="All"),
+                ]
+            ),
+        ),
+        yaxis=dict(
+            title="Portfolio Value (KRW)",
+            showgrid=True,
+            gridcolor="rgba(128, 128, 128, 0.2)",
+            tickformat=",",
+        ),
+        hovermode="x unified",
+        template="plotly_white",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+        ),
+        margin=dict(l=60, r=20, t=80, b=60),
+    )
+
+    st.plotly_chart(fig, use_container_width=True)

@@ -84,6 +84,15 @@ notebooks = [
     "ipykernel>=6.25.0",
     "ipywidgets>=8.1.0",
 ]
+web = [
+    "streamlit>=1.30.0",
+    "plotly>=5.18.0",
+    "watchdog>=3.0.0",  # Streamlit hot reload
+    # 백테스터가 필요로 하는 분석 의존성 포함
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+]
 
 # 패키지 구조 설정
 [tool.setuptools]
