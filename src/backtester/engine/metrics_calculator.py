@@ -2,6 +2,7 @@
 Metrics calculation for vectorized backtesting.
 
 Handles performance metrics, trade statistics, and risk metrics.
+Uses core metrics module for unified calculations.
 """
 
 import numpy as np
@@ -9,6 +10,14 @@ import pandas as pd
 
 from src.backtester.models import BacktestConfig, BacktestResult
 from src.config import ANNUALIZATION_FACTOR
+from src.metrics.core import (
+    calculate_cagr,
+    calculate_calmar_ratio,
+    calculate_max_drawdown,
+    calculate_returns,
+    calculate_sharpe_ratio,
+    calculate_total_return,
+)
 from src.risk.metrics import PortfolioRiskMetrics, calculate_portfolio_risk_metrics
 from src.utils.logger import get_logger
 
@@ -47,27 +56,25 @@ def calculate_metrics_vectorized(
     initial = config.initial_capital
     final = equity_curve[-1]
 
-    # Total return
-    result.total_return = (final / initial - 1) * 100
+    # Total return (using core)
+    result.total_return = calculate_total_return(initial, final)
 
-    # CAGR (annualized return)
+    # CAGR (using core)
     total_days = (dates[-1] - dates[0]).days
-    if total_days > 0 and initial > 0 and final > 0:
-        result.cagr = ((final / initial) ** (365.0 / total_days) - 1) * 100
+    result.cagr = calculate_cagr(initial, final, total_days)
 
-    # MDD (maximum drawdown)
-    cummax = np.maximum.accumulate(equity_curve)
-    drawdown = (cummax - equity_curve) / cummax
-    result.mdd = np.nanmax(drawdown) * 100
+    # MDD (using core)
+    result.mdd = calculate_max_drawdown(equity_curve)
 
-    # Calmar Ratio
-    result.calmar_ratio = result.cagr / result.mdd if result.mdd > 0 else 0.0
+    # Calmar Ratio (using core)
+    result.calmar_ratio = calculate_calmar_ratio(result.cagr, result.mdd)
 
-    # Sharpe Ratio
-    returns = np.diff(equity_curve) / equity_curve[:-1]
+    # Sharpe Ratio (using core)
+    returns = calculate_returns(equity_curve)
     daily_returns = np.insert(returns, 0, 0)
-    if len(returns) > 0 and np.std(returns) > 0:
-        result.sharpe_ratio = (np.mean(returns) / np.std(returns)) * np.sqrt(ANNUALIZATION_FACTOR)
+    result.sharpe_ratio = calculate_sharpe_ratio(
+        returns, risk_free_rate=0.0, annualization_factor=ANNUALIZATION_FACTOR
+    )
 
     # Risk metrics
     result.risk_metrics = _calculate_risk_metrics(

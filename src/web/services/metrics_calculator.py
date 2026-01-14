@@ -2,12 +2,29 @@
 
 Sortino, Calmar, VaR, CVaR, 상방/하방 변동성, z-score, p-value 등
 고급 백테스팅 메트릭 계산.
+
+Uses core metrics module for unified calculations.
 """
 
 from dataclasses import dataclass
 
 import numpy as np
 from scipy import stats
+
+from src.metrics.core import (
+    ANNUALIZATION_FACTOR,
+    calculate_calmar_ratio,
+    calculate_cvar,
+    calculate_downside_volatility,
+    calculate_max_drawdown,
+    calculate_returns,
+    calculate_sharpe_ratio,
+    calculate_sortino_ratio,
+    calculate_total_return,
+    calculate_upside_volatility,
+    calculate_var,
+    calculate_volatility,
+)
 
 __all__ = ["ExtendedMetrics", "calculate_extended_metrics"]
 
@@ -56,13 +73,6 @@ class ExtendedMetrics:
     years: float
 
 
-def _calculate_returns(equity: np.ndarray) -> np.ndarray:
-    """일간 수익률 계산."""
-    if len(equity) < 2:
-        return np.array([])
-    return np.diff(equity) / equity[:-1]
-
-
 def _calculate_cagr(
     initial_value: float,
     final_value: float,
@@ -72,136 +82,6 @@ def _calculate_cagr(
     if years <= 0 or initial_value <= 0:
         return 0.0
     return ((final_value / initial_value) ** (1 / years) - 1) * 100
-
-
-def _calculate_max_drawdown(equity: np.ndarray) -> float:
-    """최대 낙폭 계산."""
-    if len(equity) < 2:
-        return 0.0
-
-    peak = np.maximum.accumulate(equity)
-    drawdown = (equity - peak) / peak
-    return abs(float(np.min(drawdown))) * 100
-
-
-def _calculate_volatility(returns: np.ndarray, annualize: bool = True) -> float:
-    """변동성 계산."""
-    if len(returns) < 2:
-        return 0.0
-
-    vol = float(np.std(returns, ddof=1))
-    if annualize:
-        vol *= np.sqrt(365)  # 암호화폐는 365일 기준
-    return vol * 100
-
-
-def _calculate_upside_volatility(returns: np.ndarray, annualize: bool = True) -> float:
-    """상방 변동성 계산."""
-    positive_returns = returns[returns > 0]
-    if len(positive_returns) < 2:
-        return 0.0
-
-    vol = float(np.std(positive_returns, ddof=1))
-    if annualize:
-        vol *= np.sqrt(365)
-    return vol * 100
-
-
-def _calculate_downside_volatility(
-    returns: np.ndarray,
-    mar: float = 0.0,
-    annualize: bool = True,
-) -> float:
-    """하방 변동성 계산 (Downside Deviation).
-
-    Args:
-        returns: 수익률 배열
-        mar: Minimum Acceptable Return (기본: 0)
-        annualize: 연율화 여부
-    """
-    if len(returns) < 2:
-        return 0.0
-
-    downside_returns = returns[returns < mar]
-    if len(downside_returns) < 2:
-        return 0.0
-
-    vol = float(np.std(downside_returns, ddof=1))
-    if annualize:
-        vol *= np.sqrt(365)
-    return vol * 100
-
-
-def _calculate_sharpe_ratio(
-    returns: np.ndarray,
-    risk_free_rate: float = 0.02,
-) -> float:
-    """Sharpe Ratio 계산."""
-    if len(returns) < 2:
-        return 0.0
-
-    daily_rf = (1 + risk_free_rate) ** (1 / 365) - 1
-    excess_returns = returns - daily_rf
-
-    std = np.std(excess_returns, ddof=1)
-    if std == 0:
-        return 0.0
-
-    sharpe = np.mean(excess_returns) / std
-    return float(sharpe) * np.sqrt(365)
-
-
-def _calculate_sortino_ratio(
-    returns: np.ndarray,
-    risk_free_rate: float = 0.02,
-) -> float:
-    """Sortino Ratio 계산."""
-    if len(returns) < 2:
-        return 0.0
-
-    daily_rf = (1 + risk_free_rate) ** (1 / 365) - 1
-    excess_returns = returns - daily_rf
-
-    downside_returns = excess_returns[excess_returns < 0]
-    if len(downside_returns) < 2:
-        return float("inf") if np.mean(excess_returns) > 0 else 0.0
-
-    downside_std = np.std(downside_returns, ddof=1)
-    if downside_std == 0:
-        return 0.0
-
-    sortino = np.mean(excess_returns) / downside_std
-    return float(sortino) * np.sqrt(365)
-
-
-def _calculate_calmar_ratio(cagr: float, max_dd: float) -> float:
-    """Calmar Ratio 계산."""
-    if max_dd == 0:
-        return 0.0
-    return cagr / max_dd
-
-
-def _calculate_var(returns: np.ndarray, confidence: float = 0.95) -> float:
-    """Value at Risk 계산."""
-    if len(returns) < 2:
-        return 0.0
-
-    var = np.percentile(returns, (1 - confidence) * 100)
-    return abs(float(var)) * 100
-
-
-def _calculate_cvar(returns: np.ndarray, confidence: float = 0.95) -> float:
-    """Conditional VaR (Expected Shortfall) 계산."""
-    if len(returns) < 2:
-        return 0.0
-
-    var_threshold = np.percentile(returns, (1 - confidence) * 100)
-    tail_returns = returns[returns <= var_threshold]
-
-    if len(tail_returns) == 0:
-        return _calculate_var(returns, confidence)
-
-    return abs(float(np.mean(tail_returns))) * 100
 
 
 def _calculate_statistical_tests(returns: np.ndarray) -> tuple[float, float]:
@@ -299,39 +179,39 @@ def calculate_extended_metrics(
             years=0.0,
         )
 
-    # 일간 수익률
-    returns = _calculate_returns(equity)
+    # 일간 수익률 (using core)
+    returns = calculate_returns(equity)
 
     # 기간 정보
     trading_days = len(equity)
-    years = trading_days / 365
+    years = trading_days / ANNUALIZATION_FACTOR
 
-    # 총 수익률
+    # 총 수익률 (using core)
     initial_value = float(equity[0])
     final_value = float(equity[-1])
-    total_return = (final_value / initial_value - 1) * 100
+    total_return = calculate_total_return(initial_value, final_value)
 
     # CAGR
     cagr = _calculate_cagr(initial_value, final_value, years)
 
-    # MDD
-    max_dd = _calculate_max_drawdown(equity)
+    # MDD (using core)
+    max_dd = calculate_max_drawdown(equity)
 
-    # 변동성
-    volatility = _calculate_volatility(returns)
-    upside_vol = _calculate_upside_volatility(returns)
-    downside_vol = _calculate_downside_volatility(returns)
+    # 변동성 (using core)
+    volatility = calculate_volatility(returns, annualize=True, annualization_factor=ANNUALIZATION_FACTOR)
+    upside_vol = calculate_upside_volatility(returns, annualize=True, annualization_factor=ANNUALIZATION_FACTOR)
+    downside_vol = calculate_downside_volatility(returns, annualize=True, annualization_factor=ANNUALIZATION_FACTOR)
 
-    # 리스크 조정 수익률
-    sharpe = _calculate_sharpe_ratio(returns, risk_free_rate)
-    sortino = _calculate_sortino_ratio(returns, risk_free_rate)
-    calmar = _calculate_calmar_ratio(cagr, max_dd)
+    # 리스크 조정 수익률 (using core)
+    sharpe = calculate_sharpe_ratio(returns, risk_free_rate, ANNUALIZATION_FACTOR)
+    sortino = calculate_sortino_ratio(returns, risk_free_rate, ANNUALIZATION_FACTOR)
+    calmar = calculate_calmar_ratio(cagr, max_dd)
 
-    # VaR & CVaR
-    var_95 = _calculate_var(returns, 0.95)
-    var_99 = _calculate_var(returns, 0.99)
-    cvar_95 = _calculate_cvar(returns, 0.95)
-    cvar_99 = _calculate_cvar(returns, 0.99)
+    # VaR & CVaR (using core)
+    var_95 = calculate_var(returns, 0.95)
+    var_99 = calculate_var(returns, 0.99)
+    cvar_95 = calculate_cvar(returns, 0.95)
+    cvar_99 = calculate_cvar(returns, 0.99)
 
     # 통계적 검정
     z_score, p_value = _calculate_statistical_tests(returns)

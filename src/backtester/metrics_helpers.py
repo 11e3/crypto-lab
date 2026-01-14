@@ -2,11 +2,20 @@
 Metrics calculation helpers.
 
 Helper functions for performance metrics calculation.
+Uses core metrics module for unified calculations.
 """
 
 import numpy as np
 
 from src.backtester.models import Trade
+from src.metrics.core import (
+    calculate_cagr,
+    calculate_calmar_ratio,
+    calculate_max_drawdown,
+    calculate_returns,
+    calculate_sharpe_ratio,
+    calculate_total_return,
+)
 
 __all__ = [
     "calculate_return_metrics",
@@ -35,13 +44,10 @@ def calculate_return_metrics(
         return 0.0, 0.0
 
     final = equity_curve[-1]
-    total_return = (final / initial_capital - 1) * 100
+    total_return = calculate_total_return(initial_capital, final)
 
     total_days = (dates[-1] - dates[0]).days
-    if total_days > 0 and initial_capital > 0 and final > 0:
-        cagr = ((final / initial_capital) ** (365.0 / total_days) - 1) * 100
-    else:
-        cagr = 0.0
+    cagr = calculate_cagr(initial_capital, final, total_days)
 
     return total_return, cagr
 
@@ -63,22 +69,13 @@ def calculate_risk_metrics_from_equity(
     if len(equity_curve) < 2:
         return 0.0, 0.0, 0.0
 
-    # Maximum Drawdown
-    cummax = np.maximum.accumulate(equity_curve)
-    drawdown = (cummax - equity_curve) / cummax
-    mdd = float(np.nanmax(drawdown) * 100)
+    mdd = calculate_max_drawdown(equity_curve)
+    calmar = calculate_calmar_ratio(cagr, mdd)
 
-    # Calmar Ratio
-    calmar_ratio = cagr / mdd if mdd > 0 else 0.0
+    returns = calculate_returns(equity_curve)
+    sharpe = calculate_sharpe_ratio(returns, risk_free_rate=0.0, annualization_factor=252)
 
-    # Sharpe Ratio
-    returns = np.diff(equity_curve) / equity_curve[:-1]
-    if len(returns) > 0 and np.std(returns) > 0:
-        sharpe_ratio = float(np.mean(returns) / np.std(returns) * np.sqrt(252))
-    else:
-        sharpe_ratio = 0.0
-
-    return mdd, calmar_ratio, sharpe_ratio
+    return mdd, calmar, sharpe
 
 
 def calculate_trade_stats(trades: list[Trade]) -> dict[str, float]:
