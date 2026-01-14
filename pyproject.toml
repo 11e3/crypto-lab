@@ -277,6 +277,8 @@ omit = [
     "src/strategies/volatility_breakout/vbo_v2.py",
     "src/utils/indicators_v2.py",
     "src/monitoring/alerts.py",
+    # Web UI (Streamlit components - difficult to unit test)
+    "src/web/*",
 ]
 
 [tool.coverage.report]
