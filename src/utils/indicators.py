@@ -18,6 +18,11 @@ VBO 지표 (indicators_vbo):
 import numpy as np
 import pandas as pd
 
+# Import base implementations
+from src.utils.indicators_base import atr as _atr_base
+from src.utils.indicators_base import ema as _ema_base
+from src.utils.indicators_base import sma as _sma_base
+
 # Re-export momentum indicators for backward compatibility
 from src.utils.indicators_momentum import (
     bollinger_bands,
@@ -78,12 +83,7 @@ def sma(series: pd.Series, period: int, exclude_current: bool = False) -> pd.Ser
     Returns:
         SMA series
     """
-    if exclude_current:
-        # Exclude current bar: use past 'period' bars (matching legacy/bt.py)
-        # rolling(window=period) includes current bar, so we shift by 1
-        return series.rolling(window=period, min_periods=period).mean().shift(1)
-    else:
-        return series.rolling(window=period, min_periods=period).mean()
+    return _sma_base(series, period, exclude_current=exclude_current)
 
 
 def ema(series: pd.Series, period: int) -> pd.Series:
@@ -97,7 +97,7 @@ def ema(series: pd.Series, period: int) -> pd.Series:
     Returns:
         EMA series
     """
-    return series.ewm(span=period, adjust=False).mean()
+    return _ema_base(series, period)
 
 
 def atr(
@@ -118,12 +118,7 @@ def atr(
     Returns:
         ATR series
     """
-    prev_close = close.shift(1)
-    tr1 = high - low
-    tr2 = (high - prev_close).abs()
-    tr3 = (low - prev_close).abs()
-    true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-    return true_range.rolling(window=period, min_periods=period).mean()
+    return _atr_base(high, low, close, period)
 
 
 def volatility_range(high: pd.Series, low: pd.Series) -> pd.Series:

@@ -6,15 +6,19 @@ RSI, Bollinger Bands, MACD, Stochastic 등의 모멘텀 지표.
 
 import pandas as pd
 
+from src.utils.indicators_base import ema as _ema_base
+from src.utils.indicators_base import sma as _sma_base
 
+
+# Wrappers for backward compatibility - delegate to base implementations
 def _sma_local(series: pd.Series, period: int) -> pd.Series:
-    """Local SMA to avoid circular imports."""
-    return series.rolling(window=period, min_periods=period).mean()
+    """SMA wrapper using base implementation."""
+    return _sma_base(series, period)
 
 
 def _ema_local(series: pd.Series, period: int) -> pd.Series:
-    """Local EMA to avoid circular imports."""
-    return series.ewm(span=period, adjust=False).mean()
+    """EMA wrapper using base implementation."""
+    return _ema_base(series, period)
 
 
 def rsi(series: pd.Series, period: int = 14) -> pd.Series:

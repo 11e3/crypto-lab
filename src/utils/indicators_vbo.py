@@ -4,21 +4,22 @@ VBO (Volatility Breakout) 전략용 지표.
 노이즈 비율, 적응형 K값, 변동성 레짐 등 VBO 전략에 필요한 지표.
 """
 
-import numpy as np
 import pandas as pd
 
+from src.utils.indicators_base import atr as _atr_base
+from src.utils.indicators_base import noise_ratio as _noise_ratio_base
+from src.utils.indicators_base import sma as _sma_base
 
+
+# Wrappers for backward compatibility - delegate to base implementations
 def _sma_local(
     series: pd.Series,
     period: int,
     *,
     exclude_current: bool = False,
 ) -> pd.Series:
-    """Local SMA to avoid circular imports."""
-    if exclude_current:
-        shifted = series.shift(1)
-        return shifted.rolling(window=period, min_periods=period).mean()
-    return series.rolling(window=period, min_periods=period).mean()
+    """SMA wrapper using base implementation."""
+    return _sma_base(series, period, exclude_current=exclude_current)
 
 
 def _noise_ratio_local(
@@ -27,10 +28,8 @@ def _noise_ratio_local(
     low: pd.Series,
     close: pd.Series,
 ) -> pd.Series:
-    """Local noise ratio to avoid circular imports."""
-    move = abs(close - open_)
-    range_ = high - low
-    return move / range_.replace(0, np.nan)
+    """Noise ratio wrapper using base implementation."""
+    return _noise_ratio_base(open_, high, low, close)
 
 
 def _atr_local(
@@ -39,12 +38,8 @@ def _atr_local(
     close: pd.Series,
     period: int = 14,
 ) -> pd.Series:
-    """Local ATR to avoid circular imports."""
-    high_low = high - low
-    high_close = abs(high - close.shift())
-    low_close = abs(low - close.shift())
-    tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-    return tr.rolling(window=period, min_periods=period).mean()
+    """ATR wrapper using base implementation."""
+    return _atr_base(high, low, close, period)
 
 
 def add_vbo_indicators(
