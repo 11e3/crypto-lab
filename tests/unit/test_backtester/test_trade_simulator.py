@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from src.backtester.engine.trade_simulator import (
-    _check_exit_conditions,
+    _check_exit_conditions_intraday,
     _get_current_price,
     calculate_daily_equity,
     track_asset_returns,
@@ -60,56 +60,76 @@ def sample_valid_data() -> np.ndarray:
 
 
 # -------------------------------------------------------------------------
-# _check_exit_conditions Tests
+# _check_exit_conditions_intraday Tests
 # -------------------------------------------------------------------------
 
 
-class TestCheckExitConditions:
-    """Test _check_exit_conditions function."""
+class TestCheckExitConditionsIntraday:
+    """Test _check_exit_conditions_intraday function.
+
+    The function uses intraday high/low for accurate stop-loss and take-profit:
+    - Stop-loss: triggers if LOW price <= stop price
+    - Take-profit: triggers if HIGH price >= target price
+    """
 
     @pytest.mark.parametrize(
-        "pnl_pct,stop_loss_pct,take_profit_pct,expected_should_exit,expected_is_sl,expected_is_tp",
+        "entry,high,low,stop_loss_pct,take_profit_pct,expected_exit,expected_sl,expected_tp",
         [
-            (0.00, 0.05, 0.10, False, False, False),  # Normal profit
-            (-0.03, 0.05, 0.10, False, False, False),  # Small loss
-            (-0.05, 0.05, 0.10, True, True, False),  # Hit stop loss
-            (-0.06, 0.05, 0.10, True, True, False),  # Exceeded stop loss
-            (0.10, 0.05, 0.10, True, False, True),  # Hit take profit
-            (0.15, 0.05, 0.10, True, False, True),  # Exceeded take profit
-            (0.00, None, 0.10, False, False, False),  # No stop loss
-            (0.10, None, 0.10, True, False, True),  # Only take profit
-            (-0.05, 0.05, None, True, True, False),  # Only stop loss
+            # Normal conditions - no trigger
+            (100.0, 102.0, 98.0, 0.05, 0.10, False, False, False),
+            # Stop loss hit (low touches stop price)
+            (100.0, 102.0, 94.9, 0.05, 0.10, True, True, False),  # low=94.9 < stop=95
+            (100.0, 102.0, 94.0, 0.05, 0.10, True, True, False),  # low=94 < stop=95
+            # Take profit hit (high exceeds target)
+            (100.0, 110.1, 98.0, 0.05, 0.10, True, False, True),  # high=110.1 > target=110
+            (100.0, 115.0, 98.0, 0.05, 0.10, True, False, True),  # high=115 > target=110
+            # No stop loss configured
+            (100.0, 102.0, 94.0, None, 0.10, False, False, False),
+            # No take profit configured
+            (100.0, 115.0, 98.0, 0.05, None, False, False, False),
+            # Edge case: slightly below stop loss (triggers)
+            (100.0, 102.0, 94.99, 0.05, 0.10, True, True, False),
+            # Edge case: slightly above take profit (triggers)
+            (100.0, 110.01, 98.0, 0.05, 0.10, True, False, True),
         ],
     )
-    def test_exit_conditions_variants(
+    def test_exit_conditions_intraday(
         self,
-        pnl_pct: float,
+        entry: float,
+        high: float,
+        low: float,
         stop_loss_pct: float | None,
         take_profit_pct: float | None,
-        expected_should_exit: bool,
-        expected_is_sl: bool,
-        expected_is_tp: bool,
+        expected_exit: bool,
+        expected_sl: bool,
+        expected_tp: bool,
     ) -> None:
-        """Test exit condition detection with various P&L scenarios."""
+        """Test exit condition detection using intraday high/low prices."""
         config = BacktestConfig()
         config.stop_loss_pct = stop_loss_pct
         config.take_profit_pct = take_profit_pct
 
-        should_exit, is_sl, is_tp = _check_exit_conditions(pnl_pct, config)
+        should_exit, is_sl, is_tp = _check_exit_conditions_intraday(
+            entry, high, low, config
+        )
 
-        assert should_exit == expected_should_exit
-        assert is_sl == expected_is_sl
-        assert is_tp == expected_is_tp
+        assert should_exit == expected_exit
+        assert is_sl == expected_sl
+        assert is_tp == expected_tp
 
-    def test_exit_conditions_priority(self) -> None:
-        """Test that stop loss takes priority when both are hit."""
+    def test_stop_loss_priority_over_take_profit(self) -> None:
+        """Test that stop loss takes priority when both could trigger."""
         config = BacktestConfig()
         config.stop_loss_pct = 0.05
         config.take_profit_pct = 0.10
 
-        # Case where both are theoretically hit (shouldn't happen in practice)
-        pnl_pct = -0.05
-        should_exit, is_sl, is_tp = _check_exit_conditions(pnl_pct, config)
+        # Entry at 100, stop at 95, target at 110
+        # If low=94 (stop hit) and high=111 (target hit), stop loss wins
+        # This is because stop loss is checked first in the function
+        entry, high, low = 100.0, 111.0, 94.0
+        should_exit, is_sl, is_tp = _check_exit_conditions_intraday(
+            entry, high, low, config
+        )
 
         assert should_exit is True
         assert is_sl is True

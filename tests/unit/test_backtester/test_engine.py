@@ -75,6 +75,7 @@ def sample_data() -> pd.DataFrame:
             "target": np.full(periods, 100.0),
             "sma": np.full(periods, 100.0),
             "short_noise": np.full(periods, 0.5),
+            "is_whipsaw": np.zeros(periods, dtype=bool),
         },
         index=dates,
     )
@@ -176,13 +177,21 @@ class TestVectorizedBacktestEngine:
         sample_data: pd.DataFrame,
         tmp_path: Path,
     ) -> None:
-        """Test whipsaw logic (entry and close < sma same day)."""
+        """Test whipsaw logic (entry and exit signal on same day).
+
+        Whipsaw is pre-computed as: entry_signal & exit_signal
+        - Entry triggers during the day
+        - Exit signal also triggers (close < sma)
+        - Results in same-day entry and exit
+        """
         fpath = tmp_path / "KRW-ETH_day.parquet"
 
         idx = 30
         sample_data.loc[sample_data.index[idx], "entry_signal"] = True
+        sample_data.loc[sample_data.index[idx], "exit_signal"] = True  # close < sma
+        sample_data.loc[sample_data.index[idx], "is_whipsaw"] = True  # entry & exit same day
         sample_data.loc[sample_data.index[idx], "close"] = 100.0
-        sample_data.loc[sample_data.index[idx], "sma"] = 9999.0  # SMA > Close -> Whipsaw
+        sample_data.loc[sample_data.index[idx], "sma"] = 9999.0  # SMA > Close -> Exit signal
 
         sample_data.to_parquet(fpath)
         data_files = {"KRW-ETH": fpath}

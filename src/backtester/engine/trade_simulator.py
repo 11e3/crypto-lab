@@ -43,12 +43,20 @@ def process_stop_loss_take_profit(
     current_date: date,
     sorted_dates: np.ndarray,
     tickers: list[str],
-    closes: np.ndarray,
+    highs: np.ndarray,
+    lows: np.ndarray,
     exit_prices: np.ndarray,
     valid_data: np.ndarray,
     order_manager: AdvancedOrderManager,
 ) -> None:
-    """Process stop-loss and take-profit orders."""
+    """Process stop-loss and take-profit orders.
+
+    Uses intraday high/low prices for accurate stop-loss and take-profit detection:
+    - Stop-loss: triggers if LOW price <= stop price (worst case intraday)
+    - Take-profit: triggers if HIGH price >= target price (best case intraday)
+
+    This prevents look-ahead bias that would occur if using only close price.
+    """
     if config.stop_loss_pct is None and config.take_profit_pct is None:
         return
 
@@ -59,11 +67,16 @@ def process_stop_loss_take_profit(
         if not in_position[t_idx] or not valid_data[t_idx]:
             continue
 
-        current_price = closes[t_idx, d_idx]
         entry_price = state.position_entry_prices[t_idx]
-        pnl_pct = current_price / entry_price - 1.0 if entry_price > 0 else 0.0
+        if entry_price <= 0:
+            continue
 
-        should_exit, is_stop_loss, is_take_profit = _check_exit_conditions(pnl_pct, config)
+        high_price = highs[t_idx, d_idx]
+        low_price = lows[t_idx, d_idx]
+
+        should_exit, is_stop_loss, is_take_profit = _check_exit_conditions_intraday(
+            entry_price, high_price, low_price, config
+        )
 
         if should_exit:
             execute_exit(
@@ -82,12 +95,35 @@ def process_stop_loss_take_profit(
             )
 
 
-def _check_exit_conditions(pnl_pct: float, config: BacktestConfig) -> tuple[bool, bool, bool]:
-    """Check if exit conditions are met."""
-    if config.stop_loss_pct is not None and pnl_pct <= -config.stop_loss_pct:
-        return True, True, False
-    if config.take_profit_pct is not None and pnl_pct >= config.take_profit_pct:
-        return True, False, True
+def _check_exit_conditions_intraday(
+    entry_price: float,
+    high_price: float,
+    low_price: float,
+    config: BacktestConfig,
+) -> tuple[bool, bool, bool]:
+    """Check if exit conditions are met using intraday high/low.
+
+    Args:
+        entry_price: Position entry price
+        high_price: Intraday high price
+        low_price: Intraday low price
+        config: Backtest configuration
+
+    Returns:
+        Tuple of (should_exit, is_stop_loss, is_take_profit)
+    """
+    # Stop-loss check: uses LOW price (worst case scenario)
+    if config.stop_loss_pct is not None:
+        stop_price = entry_price * (1 - config.stop_loss_pct)
+        if low_price <= stop_price:
+            return True, True, False
+
+    # Take-profit check: uses HIGH price (best case scenario)
+    if config.take_profit_pct is not None:
+        target_price = entry_price * (1 + config.take_profit_pct)
+        if high_price >= target_price:
+            return True, False, True
+
     return False, False, False
 
 

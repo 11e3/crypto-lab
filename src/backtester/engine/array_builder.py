@@ -34,6 +34,7 @@ def build_numpy_arrays(
     arrays: dict[str, np.ndarray] = {
         "opens": np.full((n_tickers, n_dates), np.nan, dtype=float_dtype),
         "highs": np.full((n_tickers, n_dates), np.nan, dtype=float_dtype),
+        "lows": np.full((n_tickers, n_dates), np.nan, dtype=float_dtype),
         "closes": np.full((n_tickers, n_dates), np.nan, dtype=float_dtype),
         "targets": np.full((n_tickers, n_dates), np.nan, dtype=float_dtype),
         "smas": np.full((n_tickers, n_dates), np.nan, dtype=float_dtype),
@@ -70,6 +71,7 @@ def _fill_ticker_arrays(
 
     arrays["opens"][t_idx, idx] = df.loc[mask, "open"].to_numpy(dtype=float_dtype)
     arrays["highs"][t_idx, idx] = df.loc[mask, "high"].to_numpy(dtype=float_dtype)
+    arrays["lows"][t_idx, idx] = df.loc[mask, "low"].to_numpy(dtype=float_dtype)
     arrays["closes"][t_idx, idx] = df.loc[mask, "close"].to_numpy(dtype=float_dtype)
 
     if "target" in df.columns:

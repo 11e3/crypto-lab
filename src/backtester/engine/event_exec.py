@@ -25,40 +25,46 @@ def check_exit_condition(
 
     Priority order: signal > trailing_stop > stop_loss > take_profit
 
+    Uses intraday high/low for accurate stop-loss and take-profit detection:
+    - Stop-loss: triggers if LOW price <= stop price (worst case intraday)
+    - Take-profit: triggers if HIGH price >= target price (best case intraday)
+    - Trailing stop: uses HIGH to update highest price, LOW to check stop
+
     Args:
         position: Current position
-        row: Current bar data
+        row: Current bar data (must contain high, low, close columns)
         config: Backtest configuration
 
     Returns:
         Tuple of (should_exit, exit_reason)
     """
-    close_price = float(row["close"])
+    high_price = float(row["high"])
+    low_price = float(row["low"])
 
-    # Update highest price for trailing stop
-    if close_price > position.highest_price:
-        position.highest_price = close_price
+    # Update highest price for trailing stop (using high price)
+    if high_price > position.highest_price:
+        position.highest_price = high_price
 
     # Signal exit
     if "exit_signal" in row and row["exit_signal"]:
         return True, "signal"
 
-    # Trailing stop
+    # Trailing stop (uses LOW price to check trigger)
     if config.trailing_stop_pct is not None:
         stop_price = position.highest_price * (1 - config.trailing_stop_pct)
-        if close_price <= stop_price:
+        if low_price <= stop_price:
             return True, "trailing_stop"
 
-    # Stop loss
+    # Stop loss (uses LOW price - worst case scenario)
     if config.stop_loss_pct is not None:
         stop_price = position.entry_price * (1 - config.stop_loss_pct)
-        if close_price <= stop_price:
+        if low_price <= stop_price:
             return True, "stop_loss"
 
-    # Take profit
+    # Take profit (uses HIGH price - best case scenario)
     if config.take_profit_pct is not None:
         target_price = position.entry_price * (1 + config.take_profit_pct)
-        if close_price >= target_price:
+        if high_price >= target_price:
             return True, "take_profit"
 
     return False, ""

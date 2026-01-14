@@ -55,10 +55,6 @@ def process_entries(
             break
 
         buy_price = arrays["entry_prices"][t_idx, d_idx]
-        close_price = arrays["closes"][t_idx, d_idx]
-        sma_price = (
-            arrays["smas"][t_idx, d_idx] if not np.isnan(arrays["smas"][t_idx, d_idx]) else None
-        )
 
         invest_amount = calculate_invest_amount(
             state,
@@ -71,7 +67,13 @@ def process_entries(
             config,
         )
 
-        is_whipsaw = close_price < sma_price if sma_price is not None else False
+        # Use pre-computed whipsaw flag (entry_signal & exit_signal on same bar)
+        # This represents vectorized signal computation where both entry and exit
+        # conditions are met on the same bar. In VBO strategy:
+        # - Entry: high >= target (intraday breakout)
+        # - Exit: close < sma (end of day below SMA)
+        # Both signals being true = same-day entry and exit
+        is_whipsaw = bool(arrays["whipsaws"][t_idx, d_idx])
 
         if is_whipsaw:
             handle_whipsaw(
