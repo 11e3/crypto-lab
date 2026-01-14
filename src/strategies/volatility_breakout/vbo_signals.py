@@ -4,6 +4,8 @@ VBO Signal Generation Functions.
 Contains vectorized signal generation logic extracted from VanillaVBO.
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import pandas as pd
