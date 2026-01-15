@@ -3,7 +3,7 @@
 전략 선택 및 동적 파라미터 편집 UI 컴포넌트.
 """
 
-from typing import Any
+from typing import Any, cast
 
 import streamlit as st
 
@@ -155,7 +155,7 @@ def create_strategy_instance(strategy_name: str, parameters: dict[str, Any]) -> 
         # 전략 인스턴스 생성
         strategy = strategy_class(**parameters)
         logger.info(f"Created strategy: {strategy_name} with params: {parameters}")
-        return strategy
+        return cast(Strategy, strategy)
 
     except Exception as e:
         logger.exception(f"Failed to create strategy {strategy_name}: {e}")

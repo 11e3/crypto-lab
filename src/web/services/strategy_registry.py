@@ -83,7 +83,7 @@ class StrategyRegistry:
 
     def _extract_parameters(self, cls: type) -> dict[str, ParameterSpec]:
         """__init__ 시그니처에서 파라미터 추출."""
-        sig = inspect.signature(cls.__init__)
+        sig = inspect.signature(cls.__init__)  # type: ignore[misc]
         params: dict[str, ParameterSpec] = {}
 
         for name, param in sig.parameters.items():

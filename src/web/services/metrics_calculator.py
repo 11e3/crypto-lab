@@ -71,7 +71,7 @@ def _calculate_cagr(
     """CAGR 계산."""
     if years <= 0 or initial_value <= 0:
         return 0.0
-    return ((final_value / initial_value) ** (1 / years) - 1) * 100
+    return float(((final_value / initial_value) ** (1 / years) - 1) * 100)
 
 
 def _calculate_max_drawdown(equity: np.ndarray) -> float:
@@ -148,7 +148,7 @@ def _calculate_sharpe_ratio(
         return 0.0
 
     sharpe = np.mean(excess_returns) / std
-    return float(sharpe) * np.sqrt(365)
+    return float(sharpe * np.sqrt(365))
 
 
 def _calculate_sortino_ratio(
@@ -171,7 +171,7 @@ def _calculate_sortino_ratio(
         return 0.0
 
     sortino = np.mean(excess_returns) / downside_std
-    return float(sortino) * np.sqrt(365)
+    return float(sortino * np.sqrt(365))
 
 
 def _calculate_calmar_ratio(cagr: float, max_dd: float) -> float:
