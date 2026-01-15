@@ -10,6 +10,7 @@ __all__ = [
     "TradingBotFacade",
     "create_bot",
     "OrderManager",
+    "OrderTracker",
     "PositionManager",
     "PnLCalculator",
     "SignalHandler",
@@ -35,6 +36,10 @@ def __getattr__(name: str) -> Any:
         from src.execution.order_manager import OrderManager
 
         return OrderManager
+    elif name == "OrderTracker":
+        from src.execution.order_tracker import OrderTracker
+
+        return OrderTracker
     elif name == "PositionManager":
         from src.execution.position_manager import PositionManager
 
