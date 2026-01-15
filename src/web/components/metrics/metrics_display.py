@@ -21,14 +21,14 @@ def _format_value(value: float, suffix: str = "", precision: int = 2) -> str:
 
 def render_metrics_cards(metrics: ExtendedMetrics) -> None:
     """메트릭 카드 렌더링.
-    
+
     주요 메트릭을 카드 형태로 표시.
-    
+
     Args:
         metrics: 확장 메트릭 데이터
     """
     st.subheader("📈 Performance Summary")
-    
+
     # Row 1: 기본 수익률 메트릭
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -52,7 +52,7 @@ def render_metrics_cards(metrics: ExtendedMetrics) -> None:
             "변동성 (연간)",
             _format_value(metrics.volatility_pct, "%"),
         )
-    
+
     # Row 2: 리스크 조정 수익률
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -63,7 +63,7 @@ def render_metrics_cards(metrics: ExtendedMetrics) -> None:
         st.metric("Calmar Ratio", _format_value(metrics.calmar_ratio))
     with col4:
         st.metric("거래 수", str(metrics.num_trades))
-    
+
     # Row 3: VaR & CVaR
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -74,7 +74,7 @@ def render_metrics_cards(metrics: ExtendedMetrics) -> None:
         st.metric("CVaR (95%)", _format_value(metrics.cvar_95_pct, "%"))
     with col4:
         st.metric("CVaR (99%)", _format_value(metrics.cvar_99_pct, "%"))
-    
+
     # Row 4: 거래 메트릭
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -85,7 +85,7 @@ def render_metrics_cards(metrics: ExtendedMetrics) -> None:
         st.metric("평균 손실", _format_value(metrics.avg_loss_pct, "%"))
     with col4:
         st.metric("Profit Factor", _format_value(metrics.profit_factor))
-    
+
     # Row 5: 통계적 메트릭
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -99,7 +99,7 @@ def render_metrics_cards(metrics: ExtendedMetrics) -> None:
         st.metric("Skewness", _format_value(metrics.skewness))
     with col4:
         st.metric("Kurtosis", _format_value(metrics.kurtosis))
-    
+
     # Row 6: 변동성 및 기간
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -114,14 +114,14 @@ def render_metrics_cards(metrics: ExtendedMetrics) -> None:
 
 def render_metrics_table(metrics: ExtendedMetrics) -> None:
     """메트릭 테이블 렌더링.
-    
+
     모든 메트릭을 테이블 형태로 표시.
-    
+
     Args:
         metrics: 확장 메트릭 데이터
     """
     st.subheader("📊 Detailed Metrics")
-    
+
     # 카테고리별 메트릭 그룹화
     categories = {
         "📈 수익률 메트릭": [
@@ -164,10 +164,10 @@ def render_metrics_table(metrics: ExtendedMetrics) -> None:
             ("기간 (년)", _format_value(metrics.years, "", 2)),
         ],
     }
-    
+
     # 2열 레이아웃
     col1, col2 = st.columns(2)
-    
+
     category_items = list(categories.items())
     for i, (category, items) in enumerate(category_items):
         target_col = col1 if i % 2 == 0 else col2
@@ -180,36 +180,32 @@ def render_metrics_table(metrics: ExtendedMetrics) -> None:
 
 def render_statistical_significance(metrics: ExtendedMetrics) -> None:
     """통계적 유의성 해석 렌더링.
-    
+
     Args:
         metrics: 확장 메트릭 데이터
     """
     st.subheader("🔬 Statistical Significance Analysis")
-    
+
     p_value = metrics.p_value
     z_score = metrics.z_score
-    
+
     # 유의 수준 판정
     if p_value < 0.01:
         significance = "매우 유의함 (p < 0.01)"
-        color = "green"
         icon = "✅"
     elif p_value < 0.05:
         significance = "유의함 (p < 0.05)"
-        color = "green"
         icon = "✅"
     elif p_value < 0.1:
         significance = "약하게 유의함 (p < 0.10)"
-        color = "orange"
         icon = "⚠️"
     else:
         significance = "유의하지 않음 (p ≥ 0.10)"
-        color = "red"
         icon = "❌"
-    
+
     st.markdown(f"""
     ### {icon} 결과: {significance}
-    
+
     | 지표 | 값 | 해석 |
     |------|-----|------|
     | Z-Score | {z_score:.4f} | {"양의 초과 수익" if z_score > 0 else "음의 초과 수익"} |
@@ -217,22 +213,22 @@ def render_statistical_significance(metrics: ExtendedMetrics) -> None:
     | Skewness | {metrics.skewness:.4f} | {"우측 꼬리 (긍정적)" if metrics.skewness > 0 else "좌측 꼬리 (부정적)"} |
     | Kurtosis | {metrics.kurtosis:.4f} | {"Fat tail (위험 증가)" if metrics.kurtosis > 0 else "Thin tail"} |
     """)
-    
+
     # 해석 가이드
     with st.expander("📖 해석 가이드"):
         st.markdown("""
         **Z-Score**: 평균 수익률이 0과 얼마나 다른지 표준편차 단위로 측정
         - |Z| > 1.96: 95% 신뢰수준에서 유의
         - |Z| > 2.58: 99% 신뢰수준에서 유의
-        
+
         **P-Value**: 귀무가설(수익률=0) 하에서 관측된 결과가 나올 확률
         - p < 0.05: 통계적으로 유의한 수익률
         - p < 0.01: 매우 강한 증거
-        
+
         **Skewness**: 수익률 분포의 비대칭성
         - 양수: 큰 수익이 큰 손실보다 많음 (바람직)
         - 음수: 큰 손실이 큰 수익보다 많음 (위험)
-        
+
         **Kurtosis**: 수익률 분포의 꼬리 두께
         - 양수: Fat tail (극단적 사건 빈번)
         - 음수: Thin tail (극단적 사건 희귀)

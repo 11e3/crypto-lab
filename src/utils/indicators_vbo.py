@@ -115,12 +115,12 @@ def calculate_natr(
 
 
 def calculate_volatility_regime(
-    high: "pd.Series[float]",
-    low: "pd.Series[float]",
-    close: "pd.Series[float]",
+    high: pd.Series[float],
+    low: pd.Series[float],
+    close: pd.Series[float],
     period: int = 14,
     window: int = 100,
-) -> "pd.Series[int]":
+) -> pd.Series[int]:
     """
     변동성 레짐 분류.
 
@@ -152,13 +152,13 @@ def calculate_volatility_regime(
 
 
 def calculate_adaptive_noise(
-    high: "pd.Series[float]",
-    low: "pd.Series[float]",
-    close: "pd.Series[float]",
+    high: pd.Series[float],
+    low: pd.Series[float],
+    close: pd.Series[float],
     short_period: int = 4,
     long_period: int = 8,
     atr_period: int = 14,
-) -> tuple["pd.Series[float]", "pd.Series[float]"]:
+) -> tuple[pd.Series[float], pd.Series[float]]:
     """
     ATR로 정규화된 적응형 노이즈 계산.
 

@@ -24,7 +24,7 @@ def get_cached_registry() -> StrategyRegistry:
 
 def render_strategy_selector() -> tuple[str, dict[str, Any]]:
     """전략 선택 및 파라미터 동적 렌더링.
-    
+
     Returns:
         (strategy_name, parameters) 튜플
     """
@@ -79,11 +79,11 @@ def render_strategy_selector() -> tuple[str, dict[str, Any]]:
 
 def _render_parameter_input(name: str, spec: ParameterSpec) -> Any:
     """파라미터 타입에 따른 입력 UI 렌더링.
-    
+
     Args:
         name: 파라미터 이름
         spec: 파라미터 스펙
-        
+
     Returns:
         사용자 입력값
     """
@@ -121,9 +121,7 @@ def _render_parameter_input(name: str, spec: ParameterSpec) -> Any:
 
         case "choice":
             choices = spec.choices or []
-            default_index = (
-                choices.index(spec.default) if spec.default in choices else 0
-            )
+            default_index = choices.index(spec.default) if spec.default in choices else 0
             return st.selectbox(
                 label,
                 options=choices,
@@ -136,15 +134,13 @@ def _render_parameter_input(name: str, spec: ParameterSpec) -> Any:
             return spec.default
 
 
-def create_strategy_instance(
-    strategy_name: str, parameters: dict[str, Any]
-) -> Strategy | None:
+def create_strategy_instance(strategy_name: str, parameters: dict[str, Any]) -> Strategy | None:
     """전략 인스턴스 생성.
-    
+
     Args:
         strategy_name: 전략 이름
         parameters: 파라미터 딕셔너리
-        
+
     Returns:
         Strategy 인스턴스 또는 None (실패 시)
     """

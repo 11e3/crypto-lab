@@ -3,7 +3,6 @@
 Plotly 기반 인터랙티브 수익률 곡선 차트.
 """
 
-
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
@@ -19,7 +18,7 @@ def render_equity_curve(
     benchmark_name: str = "Benchmark",
 ) -> None:
     """인터랙티브 수익률 곡선 렌더링.
-    
+
     Args:
         dates: 날짜 배열
         equity: 포트폴리오 가치 배열
@@ -43,7 +42,7 @@ def render_equity_curve(
             y=equity,
             mode="lines",
             name="Portfolio",
-            line=dict(color="#1f77b4", width=2),
+            line={"color": "#1f77b4", "width": 2},
             hovertemplate=(
                 "<b>Date</b>: %{x|%Y-%m-%d}<br>"
                 "<b>Value</b>: %{y:,.0f} KRW<br>"
@@ -62,7 +61,7 @@ def render_equity_curve(
                 y=benchmark,
                 mode="lines",
                 name=benchmark_name,
-                line=dict(color="#ff7f0e", width=1.5, dash="dash"),
+                line={"color": "#ff7f0e", "width": 1.5, "dash": "dash"},
                 hovertemplate=(
                     f"<b>{benchmark_name}</b><br>"
                     "<b>Date</b>: %{x|%Y-%m-%d}<br>"
@@ -84,42 +83,42 @@ def render_equity_curve(
 
     # 레이아웃 설정
     fig.update_layout(
-        title=dict(
-            text="📈 Portfolio Equity Curve",
-            font=dict(size=18),
-        ),
-        xaxis=dict(
-            title="Date",
-            showgrid=True,
-            gridcolor="rgba(128, 128, 128, 0.2)",
-            rangeslider=dict(visible=True),
-            rangeselector=dict(
-                buttons=[
-                    dict(count=1, label="1M", step="month", stepmode="backward"),
-                    dict(count=3, label="3M", step="month", stepmode="backward"),
-                    dict(count=6, label="6M", step="month", stepmode="backward"),
-                    dict(count=1, label="YTD", step="year", stepmode="todate"),
-                    dict(count=1, label="1Y", step="year", stepmode="backward"),
-                    dict(step="all", label="All"),
+        title={
+            "text": "📈 Portfolio Equity Curve",
+            "font": {"size": 18},
+        },
+        xaxis={
+            "title": "Date",
+            "showgrid": True,
+            "gridcolor": "rgba(128, 128, 128, 0.2)",
+            "rangeslider": {"visible": True},
+            "rangeselector": {
+                "buttons": [
+                    {"count": 1, "label": "1M", "step": "month", "stepmode": "backward"},
+                    {"count": 3, "label": "3M", "step": "month", "stepmode": "backward"},
+                    {"count": 6, "label": "6M", "step": "month", "stepmode": "backward"},
+                    {"count": 1, "label": "YTD", "step": "year", "stepmode": "todate"},
+                    {"count": 1, "label": "1Y", "step": "year", "stepmode": "backward"},
+                    {"step": "all", "label": "All"},
                 ]
-            ),
-        ),
-        yaxis=dict(
-            title="Portfolio Value (KRW)",
-            showgrid=True,
-            gridcolor="rgba(128, 128, 128, 0.2)",
-            tickformat=",",
-        ),
+            },
+        },
+        yaxis={
+            "title": "Portfolio Value (KRW)",
+            "showgrid": True,
+            "gridcolor": "rgba(128, 128, 128, 0.2)",
+            "tickformat": ",",
+        },
         hovermode="x unified",
         template="plotly_white",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
-        ),
-        margin=dict(l=60, r=20, t=80, b=60),
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "right",
+            "x": 1,
+        },
+        margin={"l": 60, "r": 20, "t": 80, "b": 60},
     )
 
     st.plotly_chart(fig, use_container_width=True)

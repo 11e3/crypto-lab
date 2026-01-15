@@ -52,7 +52,9 @@ def render_optimization_page() -> None:
         method = st.radio(
             "탐색 방법",
             options=["grid", "random"],
-            format_func=lambda x: "Grid Search (전체 탐색)" if x == "grid" else "Random Search (무작위 탐색)",
+            format_func=lambda x: "Grid Search (전체 탐색)"
+            if x == "grid"
+            else "Random Search (무작위 탐색)",
             horizontal=True,
         )
 
@@ -224,6 +226,7 @@ def _parse_param_grid(
     Raises:
         ValueError: 파싱 오류 시
     """
+
     def parse_range(s: str) -> list[int]:
         if not s.strip():
             return []

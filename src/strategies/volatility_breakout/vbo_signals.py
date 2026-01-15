@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 def build_entry_signal(
     df: pd.DataFrame,
-    conditions: list["Condition"],
+    conditions: list[Condition],
 ) -> pd.Series[bool]:
     """
     Build entry signal based on configured conditions.
@@ -44,7 +44,7 @@ def build_entry_signal(
 
 def _apply_entry_condition(
     df: pd.DataFrame,
-    condition: "Condition",
+    condition: Condition,
     signal: pd.Series[bool],
 ) -> pd.Series[bool]:
     """Apply a single entry condition to the signal."""
@@ -82,7 +82,7 @@ def _apply_entry_condition(
 
 def build_exit_signal(
     df: pd.DataFrame,
-    conditions: list["Condition"],
+    conditions: list[Condition],
 ) -> pd.Series[bool]:
     """
     Build exit signal based on configured conditions.

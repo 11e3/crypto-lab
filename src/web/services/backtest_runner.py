@@ -10,7 +10,6 @@ import streamlit as st
 
 from src.backtester.engine import EventDrivenBacktestEngine
 from src.backtester.models import BacktestConfig, BacktestResult
-from src.data.collector_fetch import Interval
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
 
@@ -21,14 +20,14 @@ __all__ = ["run_backtest_service", "BacktestService"]
 
 class BacktestService:
     """백테스트 실행 서비스.
-    
+
     EventDrivenBacktestEngine을 래핑하여 Streamlit 환경에서
     백테스트를 실행하고 결과를 관리합니다.
     """
 
     def __init__(self, config: BacktestConfig) -> None:
         """백테스트 서비스 초기화.
-        
+
         Args:
             config: 백테스트 설정
         """
@@ -43,21 +42,18 @@ class BacktestService:
         end_date: date | None = None,
     ) -> BacktestResult | None:
         """백테스트 실행.
-        
+
         Args:
             strategy: 전략 인스턴스
             data_files: {ticker: file_path} 딕셔너리
             start_date: 시작일 (선택)
             end_date: 종료일 (선택)
-            
+
         Returns:
             BacktestResult 또는 None (실패 시)
         """
         try:
-            logger.info(
-                f"Starting backtest: {strategy.name} "
-                f"with {len(data_files)} assets"
-            )
+            logger.info(f"Starting backtest: {strategy.name} with {len(data_files)} assets")
 
             result = self.engine.run(
                 strategy=strategy,
@@ -89,9 +85,9 @@ def run_backtest_service(
     end_date_str: str | None,
 ) -> BacktestResult | None:
     """캐시 가능한 백테스트 실행 래퍼.
-    
+
     Streamlit 캐싱을 위해 모든 파라미터를 직렬화 가능한 타입으로 변환.
-    
+
     Args:
         strategy_name: 전략 이름
         strategy_params: 전략 파라미터
@@ -99,7 +95,7 @@ def run_backtest_service(
         config_dict: 백테스트 설정 딕셔너리
         start_date_str: 시작일 문자열
         end_date_str: 종료일 문자열
-        
+
     Returns:
         BacktestResult 또는 None
     """

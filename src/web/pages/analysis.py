@@ -37,7 +37,9 @@ def render_analysis_page() -> None:
     analysis_type = st.radio(
         "분석 유형 선택",
         options=["monte_carlo", "walk_forward"],
-        format_func=lambda x: "🎲 Monte Carlo 시뮬레이션" if x == "monte_carlo" else "📈 Walk-Forward 분석",
+        format_func=lambda x: "🎲 Monte Carlo 시뮬레이션"
+        if x == "monte_carlo"
+        else "📈 Walk-Forward 분석",
         horizontal=True,
     )
 
@@ -89,7 +91,9 @@ def _render_monte_carlo() -> None:
         method = st.radio(
             "시뮬레이션 방법",
             options=["bootstrap", "parametric"],
-            format_func=lambda x: "Bootstrap (리샘플링)" if x == "bootstrap" else "Parametric (정규분포)",
+            format_func=lambda x: "Bootstrap (리샘플링)"
+            if x == "bootstrap"
+            else "Parametric (정규분포)",
             horizontal=True,
             key="mc_method",
         )
@@ -324,12 +328,14 @@ def _display_monte_carlo_results() -> None:
     import plotly.graph_objects as go
 
     fig = go.Figure()
-    fig.add_trace(go.Histogram(
-        x=mc_result.simulated_returns,
-        nbinsx=50,
-        name="시뮬레이션 수익률",
-        marker_color="lightblue",
-    ))
+    fig.add_trace(
+        go.Histogram(
+            x=mc_result.simulated_returns,
+            nbinsx=50,
+            name="시뮬레이션 수익률",
+            marker_color="lightblue",
+        )
+    )
 
     # 원본 수익률 라인
     fig.add_vline(
@@ -667,14 +673,16 @@ def _display_walk_forward_results() -> None:
 
     data = []
     for i, period in enumerate(result.periods):
-        data.append({
-            "기간": i + 1,
-            "시작일": period.start_date.strftime("%Y-%m-%d"),
-            "종료일": period.end_date.strftime("%Y-%m-%d"),
-            "최적 파라미터": str(period.best_params),
-            "In-Sample 수익률": f"{period.in_sample_return:.2%}",
-            "Out-of-Sample 수익률": f"{period.out_of_sample_return:.2%}",
-        })
+        data.append(
+            {
+                "기간": i + 1,
+                "시작일": period.start_date.strftime("%Y-%m-%d"),
+                "종료일": period.end_date.strftime("%Y-%m-%d"),
+                "최적 파라미터": str(period.best_params),
+                "In-Sample 수익률": f"{period.in_sample_return:.2%}",
+                "Out-of-Sample 수익률": f"{period.out_of_sample_return:.2%}",
+            }
+        )
 
     df = pd.DataFrame(data)
     st.dataframe(df, use_container_width=True)
@@ -689,18 +697,22 @@ def _display_walk_forward_results() -> None:
     out_sample = [p.out_of_sample_return for p in result.periods]
 
     fig = go.Figure()
-    fig.add_trace(go.Bar(
-        name="In-Sample",
-        x=periods,
-        y=in_sample,
-        marker_color="lightblue",
-    ))
-    fig.add_trace(go.Bar(
-        name="Out-of-Sample",
-        x=periods,
-        y=out_sample,
-        marker_color="orange",
-    ))
+    fig.add_trace(
+        go.Bar(
+            name="In-Sample",
+            x=periods,
+            y=in_sample,
+            marker_color="lightblue",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            name="Out-of-Sample",
+            x=periods,
+            y=out_sample,
+            marker_color="orange",
+        )
+    )
 
     fig.update_layout(
         title="Walk-Forward 기간별 수익률",

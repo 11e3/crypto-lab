@@ -137,9 +137,7 @@ def render_backtest_page() -> None:
         _display_results(result)
     else:
         # 안내 메시지
-        st.info(
-            "👈 왼쪽 사이드바에서 설정을 완료하고 **🚀 백테스트 실행** 버튼을 클릭하세요."
-        )
+        st.info("👈 왼쪽 사이드바에서 설정을 완료하고 **🚀 백테스트 실행** 버튼을 클릭하세요.")
 
         # 설정 요약 표시
         with st.expander("📋 현재 설정 요약", expanded=True):
@@ -161,7 +159,7 @@ def render_backtest_page() -> None:
             with col2:
                 st.markdown(f"""
                 **📈 전략**
-                - 이름: {strategy_name or '미선택'}
+                - 이름: {strategy_name or "미선택"}
                 - 파라미터: {len(strategy_params)}개
 
                 **⚙️ 포트폴리오**
@@ -173,7 +171,7 @@ def render_backtest_page() -> None:
 
 def _display_results(result) -> None:
     """백테스트 결과 표시.
-    
+
     Args:
         result: BacktestResult 객체
     """
@@ -192,14 +190,16 @@ def _display_results(result) -> None:
     )
 
     # 탭 구성
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📈 개요",
-        "📊 수익률 곡선",
-        "📉 드로다운",
-        "📅 월별 분석",
-        "📆 연도별 분석",
-        "🔬 통계 분석",
-    ])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+        [
+            "📈 개요",
+            "📊 수익률 곡선",
+            "📉 드로다운",
+            "📅 월별 분석",
+            "📆 연도별 분석",
+            "🔬 통계 분석",
+        ]
+    )
 
     with tab1:
         render_metrics_cards(extended_metrics)

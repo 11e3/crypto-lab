@@ -1,6 +1,6 @@
 """Extended metrics calculator service.
 
-Sortino, Calmar, VaR, CVaR, 상방/하방 변동성, z-score, p-value 등 
+Sortino, Calmar, VaR, CVaR, 상방/하방 변동성, z-score, p-value 등
 고급 백테스팅 메트릭 계산.
 """
 
@@ -113,7 +113,7 @@ def _calculate_downside_volatility(
     annualize: bool = True,
 ) -> float:
     """하방 변동성 계산 (Downside Deviation).
-    
+
     Args:
         returns: 수익률 배열
         mar: Minimum Acceptable Return (기본: 0)
@@ -206,7 +206,7 @@ def _calculate_cvar(returns: np.ndarray, confidence: float = 0.95) -> float:
 
 def _calculate_statistical_tests(returns: np.ndarray) -> tuple[float, float]:
     """Z-score 및 P-value 계산.
-    
+
     Returns:
         (z_score, p_value) 튜플
     """
@@ -232,7 +232,7 @@ def _calculate_trade_metrics(
     trade_returns: list[float],
 ) -> tuple[float, float, float, float, float]:
     """거래 메트릭 계산.
-    
+
     Returns:
         (win_rate, avg_win, avg_loss, profit_factor, expectancy)
     """
@@ -261,12 +261,12 @@ def calculate_extended_metrics(
     risk_free_rate: float = 0.02,
 ) -> ExtendedMetrics:
     """확장 메트릭 계산.
-    
+
     Args:
         equity: 포트폴리오 가치 배열
         trade_returns: 개별 거래 수익률 리스트 (선택)
         risk_free_rate: 무위험 수익률 (연간, 기본: 2%)
-        
+
     Returns:
         ExtendedMetrics 데이터클래스
     """
@@ -343,9 +343,7 @@ def calculate_extended_metrics(
     # 거래 메트릭
     trade_returns = trade_returns or []
     num_trades = len(trade_returns)
-    win_rate, avg_win, avg_loss, profit_factor, expectancy = _calculate_trade_metrics(
-        trade_returns
-    )
+    win_rate, avg_win, avg_loss, profit_factor, expectancy = _calculate_trade_metrics(trade_returns)
 
     return ExtendedMetrics(
         total_return_pct=total_return,

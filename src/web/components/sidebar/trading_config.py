@@ -38,7 +38,7 @@ class TradingConfig:
 
 def render_trading_config() -> TradingConfig:
     """거래 설정 UI 렌더링.
-    
+
     Returns:
         TradingConfig 객체
     """
@@ -75,26 +75,32 @@ def render_trading_config() -> TradingConfig:
     col1, col2 = st.columns(2)
 
     with col1:
-        fee_rate = st.number_input(
-            "수수료율 (%)",
-            min_value=0.0,
-            max_value=1.0,
-            value=settings.default_fee_rate * 100,
-            step=0.01,
-            format="%.3f",
-            help="거래당 수수료율 (0.05% = 업비트 기본)",
-        ) / 100
+        fee_rate = (
+            st.number_input(
+                "수수료율 (%)",
+                min_value=0.0,
+                max_value=1.0,
+                value=settings.default_fee_rate * 100,
+                step=0.01,
+                format="%.3f",
+                help="거래당 수수료율 (0.05% = 업비트 기본)",
+            )
+            / 100
+        )
 
     with col2:
-        slippage_rate = st.number_input(
-            "슬리피지율 (%)",
-            min_value=0.0,
-            max_value=1.0,
-            value=settings.default_slippage_rate * 100,
-            step=0.01,
-            format="%.3f",
-            help="시장 충격으로 인한 가격 미끄러짐",
-        ) / 100
+        slippage_rate = (
+            st.number_input(
+                "슬리피지율 (%)",
+                min_value=0.0,
+                max_value=1.0,
+                value=settings.default_slippage_rate * 100,
+                step=0.01,
+                format="%.3f",
+                help="시장 충격으로 인한 가격 미끄러짐",
+            )
+            / 100
+        )
 
     st.markdown("---")
 

@@ -11,7 +11,7 @@ __all__ = ["WebAppSettings", "get_web_settings"]
 
 class WebAppSettings(BaseSettings):
     """웹 애플리케이션 설정.
-    
+
     환경 변수 또는 .env 파일에서 설정을 로드합니다.
     """
 

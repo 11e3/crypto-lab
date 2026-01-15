@@ -26,13 +26,13 @@ def load_ticker_data(
     end_date: date | None = None,
 ) -> pd.DataFrame | None:
     """OHLCV 데이터 로딩 (1시간 캐시).
-    
+
     Args:
         ticker: 티커 (예: KRW-BTC)
         interval: 캔들 인터벌
         start_date: 시작일 (선택)
         end_date: 종료일 (선택)
-        
+
     Returns:
         OHLCV DataFrame 또는 None (실패 시)
     """
@@ -53,10 +53,7 @@ def load_ticker_data(
         if end_date:
             df = df[df.index <= pd.Timestamp(end_date)]
 
-        logger.info(
-            f"Loaded {ticker} {interval}: {len(df)} rows "
-            f"({df.index[0]} ~ {df.index[-1]})"
-        )
+        logger.info(f"Loaded {ticker} {interval}: {len(df)} rows ({df.index[0]} ~ {df.index[-1]})")
 
         return df
 
@@ -70,11 +67,11 @@ def get_data_files(
     interval: Interval,
 ) -> dict[str, Path]:
     """티커 목록에 대한 데이터 파일 경로 딕셔너리 생성.
-    
+
     Args:
         tickers: 티커 리스트
         interval: 캔들 인터벌
-        
+
     Returns:
         {ticker: file_path} 딕셔너리
     """
@@ -95,11 +92,11 @@ def validate_data_availability(
     interval: Interval,
 ) -> tuple[list[str], list[str]]:
     """데이터 가용성 검증.
-    
+
     Args:
         tickers: 티커 리스트
         interval: 캔들 인터벌
-        
+
     Returns:
         (available_tickers, missing_tickers) 튜플
     """

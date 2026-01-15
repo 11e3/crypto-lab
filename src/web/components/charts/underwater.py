@@ -15,7 +15,7 @@ def render_underwater_curve(
     equity: np.ndarray,
 ) -> None:
     """언더워터(드로다운) 곡선 렌더링.
-    
+
     Args:
         dates: 날짜 배열
         equity: 포트폴리오 가치 배열
@@ -44,10 +44,9 @@ def render_underwater_curve(
             name="Drawdown",
             fill="tozeroy",
             fillcolor="rgba(255, 0, 0, 0.3)",
-            line=dict(color="red", width=1),
+            line={"color": "red", "width": 1},
             hovertemplate=(
-                "<b>Date</b>: %{x|%Y-%m-%d}<br>"
-                "<b>Drawdown</b>: %{y:.2f}%<extra></extra>"
+                "<b>Date</b>: %{x|%Y-%m-%d}<br><b>Drawdown</b>: %{y:.2f}%<extra></extra>"
             ),
         )
     )
@@ -59,36 +58,36 @@ def render_underwater_curve(
             y=[mdd_value],
             mode="markers+text",
             name=f"MDD: {mdd_value:.2f}%",
-            marker=dict(color="darkred", size=12, symbol="triangle-down"),
+            marker={"color": "darkred", "size": 12, "symbol": "triangle-down"},
             text=[f"MDD: {mdd_value:.2f}%"],
             textposition="bottom center",
-            textfont=dict(color="darkred", size=11),
+            textfont={"color": "darkred", "size": 11},
             hoverinfo="skip",
         )
     )
 
     # 레이아웃 설정
     fig.update_layout(
-        title=dict(
-            text="📉 Underwater Curve (Drawdown)",
-            font=dict(size=18),
-        ),
-        xaxis=dict(
-            title="Date",
-            showgrid=True,
-            gridcolor="rgba(128, 128, 128, 0.2)",
-        ),
-        yaxis=dict(
-            title="Drawdown (%)",
-            showgrid=True,
-            gridcolor="rgba(128, 128, 128, 0.2)",
-            ticksuffix="%",
-            range=[min(drawdown) * 1.1, 5],  # 약간의 여백
-        ),
+        title={
+            "text": "📉 Underwater Curve (Drawdown)",
+            "font": {"size": 18},
+        },
+        xaxis={
+            "title": "Date",
+            "showgrid": True,
+            "gridcolor": "rgba(128, 128, 128, 0.2)",
+        },
+        yaxis={
+            "title": "Drawdown (%)",
+            "showgrid": True,
+            "gridcolor": "rgba(128, 128, 128, 0.2)",
+            "ticksuffix": "%",
+            "range": [min(drawdown) * 1.1, 5],  # 약간의 여백
+        },
         hovermode="x unified",
         template="plotly_white",
         showlegend=False,
-        margin=dict(l=60, r=20, t=60, b=40),
+        margin={"l": 60, "r": 20, "t": 60, "b": 40},
     )
 
     st.plotly_chart(fig, use_container_width=True)

@@ -81,7 +81,11 @@ def render_data_collect_page() -> None:
             placeholder="예: KRW-MATIC",
             help="Upbit에서 지원하는 KRW 마켓 티커를 입력하세요",
         )
-        if custom_ticker and custom_ticker not in selected_tickers and st.button(f"➕ {custom_ticker} 추가"):
+        if (
+            custom_ticker
+            and custom_ticker not in selected_tickers
+            and st.button(f"➕ {custom_ticker} 추가")
+        ):
             selected_tickers.append(custom_ticker.upper())
             st.session_state.selected_collect_tickers = selected_tickers
             st.rerun()
@@ -97,7 +101,9 @@ def render_data_collect_page() -> None:
         selected_intervals = []
         for interval_code, interval_name in INTERVALS:
             checked = interval_code in st.session_state.selected_intervals
-            if st.checkbox(f"{interval_name} ({interval_code})", value=checked, key=f"interval_{interval_code}"):
+            if st.checkbox(
+                f"{interval_name} ({interval_code})", value=checked, key=f"interval_{interval_code}"
+            ):
                 selected_intervals.append(interval_code)
 
         st.session_state.selected_intervals = selected_intervals
@@ -254,12 +260,14 @@ def _display_collection_results() -> None:
         status = "✅ 성공" if count >= 0 else "❌ 실패"
         candles = f"{count:,}" if count >= 0 else "-"
 
-        data.append({
-            "티커": ticker,
-            "인터벌": interval,
-            "상태": status,
-            "캔들 수": candles,
-        })
+        data.append(
+            {
+                "티커": ticker,
+                "인터벌": interval,
+                "상태": status,
+                "캔들 수": candles,
+            }
+        )
 
     df = pd.DataFrame(data)
     st.dataframe(df, use_container_width=True, height=400)
