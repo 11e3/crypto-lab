@@ -120,7 +120,7 @@ def render_yearly_bar_chart(
         margin={"l": 60, "r": 20, "t": 60, "b": 40},
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # 통계 요약
     col1, col2, col3, col4 = st.columns(4)

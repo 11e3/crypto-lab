@@ -234,7 +234,7 @@ def _display_results(result: BacktestResult) -> None:
                     ]
                 )
 
-                st.dataframe(trades_df, use_container_width=True, height=400)
+                st.dataframe(trades_df, width="stretch", height=400)
 
     with tab2:
         render_equity_curve(dates, equity)

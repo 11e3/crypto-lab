@@ -265,7 +265,7 @@ def _display_collection_results() -> None:
         )
 
     df = pd.DataFrame(data)
-    st.dataframe(df, use_container_width=True, height=400)
+    st.dataframe(df, width="stretch", height=400)
 
     # 요약
     col1, col2, col3 = st.columns(3)

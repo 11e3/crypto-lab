@@ -426,9 +426,9 @@ def _display_optimization_results() -> None:
     df = pd.DataFrame(data)
     df = df.sort_values(metric, ascending=False)
 
-    st.dataframe(df, use_container_width=True, height=400)
+    st.dataframe(df, width="stretch", height=400)
 
     # 상위 10개 결과
     st.markdown("### 🔝 Top 10 결과")
     top_10 = df.head(10)
-    st.dataframe(top_10, use_container_width=True)
+    st.dataframe(top_10, width="stretch")

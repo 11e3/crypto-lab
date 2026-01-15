@@ -354,7 +354,7 @@ def _display_monte_carlo_results() -> None:
         showlegend=True,
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_walk_forward() -> None:
@@ -687,7 +687,7 @@ def _display_walk_forward_results() -> None:
         )
 
     df = pd.DataFrame(data)
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df, width="stretch")
 
     # 차트
     st.markdown("### 📈 기간별 수익률 비교")
@@ -723,7 +723,7 @@ def _display_walk_forward_results() -> None:
         barmode="group",
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _create_strategy(strategy_type: str) -> Any:

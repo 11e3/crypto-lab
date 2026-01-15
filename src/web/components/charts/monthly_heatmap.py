@@ -163,7 +163,7 @@ def render_monthly_heatmap(
         margin={"l": 60, "r": 20, "t": 80, "b": 40},
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # 연도별 합계 표시
     yearly_returns = monthly.groupby("year")["return_pct"].sum()
