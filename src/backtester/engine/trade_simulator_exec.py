@@ -8,6 +8,7 @@ from datetime import date
 
 import numpy as np
 
+from src.backtester.engine.trade_costs import TradeCostCalculator
 from src.backtester.engine.trade_simulator_state import SimulationState
 from src.backtester.models import BacktestConfig
 from src.execution.orders.advanced_orders import AdvancedOrderManager
@@ -32,13 +33,10 @@ def execute_exit(
     amount = state.position_amounts[t_idx]
     entry_price = state.position_entry_prices[t_idx]
 
-    revenue = amount * exit_price * (1 - config.fee_rate)
-    state.cash += revenue
+    calculator = TradeCostCalculator(config.fee_rate, config.slippage_rate)
+    costs = calculator.calculate_exit_costs(entry_price, exit_price, amount)
 
-    pnl = revenue - (amount * entry_price)
-    pnl_pct = (exit_price / entry_price - 1) * 100
-    commission = amount * entry_price * config.fee_rate + amount * exit_price * config.fee_rate
-    slippage = amount * (entry_price + exit_price) * config.slippage_rate
+    state.cash += costs.revenue
 
     state.trades_list.append(
         {
@@ -48,11 +46,11 @@ def execute_exit(
             "exit_date": current_date,
             "exit_price": exit_price,
             "amount": amount,
-            "pnl": pnl,
-            "pnl_pct": pnl_pct,
+            "pnl": costs.pnl,
+            "pnl_pct": costs.pnl_pct,
             "is_whipsaw": False,
-            "commission_cost": commission,
-            "slippage_cost": slippage,
+            "commission_cost": costs.commission,
+            "slippage_cost": costs.slippage,
             "is_stop_loss": is_stop_loss,
             "is_take_profit": is_take_profit,
             "exit_reason": exit_reason,
@@ -79,14 +77,11 @@ def handle_whipsaw(
 ) -> None:
     """Handle whipsaw (same-day entry and exit)."""
     sell_price = arrays["exit_prices"][t_idx, d_idx]
-    amount = (invest_amount / buy_price) * (1 - fee_rate)
-    return_money = amount * sell_price * (1 - fee_rate)
-    state.cash = state.cash - invest_amount + return_money
 
-    pnl = return_money - invest_amount
-    pnl_pct = (sell_price / buy_price - 1) * 100
-    commission = amount * (buy_price + sell_price) * fee_rate
-    slippage = amount * (buy_price + sell_price) * slippage_rate
+    calculator = TradeCostCalculator(fee_rate, slippage_rate)
+    costs = calculator.calculate_whipsaw_costs(buy_price, sell_price, invest_amount)
+
+    state.cash = state.cash - invest_amount + costs.revenue
 
     state.trades_list.append(
         {
@@ -95,12 +90,12 @@ def handle_whipsaw(
             "entry_price": buy_price,
             "exit_date": current_date,
             "exit_price": sell_price,
-            "amount": amount,
-            "pnl": pnl,
-            "pnl_pct": pnl_pct,
+            "amount": costs.net_amount,
+            "pnl": costs.pnl,
+            "pnl_pct": costs.pnl_pct,
             "is_whipsaw": True,
-            "commission_cost": commission,
-            "slippage_cost": slippage,
+            "commission_cost": costs.commission,
+            "slippage_cost": costs.slippage,
             "is_stop_loss": False,
             "is_take_profit": False,
             "exit_reason": "whipsaw",
@@ -117,7 +112,9 @@ def handle_normal_entry(
     fee_rate: float,
 ) -> None:
     """Handle normal entry (position opened)."""
-    amount = (invest_amount / buy_price) * (1 - fee_rate)
+    calculator = TradeCostCalculator(fee_rate)
+    amount = calculator.calculate_buy_amount(invest_amount, buy_price)
+
     state.position_amounts[t_idx] = amount
     state.position_entry_prices[t_idx] = buy_price
     state.position_entry_dates[t_idx] = d_idx
