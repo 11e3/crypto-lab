@@ -5,11 +5,17 @@
 
 from __future__ import annotations
 
+from datetime import date as date_type
+from typing import TYPE_CHECKING
+
 import numpy as np
 import streamlit as st
 
 from src.backtester.models import BacktestConfig, BacktestResult
 from src.utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from src.web.components.sidebar.trading_config import TradingConfig
 from src.web.components.charts.equity_curve import render_equity_curve
 from src.web.components.charts.monthly_heatmap import render_monthly_heatmap
 from src.web.components.charts.underwater import render_underwater_curve
@@ -32,38 +38,71 @@ __all__ = ["render_backtest_page"]
 
 
 def render_backtest_page() -> None:
-    """백테스트 페이지 렌더링."""
+    """백테스트 페이지 렌더링 (탭 기반 UI)."""
     st.header("📈 백테스트")
 
-    # ===== 사이드바 설정 =====
-    with st.sidebar:
-        st.title("📊 백테스트 설정")
-        st.markdown("---")
+    # 탭 생성: 설정 탭과 결과 탭
+    if "backtest_result" in st.session_state:
+        # 결과가 있으면 설정과 결과 탭 모두 표시
+        tab1, tab2 = st.tabs(["⚙️ 설정", "📊 결과"])
+    else:
+        # 결과가 없으면 설정 탭만 표시
+        tab1 = st.tabs(["⚙️ 설정"])[0]
+        tab2 = None
 
-        # 1. 날짜 설정
+    # ===== 설정 탭 =====
+    with tab1:
+        _render_settings_tab()
+
+    # ===== 결과 탭 =====
+    if tab2 is not None:
+        with tab2:
+            if "backtest_result" in st.session_state:
+                _display_results(st.session_state.backtest_result)
+            else:
+                st.info("백테스트를 실행하면 결과가 여기에 표시됩니다.")
+
+
+def _render_settings_tab() -> None:
+    """설정 탭 렌더링."""
+    st.subheader("⚙️ 백테스트 설정")
+
+    # 3개 컬럼으로 설정 구분
+    col1, col2, col3 = st.columns([1, 1, 1])
+
+    # ===== 컬럼 1: 날짜 & 거래 설정 =====
+    with col1:
+        st.markdown("### 📅 기간 설정")
         start_date, end_date = render_date_config()
-        st.markdown("---")
 
-        # 2. 거래 설정
+        st.markdown("### 💰 거래 설정")
         trading_config = render_trading_config()
-        st.markdown("---")
 
-        # 3. 전략 선택
+    # ===== 컬럼 2: 전략 설정 =====
+    with col2:
+        st.markdown("### 📈 전략 설정")
         strategy_name, strategy_params = render_strategy_selector()
-        st.markdown("---")
 
-        # 4. 자산 선택
+    # ===== 컬럼 3: 자산 선택 =====
+    with col3:
+        st.markdown("### 🪙 자산 선택")
         selected_tickers = render_asset_selector()
-        st.markdown("---")
 
-        # 실행 버튼
+    st.markdown("---")
+
+    # 설정 요약
+    with st.expander("📋 설정 요약", expanded=False):
+        _show_config_summary(strategy_name, selected_tickers, trading_config, start_date, end_date)
+
+    # 실행 버튼
+    col_left, col_center, col_right = st.columns([1, 1, 1])
+    with col_center:
         run_button = st.button(
             "🚀 백테스트 실행",
             type="primary",
             use_container_width=True,
+            disabled=not strategy_name or not selected_tickers,
         )
-
-    # ===== 메인 화면 =====
 
     # 검증
     if not strategy_name:
@@ -99,76 +138,82 @@ def render_backtest_page() -> None:
                 fee_rate=trading_config.fee_rate,
                 slippage_rate=trading_config.slippage_rate,
                 max_slots=trading_config.max_slots,
-                stop_loss_pct=trading_config.stop_loss_pct,
-                take_profit_pct=trading_config.take_profit_pct,
-                trailing_stop_pct=trading_config.trailing_stop_pct,
+                use_cache=False,
             )
 
             # 데이터 파일 경로
             data_files = get_data_files(available_tickers, trading_config.interval)
 
-            # 백테스트 실행 (캐시됨)
+            if not data_files:
+                st.error("❌ 데이터 파일을 찾을 수 없습니다.")
+                return
+
+            # 백테스트 실행 (캐싱을 위해 직렬화 가능한 타입으로 변환)
+            data_files_dict = {ticker: str(path) for ticker, path in data_files.items()}
+            config_dict = {
+                "initial_capital": config.initial_capital,
+                "fee_rate": config.fee_rate,
+                "slippage_rate": config.slippage_rate,
+                "max_slots": config.max_slots,
+                "use_cache": config.use_cache,
+            }
+            start_date_str = start_date.isoformat() if start_date else None
+            end_date_str = end_date.isoformat() if end_date else None
+
             result = run_backtest_service(
                 strategy_name=strategy_name,
                 strategy_params=strategy_params,
-                data_files_dict={k: str(v) for k, v in data_files.items()},
-                config_dict={
-                    "initial_capital": config.initial_capital,
-                    "fee_rate": config.fee_rate,
-                    "slippage_rate": config.slippage_rate,
-                    "max_slots": config.max_slots,
-                    "stop_loss_pct": config.stop_loss_pct,
-                    "take_profit_pct": config.take_profit_pct,
-                    "trailing_stop_pct": config.trailing_stop_pct,
-                },
-                start_date_str=start_date.isoformat(),
-                end_date_str=end_date.isoformat(),
+                data_files_dict=data_files_dict,
+                config_dict=config_dict,
+                start_date_str=start_date_str,
+                end_date_str=end_date_str,
             )
 
             if result:
-                # 세션 스테이트에 저장
                 st.session_state.backtest_result = result
-                st.success("✅ 백테스트 완료!")
+                st.success("✅ 백테스트 완료! '📊 결과' 탭에서 확인하세요.")
+                st.rerun()  # 결과 탭 표시를 위해 페이지 새로고침
             else:
-                st.error("❌ 백테스트 실행 실패. 로그를 확인하세요.")
-                return
+                st.error("❌ 백테스트 실행 실패")
 
-    # 결과 표시
-    if "backtest_result" in st.session_state:
-        result = st.session_state.backtest_result
-        _display_results(result)
-    else:
-        # 안내 메시지
-        st.info("👈 왼쪽 사이드바에서 설정을 완료하고 **🚀 백테스트 실행** 버튼을 클릭하세요.")
 
-        # 설정 요약 표시
-        with st.expander("📋 현재 설정 요약", expanded=True):
-            col1, col2 = st.columns(2)
+def _show_config_summary(
+    strategy_name: str,
+    selected_tickers: list[str],
+    trading_config: TradingConfig,
+    start_date: date_type | None,
+    end_date: date_type | None,
+) -> None:
+    """설정 요약 표시."""
+    col1, col2, col3 = st.columns(3)
 
-            with col1:
-                st.markdown(f"""
-                **📅 기간**
-                - 시작: {start_date}
-                - 종료: {end_date}
-                - 기간: {(end_date - start_date).days}일
+    with col1:
+        st.markdown(
+            f"""
+            **📈 전략**
+            - 전략: {strategy_name}
+            - 인터벌: {trading_config.interval}
+            """
+        )
 
-                **⏱️ 거래 설정**
-                - 인터벌: {trading_config.interval}
-                - 수수료: {trading_config.fee_rate:.2%}
-                - 슬리피지: {trading_config.slippage_rate:.2%}
-                """)
+    with col2:
+        st.markdown(
+            f"""
+            **📅 기간**
+            - 시작: {start_date if start_date else "전체"}
+            - 종료: {end_date if end_date else "전체"}
+            """
+        )
 
-            with col2:
-                st.markdown(f"""
-                **📈 전략**
-                - 이름: {strategy_name or "미선택"}
-                - 파라미터: {len(strategy_params)}개
-
-                **⚙️ 포트폴리오**
-                - 초기자본: {trading_config.initial_capital:,.0f} KRW
-                - 최대슬롯: {trading_config.max_slots}개
-                - 자산: {len(selected_tickers)}개
-                """)
+    with col3:
+        st.markdown(
+            f"""
+            **⚙️ 포트폴리오**
+            - 초기자본: {trading_config.initial_capital:,.0f} KRW
+            - 최대슬롯: {trading_config.max_slots}개
+            - 자산: {len(selected_tickers)}개
+            """
+        )
 
 
 def _display_results(result: BacktestResult) -> None:
@@ -206,35 +251,36 @@ def _display_results(result: BacktestResult) -> None:
             "📉 드로다운",
             "📅 월별 분석",
             "📆 연도별 분석",
-            "🔬 통계 분석",
+            "🔬 통계",
         ]
     )
 
     with tab1:
+        # 메트릭 카드
         render_metrics_cards(extended_metrics)
 
         # 거래 내역
         if result.trades:
-            with st.expander(f"📜 거래 내역 ({len(result.trades)}건)", expanded=False):
-                import pandas as pd
+            st.markdown("### 📋 거래 내역")
 
-                trades_df = pd.DataFrame(
-                    [
-                        {
-                            "티커": t.ticker,
-                            "진입일": t.entry_date,
-                            "진입가": f"{t.entry_price:,.0f}",
-                            "청산일": t.exit_date or "-",
-                            "청산가": f"{t.exit_price:,.0f}" if t.exit_price else "-",
-                            "수량": f"{t.amount:.4f}",
-                            "손익": f"{t.pnl:,.0f}",
-                            "수익률": f"{t.pnl_pct:.2f}%",
-                        }
-                        for t in result.trades[:100]  # 최대 100개만 표시
-                    ]
-                )
+            import pandas as pd
 
-                st.dataframe(trades_df, width="stretch", height=400)
+            trades_df = pd.DataFrame(
+                [
+                    {
+                        "티커": t.ticker,
+                        "진입일": str(t.entry_date),
+                        "진입가": f"{t.entry_price:,.0f}",
+                        "청산일": str(t.exit_date) if t.exit_date else "-",
+                        "청산가": f"{t.exit_price:,.0f}" if t.exit_price else "-",
+                        "수익": f"{t.pnl:,.0f}",
+                        "수익률": f"{t.pnl_pct:.2f}%",
+                    }
+                    for t in result.trades[-100:]  # 최근 100개만
+                ]
+            )
+
+            st.dataframe(trades_df, width="stretch", height=400)
 
     with tab2:
         render_equity_curve(dates, equity)
