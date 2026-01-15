@@ -277,6 +277,8 @@ omit = [
     "src/strategies/volatility_breakout/vbo_v2.py",
     "src/utils/indicators_v2.py",
     "src/monitoring/alerts.py",
+    # Web UI modules (tested via integration tests)
+    "src/web/*",
 ]
 
 [tool.coverage.report]

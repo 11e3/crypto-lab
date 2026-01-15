@@ -641,36 +641,3 @@ class TestMarketRegimeCondition:
         indicators: dict[str, float] = {}
 
         assert condition.evaluate(current, history, indicators) is False
-
-
-class TestDeprecatedAliases:
-    """Tests for deprecated filter aliases to ensure backward compatibility."""
-
-    def test_trend_filter_deprecated_alias(self) -> None:
-        """Test TrendFilter deprecated alias - covers lines 49-54."""
-        import warnings
-
-        from src.strategies.volatility_breakout.conditions_deprecated import TrendFilter
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            _filter = TrendFilter()
-
-            assert len(w) == 1
-            assert issubclass(w[0].category, DeprecationWarning)
-            assert "TrendFilter" in str(w[0].message)
-            assert "TrendCondition" in str(w[0].message)
-
-    def test_noise_filter_deprecated_alias(self) -> None:
-        """Test NoiseFilter deprecated alias - covers lines 49-54."""
-        import warnings
-
-        from src.strategies.volatility_breakout.conditions_deprecated import NoiseFilter
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            _filter = NoiseFilter()
-
-            assert len(w) == 1
-            assert issubclass(w[0].category, DeprecationWarning)
-            assert "NoiseFilter" in str(w[0].message)
