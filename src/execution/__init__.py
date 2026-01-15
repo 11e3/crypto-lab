@@ -12,6 +12,8 @@ __all__ = [
     "OrderManager",
     "PositionManager",
     "SignalHandler",
+    "SignalDataLoader",
+    "SignalMetricsCalculator",
 ]
 
 
@@ -40,4 +42,12 @@ def __getattr__(name: str) -> Any:
         from src.execution.signal_handler import SignalHandler
 
         return SignalHandler
+    elif name == "SignalDataLoader":
+        from src.execution.signal_data import SignalDataLoader
+
+        return SignalDataLoader
+    elif name == "SignalMetricsCalculator":
+        from src.execution.signal_metrics import SignalMetricsCalculator
+
+        return SignalMetricsCalculator
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
