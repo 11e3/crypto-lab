@@ -8,7 +8,7 @@ import streamlit as st
 from src.backtester import BacktestConfig, optimize_strategy_parameters
 from src.strategies.volatility_breakout import create_vbo_strategy
 from src.utils.logger import get_logger
-from src.web.services.data_loader import get_data_files, validate_data_availability
+from src.web.services.data_loader import validate_data_availability
 
 logger = get_logger(__name__)
 
@@ -413,7 +413,7 @@ def _display_optimization_results() -> None:
 
     # 결과를 DataFrame으로 변환
     data = []
-    for params, score in zip(result.all_params, result.all_scores):
+    for params, score in zip(result.all_params, result.all_scores, strict=False):
         row = params.copy()
         row[metric] = score
         data.append(row)

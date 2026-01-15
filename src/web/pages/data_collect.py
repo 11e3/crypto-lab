@@ -5,7 +5,6 @@
 
 import streamlit as st
 
-from src.data.collector import Interval
 from src.data.collector_factory import DataCollectorFactory
 from src.utils.logger import get_logger
 
@@ -82,11 +81,10 @@ def render_data_collect_page() -> None:
             placeholder="예: KRW-MATIC",
             help="Upbit에서 지원하는 KRW 마켓 티커를 입력하세요",
         )
-        if custom_ticker and custom_ticker not in selected_tickers:
-            if st.button(f"➕ {custom_ticker} 추가"):
-                selected_tickers.append(custom_ticker.upper())
-                st.session_state.selected_collect_tickers = selected_tickers
-                st.rerun()
+        if custom_ticker and custom_ticker not in selected_tickers and st.button(f"➕ {custom_ticker} 추가"):
+            selected_tickers.append(custom_ticker.upper())
+            st.session_state.selected_collect_tickers = selected_tickers
+            st.rerun()
 
         st.markdown("---")
 
@@ -197,8 +195,6 @@ def _run_collection(
 
                 try:
                     # 개별 수집 (collect_multiple 대신 직접 호출)
-                    interval_typed: Interval = interval  # type: ignore
-
                     if full_refresh:
                         df = collector.data_source.get_ohlcv(ticker, interval, count=200)
                         if df is not None:
