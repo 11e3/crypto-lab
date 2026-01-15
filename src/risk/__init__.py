@@ -17,17 +17,46 @@ from src.risk.position_sizing import (
     calculate_multi_asset_position_sizes,
     calculate_position_size,
 )
+from src.risk.stress_testing import (
+    StressTester,
+    StressScenario,
+    StressTestResult,
+    CrisisType,
+    HISTORICAL_SCENARIOS,
+)
+from src.risk.drawdown_control import (
+    DrawdownController,
+    DrawdownState,
+    RiskState,
+    RiskBudgetManager,
+    RiskBudget,
+)
 
 __all__ = [
+    # Metrics
     "PortfolioRiskMetrics",
     "calculate_var",
     "calculate_cvar",
     "calculate_portfolio_volatility",
     "calculate_portfolio_correlation",
+    # Position sizing
     "PositionSizingMethod",
     "calculate_position_size",
     "calculate_multi_asset_position_sizes",
+    # Portfolio optimization
     "PortfolioOptimizer",
     "PortfolioWeights",
     "optimize_portfolio",
+    # Stress testing
+    "StressTester",
+    "StressScenario",
+    "StressTestResult",
+    "CrisisType",
+    "HISTORICAL_SCENARIOS",
+    # Drawdown control
+    "DrawdownController",
+    "DrawdownState",
+    "RiskState",
+    "RiskBudgetManager",
+    "RiskBudget",
 ]
