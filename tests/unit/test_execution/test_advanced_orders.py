@@ -7,11 +7,13 @@ from datetime import date
 import pytest
 
 from src.execution.orders.advanced_orders import (
-    AdvancedOrder,
     AdvancedOrderManager,
+    update_trailing_stop,
+)
+from src.execution.orders.advanced_orders_models import (
+    AdvancedOrder,
     OrderType,
 )
-from src.execution.orders.advanced_orders_check import update_trailing_stop
 
 # -------------------------------------------------------------------------
 # Fixtures
