@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from src.exchange import ExchangeOrderError, InsufficientBalanceError
 from src.exchange.types import Order
-from src.execution.event_bus import get_event_bus
+from src.execution.event_bus import EventBus, get_event_bus
 from src.execution.events import EventType, OrderEvent
 from src.utils.logger import get_logger
 
@@ -23,18 +23,24 @@ class OrderManager:
     Handles order placement, status checking, and error handling.
     """
 
-    def __init__(self, exchange: "Exchange", publish_events: bool = True) -> None:
+    def __init__(
+        self,
+        exchange: "Exchange",
+        publish_events: bool = True,
+        event_bus: EventBus | None = None,
+    ) -> None:
         """
         Initialize order manager.
 
         Args:
             exchange: Exchange instance for order execution
             publish_events: Whether to publish events (default: True)
+            event_bus: Optional EventBus instance (uses global if not provided)
         """
         self.exchange = exchange
         self.active_orders: dict[str, Order] = {}  # order_id -> Order
         self.publish_events = publish_events
-        self.event_bus = get_event_bus() if publish_events else None
+        self.event_bus = event_bus if event_bus else (get_event_bus() if publish_events else None)
 
     def place_buy_order(
         self,

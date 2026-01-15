@@ -8,7 +8,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from src.backtester.engine import EventDrivenBacktestEngine
+from src.backtester.engine import BacktestEngine, EventDrivenBacktestEngine
 from src.backtester.models import BacktestConfig, BacktestResult
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
@@ -21,18 +21,23 @@ __all__ = ["run_backtest_service", "BacktestService"]
 class BacktestService:
     """백테스트 실행 서비스.
 
-    EventDrivenBacktestEngine을 래핑하여 Streamlit 환경에서
+    BacktestEngine을 래핑하여 Streamlit 환경에서
     백테스트를 실행하고 결과를 관리합니다.
     """
 
-    def __init__(self, config: BacktestConfig) -> None:
+    def __init__(
+        self,
+        config: BacktestConfig,
+        engine: BacktestEngine | None = None,
+    ) -> None:
         """백테스트 서비스 초기화.
 
         Args:
             config: 백테스트 설정
+            engine: Optional BacktestEngine (uses EventDrivenBacktestEngine if not provided)
         """
         self.config = config
-        self.engine = EventDrivenBacktestEngine(config)
+        self.engine = engine if engine else EventDrivenBacktestEngine(config)
 
     def run(
         self,

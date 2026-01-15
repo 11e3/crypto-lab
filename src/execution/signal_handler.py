@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from src.execution.event_bus import get_event_bus
+from src.execution.event_bus import EventBus, get_event_bus
 from src.execution.events import EventType, SignalEvent
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
@@ -30,6 +30,7 @@ class SignalHandler:
         exchange: "Exchange",
         min_data_points: int = 10,
         publish_events: bool = True,
+        event_bus: EventBus | None = None,
     ) -> None:
         """
         Initialize signal handler.
@@ -39,12 +40,13 @@ class SignalHandler:
             exchange: Exchange instance for data fetching
             min_data_points: Minimum data points required for signal generation
             publish_events: Whether to publish events (default: True)
+            event_bus: Optional EventBus instance (uses global if not provided)
         """
         self.strategy = strategy
         self.exchange = exchange
         self.min_data_points = min_data_points
         self.publish_events = publish_events
-        self.event_bus = get_event_bus() if publish_events else None
+        self.event_bus = event_bus if event_bus else (get_event_bus() if publish_events else None)
 
     def get_ohlcv_data(
         self,
