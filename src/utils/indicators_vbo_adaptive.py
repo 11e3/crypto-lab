@@ -4,6 +4,8 @@ Adaptive VBO indicators (Phase 2 improvements).
 Contains volatility regime, adaptive noise, and adaptive K-value calculations.
 """
 
+from __future__ import annotations
+
 import pandas as pd
 
 from src.utils.indicators_vbo import (
@@ -13,12 +15,12 @@ from src.utils.indicators_vbo import (
 
 
 def calculate_volatility_regime(
-    high: "pd.Series[float]",
-    low: "pd.Series[float]",
-    close: "pd.Series[float]",
+    high: pd.Series[float],
+    low: pd.Series[float],
+    close: pd.Series[float],
     period: int = 14,
     window: int = 100,
-) -> "pd.Series[int]":
+) -> pd.Series[int]:
     """
     Volatility regime classification.
 
@@ -40,13 +42,13 @@ def calculate_volatility_regime(
 
 
 def calculate_adaptive_noise(
-    high: "pd.Series[float]",
-    low: "pd.Series[float]",
-    close: "pd.Series[float]",
+    high: pd.Series[float],
+    low: pd.Series[float],
+    close: pd.Series[float],
     short_period: int = 4,
     long_period: int = 8,
     atr_period: int = 14,
-) -> tuple["pd.Series[float]", "pd.Series[float]"]:
+) -> tuple[pd.Series[float], pd.Series[float]]:
     """
     ATR-normalized adaptive noise calculation.
 
@@ -67,13 +69,13 @@ def calculate_adaptive_noise(
 
 
 def calculate_noise_ratio(
-    high: "pd.Series[float]",
-    low: "pd.Series[float]",
-    close: "pd.Series[float]",
+    high: pd.Series[float],
+    low: pd.Series[float],
+    close: pd.Series[float],
     short_period: int = 4,
     long_period: int = 8,
     atr_period: int = 14,
-) -> "pd.Series[float]":
+) -> pd.Series[float]:
     """
     Noise ratio (short / long) calculation.
 
@@ -88,13 +90,13 @@ def calculate_noise_ratio(
 
 
 def calculate_adaptive_k_value(
-    high: "pd.Series[float]",
-    low: "pd.Series[float]",
-    close: "pd.Series[float]",
+    high: pd.Series[float],
+    low: pd.Series[float],
+    close: pd.Series[float],
     base_k: float = 0.5,
     atr_period: int = 14,
     window: int = 100,
-) -> "pd.Series[float]":
+) -> pd.Series[float]:
     """
     Volatility regime-based adaptive K value.
 

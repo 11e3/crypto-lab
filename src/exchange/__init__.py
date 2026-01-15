@@ -13,6 +13,12 @@ from src.exceptions.exchange import (
 )
 from src.exchange.base import Exchange
 from src.exchange.factory import ExchangeFactory, ExchangeName
+from src.exchange.protocols import (
+    BalanceService,
+    MarketDataService,
+    OrderExecutionService,
+    PriceService,
+)
 from src.exchange.types import Balance, Order, OrderSide, OrderStatus, OrderType, Ticker
 from src.exchange.upbit import UpbitExchange
 
@@ -21,12 +27,19 @@ __all__ = [
     "UpbitExchange",
     "ExchangeFactory",
     "ExchangeName",
+    # Protocol interfaces
+    "PriceService",
+    "MarketDataService",
+    "OrderExecutionService",
+    "BalanceService",
+    # Types
     "Balance",
     "Order",
     "OrderSide",
     "OrderStatus",
     "OrderType",
     "Ticker",
+    # Exceptions
     "ExchangeError",
     "ExchangeConnectionError",
     "ExchangeAuthenticationError",

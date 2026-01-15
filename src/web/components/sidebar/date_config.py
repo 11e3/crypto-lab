@@ -12,7 +12,7 @@ __all__ = ["render_date_config"]
 
 def render_date_config() -> tuple[date, date]:
     """날짜 범위 선택 UI 렌더링.
-    
+
     Returns:
         (start_date, end_date) 튜플
     """

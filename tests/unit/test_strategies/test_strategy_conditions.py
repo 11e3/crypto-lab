@@ -1,5 +1,5 @@
 """
-Tests for strategy conditions modules - momentum, mean_reversion, and pair_trading.
+Tests for strategy conditions modules - momentum and mean_reversion.
 """
 
 from datetime import date
@@ -369,92 +369,6 @@ class TestMeanReversionConditions:
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
 
 
-class TestPairTradingConditions:
-    """Test pair trading strategy conditions."""
-
-    def test_spread_zscore_oversold(
-        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
-    ) -> None:
-        """Test spread Z-score oversold condition."""
-        from src.strategies.pair_trading.conditions import SpreadZScoreCondition
-
-        condition = SpreadZScoreCondition(z_score_key="z_score", entry_threshold=2.0)
-
-        # Spread oversold (very negative)
-        indicators = {"z_score": -3.0}
-        assert condition.evaluate(sample_ohlcv, sample_history, indicators) is True
-
-        # Spread neutral
-        indicators = {"z_score": 0.5}
-        assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
-
-    def test_spread_zscore_overbought(
-        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
-    ) -> None:
-        """Test spread Z-score overbought condition."""
-        from src.strategies.pair_trading.conditions import SpreadZScoreCondition
-
-        condition = SpreadZScoreCondition(z_score_key="z_score", entry_threshold=2.0)
-
-        # Spread overbought (very positive)
-        indicators = {"z_score": 3.0}
-        assert condition.evaluate(sample_ohlcv, sample_history, indicators) is True
-
-        # Spread neutral
-        indicators = {"z_score": 0.5}
-        assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
-
-    def test_spread_mean_reversion(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
-        """Test spread mean reversion condition."""
-        from src.strategies.pair_trading.conditions import SpreadMeanReversionCondition
-
-        condition = SpreadMeanReversionCondition()
-
-        # Z-score near zero - exit signal
-        indicators = {"z_score": 0.3}
-        result = condition.evaluate(sample_ohlcv, sample_history, indicators)
-        assert result is True
-
-        # Z-score far from zero - no exit
-        indicators = {"z_score": 1.5}
-        result = condition.evaluate(sample_ohlcv, sample_history, indicators)
-        assert result is False
-
-        # Test with missing z_score (line 90-91)
-        indicators_no_zscore: dict[str, float] = {}
-        result_none = condition.evaluate(sample_ohlcv, sample_history, indicators_no_zscore)
-        assert result_none is False
-
-    def test_spread_deviation(self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame) -> None:
-        """Test spread deviation condition."""
-        from src.strategies.pair_trading.conditions import SpreadDeviationCondition
-
-        condition = SpreadDeviationCondition(
-            spread_key="spread", spread_mean_key="spread_mean", min_deviation_pct=0.02
-        )
-
-        # Large deviation (5%)
-        indicators = {
-            "spread": 3.0,
-            "spread_mean": 2.86,  # 5% deviation
-        }
-        assert condition.evaluate(sample_ohlcv, sample_history, indicators) is True
-
-        # Small deviation (1%)
-        indicators = {"spread": 1.01, "spread_mean": 1.0}
-        assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
-
-        # Test with missing spread values (line 137)
-        indicators_missing: dict[str, float] = {}
-        result = condition.evaluate(sample_ohlcv, sample_history, indicators_missing)
-        assert result is False
-
-        # Test with spread_mean == 0 (line 137)
-        indicators_zero_mean = {"spread": 1.0, "spread_mean": 0.0}
-        result = condition.evaluate(sample_ohlcv, sample_history, indicators_zero_mean)
-        assert result is False
-
-
 class TestConditionsWithMissingIndicators:
     """Test conditions handle missing indicators gracefully."""
 
@@ -493,17 +407,6 @@ class TestConditionsWithMissingIndicators:
         from src.strategies.mean_reversion.conditions import BollingerLowerBandCondition
 
         condition = BollingerLowerBandCondition()
-        indicators = {}
-
-        assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
-
-    def test_pair_trading_missing_zscore(
-        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
-    ) -> None:
-        """Test pair trading condition with missing Z-score."""
-        from src.strategies.pair_trading.conditions import SpreadZScoreCondition
-
-        condition = SpreadZScoreCondition()
         indicators = {}
 
         assert condition.evaluate(sample_ohlcv, sample_history, indicators) is False
@@ -555,19 +458,3 @@ class TestConditionIntegration:
         assert lower_band is True
         assert rsi_oversold is True
         assert below_sma is True
-
-    def test_pair_trading_spread_signals(
-        self, sample_ohlcv: OHLCV, sample_history: pd.DataFrame
-    ) -> None:
-        """Test pair trading signals."""
-        from src.strategies.pair_trading.conditions import SpreadZScoreCondition
-
-        # Oversold pair
-        oversold_condition = SpreadZScoreCondition(z_score_key="z_score", entry_threshold=2.0)
-        indicators = {"z_score": -3.0}
-        assert oversold_condition.evaluate(sample_ohlcv, sample_history, indicators) is True
-
-        # Overbought pair
-        overbought_condition = SpreadZScoreCondition(z_score_key="z_score", entry_threshold=2.0)
-        indicators = {"z_score": 3.0}
-        assert overbought_condition.evaluate(sample_ohlcv, sample_history, indicators) is True

@@ -19,14 +19,17 @@ from src.risk.position_sizing import (
 )
 
 __all__ = [
+    # Metrics
     "PortfolioRiskMetrics",
     "calculate_var",
     "calculate_cvar",
     "calculate_portfolio_volatility",
     "calculate_portfolio_correlation",
+    # Position sizing
     "PositionSizingMethod",
     "calculate_position_size",
     "calculate_multi_asset_position_sizes",
+    # Portfolio optimization
     "PortfolioOptimizer",
     "PortfolioWeights",
     "optimize_portfolio",

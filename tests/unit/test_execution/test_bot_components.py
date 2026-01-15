@@ -4,7 +4,7 @@ Tests for Bot Components Module.
 
 from unittest.mock import MagicMock
 
-from src.execution.bot.bot_components import BotComponents
+from src.execution.bot.bot_init import BotComponents
 
 
 class TestBotComponents:

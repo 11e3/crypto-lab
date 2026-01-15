@@ -14,6 +14,7 @@ from src.backtester.engine.event_exec import (
     execute_entry,
     execute_exit,
 )
+from src.backtester.engine.trade_costs import TradeCostCalculator
 from src.backtester.models import BacktestConfig, Trade
 
 __all__ = [
@@ -171,6 +172,7 @@ def close_remaining_positions(
         List of closing trades
     """
     trades: list[Trade] = []
+    calculator = TradeCostCalculator(config.fee_rate, config.slippage_rate)
 
     for ticker, position in positions.items():
         if ticker not in ticker_data:
@@ -183,12 +185,8 @@ def close_remaining_positions(
             continue
 
         row = final_data.iloc[0]
-        exit_price = float(row["close"]) * (1 - config.slippage_rate)
-
-        revenue = position.amount * exit_price * (1 - config.fee_rate)
-        cost = position.amount * position.entry_price
-        pnl = revenue - cost
-        pnl_pct = (exit_price / position.entry_price - 1) * 100
+        exit_price = calculator.apply_slippage(float(row["close"]), is_buy=False)
+        costs = calculator.calculate_exit_costs(position.entry_price, exit_price, position.amount)
 
         trade = Trade(
             ticker=ticker,
@@ -197,8 +195,8 @@ def close_remaining_positions(
             exit_date=final_date,
             exit_price=exit_price,
             amount=position.amount,
-            pnl=pnl,
-            pnl_pct=pnl_pct,
+            pnl=costs.pnl,
+            pnl_pct=costs.pnl_pct,
             exit_reason="open",
         )
         trades.append(trade)

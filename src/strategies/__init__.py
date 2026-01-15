@@ -14,7 +14,6 @@ from src.strategies.mean_reversion import (
     SimpleMeanReversionStrategy,
 )
 from src.strategies.momentum import MomentumStrategy, SimpleMomentumStrategy
-from src.strategies.pair_trading import PairTradingStrategy
 from src.strategies.volatility_breakout import (
     MinimalVBO,
     StrictVBO,
@@ -34,8 +33,6 @@ __all__ = [
     # Mean Reversion strategies
     "MeanReversionStrategy",
     "SimpleMeanReversionStrategy",
-    # Pair Trading strategies
-    "PairTradingStrategy",
     # Momentum strategies
     "MomentumStrategy",
     "SimpleMomentumStrategy",

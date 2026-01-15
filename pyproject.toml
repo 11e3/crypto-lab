@@ -23,7 +23,6 @@ classifiers = [
 
 # 프로덕션 의존성 (실행 환경 최소화)
 dependencies = [
-    "click>=8.1.0",  # CLI framework
     "pyupbit>=0.2.34",
     "requests>=2.31.0",
     "pandas>=2.0.0",  # Required for data handling
@@ -36,9 +35,8 @@ dependencies = [
     "psutil>=5.9.0",  # Process and system utilities
 ]
 
-# CLI 진입점
-[project.scripts]
-crypto-quant = "src.cli.main:main"
+# Web app 진입점 (streamlit run으로 실행)
+# 실행: uv run streamlit run src/web/app.py
 
 # 선택적 의존성 그룹
 [project.optional-dependencies]
@@ -166,6 +164,10 @@ module = [
     "scipy.*",
     "matplotlib.*",
     "psutil.*",
+    "streamlit.*",
+    "plotly.*",
+    "yaml.*",
+    "requests.*",
 ]
 ignore_missing_imports = true
 
@@ -275,6 +277,8 @@ omit = [
     "src/strategies/volatility_breakout/vbo_v2.py",
     "src/utils/indicators_v2.py",
     "src/monitoring/alerts.py",
+    # Web UI modules (tested via integration tests)
+    "src/web/*",
 ]
 
 [tool.coverage.report]

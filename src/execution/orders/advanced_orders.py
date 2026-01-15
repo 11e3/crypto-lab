@@ -6,45 +6,64 @@ Supports:
 - Take Profit: Automatically sell when price reaches target
 - Trailing Stop: Automatically adjust stop loss as price moves favorably
 
-This module re-exports models for backward compatibility:
-- OrderType from advanced_orders_models
-- AdvancedOrder from advanced_orders_models
+Uses specialized handlers for each order type (SRP).
 """
 
 from datetime import date
 
-from src.execution.orders.advanced_orders_check import (
-    check_stop_loss,
-    check_take_profit,
-    update_trailing_stop,
-)
-from src.execution.orders.advanced_orders_factory import (
-    create_stop_loss_order,
-    create_take_profit_order,
-    create_trailing_stop_order,
-)
 from src.execution.orders.advanced_orders_models import AdvancedOrder, OrderType
+from src.execution.orders.order_handlers import (
+    StopLossHandler,
+    TakeProfitHandler,
+    TrailingStopHandler,
+)
 from src.utils.logger import get_logger
 
 __all__ = [
     "OrderType",
     "AdvancedOrder",
     "AdvancedOrderManager",
+    "StopLossHandler",
+    "TakeProfitHandler",
+    "TrailingStopHandler",
+    # Backward compatibility
+    "create_stop_loss_order",
+    "create_take_profit_order",
+    "create_trailing_stop_order",
+    "check_stop_loss",
+    "check_take_profit",
+    "update_trailing_stop",
 ]
 
 logger = get_logger(__name__)
+
+# Backward compatibility aliases
+create_stop_loss_order = StopLossHandler.create
+create_take_profit_order = TakeProfitHandler.create
+create_trailing_stop_order = TrailingStopHandler.create
+check_stop_loss = StopLossHandler.check
+check_take_profit = TakeProfitHandler.check
+update_trailing_stop = TrailingStopHandler.update
 
 
 class AdvancedOrderManager:
     """
     Manages advanced orders (stop loss, take profit, trailing stop).
 
-    Tracks conditional orders and checks if they should be triggered.
+    Uses specialized handlers for each order type.
     """
 
-    def __init__(self) -> None:
-        """Initialize advanced order manager."""
-        self.orders: dict[str, AdvancedOrder] = {}  # order_id -> AdvancedOrder
+    def __init__(
+        self,
+        stop_loss_handler: StopLossHandler | None = None,
+        take_profit_handler: TakeProfitHandler | None = None,
+        trailing_stop_handler: TrailingStopHandler | None = None,
+    ) -> None:
+        """Initialize advanced order manager with handlers."""
+        self.orders: dict[str, AdvancedOrder] = {}
+        self.stop_loss = stop_loss_handler or StopLossHandler()
+        self.take_profit = take_profit_handler or TakeProfitHandler()
+        self.trailing_stop = trailing_stop_handler or TrailingStopHandler()
 
     def create_stop_loss(
         self,
@@ -55,8 +74,8 @@ class AdvancedOrderManager:
         stop_loss_price: float | None = None,
         stop_loss_pct: float | None = None,
     ) -> AdvancedOrder:
-        """Create a stop loss order. See advanced_orders_factory for details."""
-        order = create_stop_loss_order(
+        """Create and register a stop loss order."""
+        order = self.stop_loss.create(
             ticker=ticker,
             entry_price=entry_price,
             entry_date=entry_date,
@@ -77,8 +96,8 @@ class AdvancedOrderManager:
         take_profit_price: float | None = None,
         take_profit_pct: float | None = None,
     ) -> AdvancedOrder:
-        """Create a take profit order. See advanced_orders_factory for details."""
-        order = create_take_profit_order(
+        """Create and register a take profit order."""
+        order = self.take_profit.create(
             ticker=ticker,
             entry_price=entry_price,
             entry_date=entry_date,
@@ -99,8 +118,8 @@ class AdvancedOrderManager:
         trailing_stop_pct: float,
         initial_stop_loss_pct: float | None = None,
     ) -> AdvancedOrder:
-        """Create a trailing stop order. See advanced_orders_factory for details."""
-        order = create_trailing_stop_order(
+        """Create and register a trailing stop order."""
+        order = self.trailing_stop.create(
             ticker=ticker,
             entry_price=entry_price,
             entry_date=entry_date,
@@ -142,43 +161,26 @@ class AdvancedOrderManager:
             if not order.is_active or order.is_triggered or order.ticker != ticker:
                 continue
 
-            update_trailing_stop(order, check_high)
+            self.trailing_stop.update(order, check_high)
 
-            if check_stop_loss(order, check_low, current_date):
+            if self.stop_loss.check(order, check_low, current_date):
                 triggered_orders.append(order)
                 continue
 
-            if check_take_profit(order, check_high, current_date):
+            if self.take_profit.check(order, check_high, current_date):
                 triggered_orders.append(order)
-                continue
 
         return triggered_orders
 
     def get_active_orders(self, ticker: str | None = None) -> list[AdvancedOrder]:
-        """
-        Get active orders, optionally filtered by ticker.
-
-        Args:
-            ticker: Optional ticker to filter by
-
-        Returns:
-            List of active orders
-        """
+        """Get active orders, optionally filtered by ticker."""
         orders = [o for o in self.orders.values() if o.is_active and not o.is_triggered]
         if ticker:
             orders = [o for o in orders if o.ticker == ticker]
         return orders
 
     def cancel_order(self, order_id: str) -> bool:
-        """
-        Cancel an advanced order.
-
-        Args:
-            order_id: Order identifier
-
-        Returns:
-            True if cancelled successfully
-        """
+        """Cancel an advanced order by ID."""
         if order_id in self.orders:
             self.orders[order_id].is_active = False
             logger.info(f"Cancelled advanced order: {order_id}")
@@ -186,15 +188,7 @@ class AdvancedOrderManager:
         return False
 
     def cancel_all_orders(self, ticker: str | None = None) -> int:
-        """
-        Cancel all orders, optionally filtered by ticker.
-
-        Args:
-            ticker: Optional ticker to filter by
-
-        Returns:
-            Number of orders cancelled
-        """
+        """Cancel all orders, optionally filtered by ticker."""
         count = 0
         for order in self.orders.values():
             if ticker and order.ticker != ticker:

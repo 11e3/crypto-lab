@@ -15,7 +15,6 @@ from src.backtester.engine import (
 from src.backtester.engine.metrics_calculator import calculate_metrics_vectorized
 from src.backtester.engine.signal_processor import add_price_columns
 from src.strategies.base import Strategy
-from src.strategies.pair_trading import PairTradingStrategy
 
 # -------------------------------------------------------------------------
 # Fixtures
@@ -49,8 +48,6 @@ def mock_strategy() -> MagicMock:
     strategy.exit_conditions = MagicMock()
     strategy.exit_conditions.conditions = []
     strategy.required_indicators.return_value = []
-    # Explicitly set is_pair_trading to False for non-pair-trading tests
-    strategy.is_pair_trading = False
     return strategy
 
 
@@ -453,82 +450,6 @@ class TestEngineTradingLogic:
 
 
 # -------------------------------------------------------------------------
-# Test Pair Trading Edge Cases
-# -------------------------------------------------------------------------
-
-
-# Define dummy class at module level for correct patching behavior
-class DummyPairStrategy(PairTradingStrategy):
-    def __init__(self) -> None:
-        super().__init__("PairStrat")
-        self.lookback_period = 10
-
-    def required_indicators(self) -> list[str]:
-        return []
-
-    def calculate_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
-        return df
-
-    def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
-        return df
-
-    def calculate_spread_for_pair(self, df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-        m = pd.DataFrame(index=df1.index)
-        m["entry_signal"] = False
-        m["exit_signal"] = False
-        # Create signals
-        if len(m) > 30:
-            m.iloc[30, m.columns.get_loc("entry_signal")] = True
-        return m
-
-
-class TestPairTradingExtended:
-    def test_pair_trading_wrong_file_count(self, engine: VectorizedBacktestEngine) -> None:
-        """Test pair trading validates 2 files."""
-        # Since import is now inside run(), we need to patch before run() is called
-        # But the isinstance check will still work since we're importing inside run()
-        strat = DummyPairStrategy()
-        with pytest.raises(ValueError, match="requires exactly 2 tickers"):
-            engine.run(strat, {"A": Path("a")})
-
-    def test_pair_trading_insufficient_slots(
-        self, engine: VectorizedBacktestEngine, tmp_path: Path
-    ) -> None:
-        """Test pair trading logic when slots < 2."""
-        strat = DummyPairStrategy()
-
-        # Setup data (reuse standard layout)
-        periods = 50
-        dates = pd.date_range("2023-01-01", periods=periods)
-        df = pd.DataFrame(
-            {
-                "close": np.full(periods, 100.0),
-                "open": np.full(periods, 100.0),
-                "high": np.full(periods, 105.0),
-                "low": np.full(periods, 95.0),
-                "volume": np.full(periods, 1000.0),
-                "entry_signal": np.zeros(periods, dtype=bool),
-                "exit_signal": np.zeros(periods, dtype=bool),
-                "entry_price": np.full(periods, 100.0),
-                "exit_price": np.full(periods, 100.0),
-            },
-            index=dates,
-        )
-
-        f1, f2 = tmp_path / "A.parquet", tmp_path / "B.parquet"
-        df.to_parquet(f1)
-        df.to_parquet(f2)
-
-        engine.config.max_slots = 1
-
-        with patch("src.backtester.engine.vectorized.optimize_dtypes", side_effect=lambda x: x):
-            result = engine.run(strat, {"A": f1, "B": f2})
-
-        # Should enter NO trades because need at least 2 slots
-        assert len(result.trades) == 0
-
-
-# -------------------------------------------------------------------------
 # Test run_backtest Convenience Function
 # -------------------------------------------------------------------------
 
@@ -550,8 +471,7 @@ class TestConvenienceFunction:
         mock_engine_instance.run.return_value = BacktestResult()
 
         strategy = MagicMock(spec=Strategy)
-        strategy.is_pair_trading = False  # Not a pair trading strategy
-        strategy.name = "TestStrategy"  # Add name attribute
+        strategy.name = "TestStrategy"
 
         # Use side_effect to create file physically during collection
         # This satisfies the check `if v.exists()` later in the function

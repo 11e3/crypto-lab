@@ -107,8 +107,8 @@ class VanillaVBO(Strategy):
             default_entry = [
                 BreakoutCondition(),  # 고가 돌파: high >= target
                 SMABreakoutCondition(),  # SMA 필터: target > SMA
-                TrendCondition(),  # Formerly TrendFilter, 장기 추세: target > sma_trend
-                NoiseCondition(),  # Formerly NoiseFilter, 노이즈 필터: short_noise < long_noise
+                TrendCondition(),  # 장기 추세: target > sma_trend
+                NoiseCondition(),  # 노이즈 필터: short_noise < long_noise
             ]
             default_exit = [
                 PriceBelowSMACondition(),  # SMA 퇴출: close < SMA

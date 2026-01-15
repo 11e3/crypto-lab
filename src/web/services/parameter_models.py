@@ -12,7 +12,7 @@ __all__ = [
 @dataclass(frozen=True)
 class ParameterSpec:
     """전략 파라미터 명세.
-    
+
     Attributes:
         name: 파라미터 이름
         type: 파라미터 타입 (int, float, bool, choice)
@@ -37,7 +37,7 @@ class ParameterSpec:
 @dataclass(frozen=True)
 class StrategyInfo:
     """전략 메타데이터.
-    
+
     Attributes:
         name: 전략 이름 (UI에 표시될 이름)
         class_name: 전략 클래스 이름

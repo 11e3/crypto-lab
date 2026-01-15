@@ -4,6 +4,8 @@ Event-driven engine execution logic.
 Contains entry and exit execution functions.
 """
 
+from __future__ import annotations
+
 from datetime import date
 
 import pandas as pd
@@ -17,7 +19,7 @@ logger = get_logger(__name__)
 
 def check_exit_condition(
     position: Position,
-    row: "pd.Series[float]",
+    row: pd.Series[float],
     config: BacktestConfig,
 ) -> tuple[bool, str]:
     """
@@ -66,7 +68,7 @@ def check_exit_condition(
 
 def execute_exit(
     position: Position,
-    row: "pd.Series[float]",
+    row: pd.Series[float],
     current_date: date,
     exit_reason: str,
     config: BacktestConfig,
@@ -119,7 +121,7 @@ def execute_exit(
 
 def execute_entry(
     ticker: str,
-    row: "pd.Series[float]",
+    row: pd.Series[float],
     current_date: date,
     cash: float,
     remaining_slots: int,

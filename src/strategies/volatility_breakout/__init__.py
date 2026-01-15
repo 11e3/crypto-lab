@@ -1,14 +1,10 @@
 """Volatility Breakout Strategy package."""
 
-import warnings
-
 from src.strategies.volatility_breakout.conditions import (
     BreakoutCondition,
     NoiseCondition,
-    NoiseFilter,  # Backward compatibility alias (deprecated)
     SMABreakoutCondition,
     TrendCondition,
-    TrendFilter,  # Backward compatibility alias (deprecated)
     WhipsawExitCondition,
 )
 from src.strategies.volatility_breakout.vbo import (
@@ -19,18 +15,12 @@ from src.strategies.volatility_breakout.vbo import (
     quick_vbo,
 )
 
-# Warn when deprecated aliases are imported
-if __name__ != "__main__":
-    warnings.filterwarnings("default", category=DeprecationWarning, module=__name__)
-
 __all__ = [
     "BreakoutCondition",
     "SMABreakoutCondition",
     "WhipsawExitCondition",
     "TrendCondition",
     "NoiseCondition",
-    "TrendFilter",  # Deprecated: Use TrendCondition
-    "NoiseFilter",  # Deprecated: Use NoiseCondition
     "VanillaVBO",
     "MinimalVBO",
     "StrictVBO",

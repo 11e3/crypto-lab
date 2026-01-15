@@ -17,7 +17,6 @@ from src.backtester.engine.data_loader import (
     load_ticker_data,
 )
 from src.backtester.engine.entry_processor import process_entries
-from src.backtester.engine.pair_trading import run_pair_trading_backtest
 from src.backtester.engine.result_builder import build_backtest_result
 from src.backtester.engine.signal_processor import add_price_columns
 from src.backtester.engine.trade_simulator import (
@@ -58,9 +57,6 @@ class VectorizedBacktestEngine:
         end_date: date | None = None,
     ) -> BacktestResult:
         """Run vectorized backtest for a strategy on multiple assets."""
-        if strategy.is_pair_trading:
-            return self._run_pair_trading(strategy, data_files, start_date, end_date)
-
         ticker_data, ticker_historical_data = self._load_all_ticker_data(strategy, data_files)
 
         if not ticker_data:
@@ -175,26 +171,6 @@ class VectorizedBacktestEngine:
 
         finalize_open_positions(state, sorted_dates, tickers, n_tickers)
         return state
-
-    def _run_pair_trading(
-        self,
-        strategy: Strategy,
-        data_files: dict[str, Path],
-        start_date: date | None = None,
-        end_date: date | None = None,
-    ) -> BacktestResult:
-        """Run backtest for pair trading strategy."""
-        tickers = list(data_files.keys())
-        if len(tickers) != 2:
-            raise ValueError(f"Pair trading requires exactly 2 tickers, got {len(tickers)}")
-
-        ticker1, ticker2 = tickers[0], tickers[1]
-        df1 = self.load_data(data_files[ticker1])
-        df2 = self.load_data(data_files[ticker2])
-
-        return run_pair_trading_backtest(
-            strategy, df1, df2, ticker1, ticker2, self.config, start_date, end_date
-        )
 
 
 BacktestEngine = VectorizedBacktestEngine

@@ -1,40 +1,52 @@
 """
-Order manager for handling order execution and tracking.
+Order manager for handling order execution.
+
+Focuses on order placement (SRP). Order tracking is delegated to OrderTracker.
 """
 
-from typing import TYPE_CHECKING
-
-from src.exchange import ExchangeOrderError, InsufficientBalanceError
+from src.exchange import ExchangeOrderError, InsufficientBalanceError, OrderExecutionService
 from src.exchange.types import Order
-from src.execution.event_bus import get_event_bus
+from src.execution.event_bus import EventBus, get_event_bus
 from src.execution.events import EventType, OrderEvent
+from src.execution.order_tracker import OrderTracker
 from src.utils.logger import get_logger
-
-if TYPE_CHECKING:
-    from src.exchange import Exchange
 
 logger = get_logger(__name__)
 
 
 class OrderManager:
     """
-    Manages order execution and tracking.
+    Manages order execution.
 
-    Handles order placement, status checking, and error handling.
+    Focuses on placing and cancelling orders.
+    Delegates order tracking to OrderTracker.
     """
 
-    def __init__(self, exchange: "Exchange", publish_events: bool = True) -> None:
+    def __init__(
+        self,
+        exchange: OrderExecutionService,
+        publish_events: bool = True,
+        event_bus: EventBus | None = None,
+        order_tracker: OrderTracker | None = None,
+    ) -> None:
         """
         Initialize order manager.
 
         Args:
-            exchange: Exchange instance for order execution
+            exchange: Service implementing OrderExecutionService protocol
             publish_events: Whether to publish events (default: True)
+            event_bus: Optional EventBus instance (uses global if not provided)
+            order_tracker: Optional OrderTracker (creates default if not provided)
         """
         self.exchange = exchange
-        self.active_orders: dict[str, Order] = {}  # order_id -> Order
         self.publish_events = publish_events
-        self.event_bus = get_event_bus() if publish_events else None
+        self.event_bus = event_bus if event_bus else (get_event_bus() if publish_events else None)
+        self.order_tracker = order_tracker or OrderTracker(exchange, self.event_bus)
+
+    @property
+    def active_orders(self) -> dict[str, Order]:
+        """Backward compatibility: access active orders from tracker."""
+        return self.order_tracker.active_orders
 
     def place_buy_order(
         self,
@@ -47,7 +59,7 @@ class OrderManager:
 
         Args:
             ticker: Trading pair symbol
-            amount: Amount to buy (in quote currency, e.g., KRW)
+            amount: Amount to buy (in quote currency)
             min_order_amount: Minimum order amount (order skipped if below)
 
         Returns:
@@ -61,23 +73,10 @@ class OrderManager:
 
         try:
             order = self.exchange.buy_market_order(ticker, amount)
-            self.active_orders[order.order_id] = order
+            self.order_tracker.add_order(order)
             logger.info(f"Placed buy order: {order.order_id} for {ticker} @ {amount:.0f}")
 
-            # Publish event
-            if self.event_bus:
-                event = OrderEvent(
-                    event_type=EventType.ORDER_PLACED,
-                    source="OrderManager",
-                    order_id=order.order_id,
-                    ticker=ticker,
-                    side="buy",
-                    amount=amount,
-                    price=0.0,  # Market order, price unknown at placement
-                    status="pending",
-                )
-                self.event_bus.publish(event)
-
+            self._publish_order_placed(order, ticker, "buy", amount)
             return order
         except InsufficientBalanceError as e:
             logger.error(f"Insufficient balance for buy order {ticker}: {e}")
@@ -100,14 +99,13 @@ class OrderManager:
 
         Args:
             ticker: Trading pair symbol
-            amount: Amount to sell (in base currency, e.g., BTC)
+            amount: Amount to sell (in base currency)
             min_order_amount: Minimum order amount in quote currency
 
         Returns:
             Order object if successful, None otherwise
         """
         try:
-            # Get current price to check minimum order value
             current_price = self.exchange.get_current_price(ticker)
             order_value = amount * current_price
 
@@ -118,23 +116,10 @@ class OrderManager:
                 return None
 
             order = self.exchange.sell_market_order(ticker, amount)
-            self.active_orders[order.order_id] = order
+            self.order_tracker.add_order(order)
             logger.info(f"Placed sell order: {order.order_id} for {ticker} @ {amount:.6f}")
 
-            # Publish event
-            if self.event_bus:
-                event = OrderEvent(
-                    event_type=EventType.ORDER_PLACED,
-                    source="OrderManager",
-                    order_id=order.order_id,
-                    ticker=ticker,
-                    side="sell",
-                    amount=amount,
-                    price=0.0,  # Market order, price unknown at placement
-                    status="pending",
-                )
-                self.event_bus.publish(event)
-
+            self._publish_order_placed(order, ticker, "sell", amount)
             return order
         except InsufficientBalanceError as e:
             logger.error(f"Insufficient balance for sell order {ticker}: {e}")
@@ -145,6 +130,25 @@ class OrderManager:
         except Exception as e:
             logger.error(f"Unexpected error placing sell order {ticker}: {e}", exc_info=True)
             return None
+
+    def _publish_order_placed(
+        self, order: Order, ticker: str, side: str, amount: float
+    ) -> None:
+        """Publish order placed event."""
+        if not self.event_bus:
+            return
+
+        event = OrderEvent(
+            event_type=EventType.ORDER_PLACED,
+            source="OrderManager",
+            order_id=order.order_id,
+            ticker=ticker,
+            side=side,
+            amount=amount,
+            price=0.0,
+            status="pending",
+        )
+        self.event_bus.publish(event)
 
     def sell_all(self, ticker: str, min_order_amount: float = 0.0) -> Order | None:
         """
@@ -170,51 +174,6 @@ class OrderManager:
             logger.error(f"Error selling all for {ticker}: {e}", exc_info=True)
             return None
 
-    def get_order_status(self, order_id: str) -> Order | None:
-        """
-        Get status of an order.
-
-        Args:
-            order_id: Order identifier
-
-        Returns:
-            Order object with current status, None on error
-        """
-        try:
-            order = self.exchange.get_order_status(order_id)
-            # Update cached order
-            old_order = self.active_orders.get(order_id)
-            if order_id in self.active_orders:
-                self.active_orders[order_id] = order
-
-            # Publish event if status changed
-            if self.event_bus and old_order and old_order.status != order.status:
-                if order.is_filled:
-                    event_type = EventType.ORDER_FILLED
-                elif order.status.value == "cancelled":
-                    event_type = EventType.ORDER_CANCELLED
-                elif order.status.value == "failed":
-                    event_type = EventType.ORDER_FAILED
-                else:
-                    event_type = EventType.ORDER_PLACED
-
-                event = OrderEvent(
-                    event_type=event_type,
-                    source="OrderManager",
-                    order_id=order.order_id,
-                    ticker=order.symbol,
-                    side=order.side.value,
-                    amount=order.amount,
-                    price=order.filled_price or order.price or 0.0,
-                    status=order.status.value,
-                )
-                self.event_bus.publish(event)
-
-            return order
-        except Exception as e:
-            logger.error(f"Error getting order status for {order_id}: {e}", exc_info=True)
-            return None
-
     def cancel_order(self, order_id: str) -> bool:
         """
         Cancel an active order.
@@ -228,28 +187,21 @@ class OrderManager:
         try:
             success = self.exchange.cancel_order(order_id)
             if success:
-                self.active_orders.pop(order_id, None)
+                self.order_tracker.remove_order(order_id)
                 logger.info(f"Cancelled order: {order_id}")
             return success
         except Exception as e:
             logger.error(f"Error cancelling order {order_id}: {e}", exc_info=True)
             return False
 
-    def get_active_orders(self) -> dict[str, Order]:
-        """
-        Get all active orders.
+    def get_order_status(self, order_id: str) -> Order | None:
+        """Get order status. Delegates to OrderTracker."""
+        return self.order_tracker.get_status(order_id)
 
-        Returns:
-            Dictionary of order_id -> Order
-        """
-        return self.active_orders.copy()
+    def get_active_orders(self) -> dict[str, Order]:
+        """Get all active orders. Delegates to OrderTracker."""
+        return self.order_tracker.get_all_active()
 
     def clear_filled_orders(self) -> None:
-        """Remove filled orders from active orders cache."""
-        filled_order_ids = [
-            order_id for order_id, order in self.active_orders.items() if order.is_filled
-        ]
-        for order_id in filled_order_ids:
-            self.active_orders.pop(order_id, None)
-        if filled_order_ids:
-            logger.debug(f"Cleared {len(filled_order_ids)} filled orders")
+        """Remove filled orders. Delegates to OrderTracker."""
+        self.order_tracker.clear_filled()

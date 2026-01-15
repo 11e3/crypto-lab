@@ -18,16 +18,16 @@ __all__ = ["StrategyRegistry"]
 
 class StrategyRegistry:
     """전략 자동 감지 및 레지스트리.
-    
+
     모든 전략 모듈을 스캔하여 Strategy 서브클래스를 탐색하고,
     __init__ 시그니처에서 파라미터를 추출하여 메타데이터를 생성합니다.
-    
+
     Example:
         >>> registry = StrategyRegistry()
         >>> strategies = registry.list_strategies()
         >>> for info in strategies:
         ...     print(f"{info.name}: {info.description}")
-        >>> 
+        >>>
         >>> params = registry.get_parameters("VanillaVBO")
         >>> strategy_class = registry.get_strategy_class("VanillaVBO")
     """
@@ -36,7 +36,6 @@ class StrategyRegistry:
         "src.strategies.volatility_breakout",
         "src.strategies.momentum",
         "src.strategies.mean_reversion",
-        "src.strategies.pair_trading",
         "src.strategies.opening_range_breakout",
     ]
 
@@ -58,11 +57,7 @@ class StrategyRegistry:
 
     def _is_valid_strategy(self, cls: type) -> bool:
         """유효한 전략 클래스인지 확인."""
-        return (
-            issubclass(cls, Strategy)
-            and cls is not Strategy
-            and not inspect.isabstract(cls)
-        )
+        return issubclass(cls, Strategy) and cls is not Strategy and not inspect.isabstract(cls)
 
     def _register_strategy(self, name: str, cls: type, module_path: str) -> None:
         """전략을 레지스트리에 등록."""
@@ -87,7 +82,7 @@ class StrategyRegistry:
 
     def _extract_parameters(self, cls: type) -> dict[str, ParameterSpec]:
         """__init__ 시그니처에서 파라미터 추출."""
-        sig = inspect.signature(cls.__init__)
+        sig = inspect.signature(cls.__init__)  # type: ignore[misc]
         params: dict[str, ParameterSpec] = {}
 
         for name, param in sig.parameters.items():
@@ -100,9 +95,7 @@ class StrategyRegistry:
 
         return params
 
-    def _create_parameter_spec(
-        self, name: str, param: inspect.Parameter
-    ) -> ParameterSpec | None:
+    def _create_parameter_spec(self, name: str, param: inspect.Parameter) -> ParameterSpec | None:
         """파라미터 정보에서 ParameterSpec 생성."""
         annotation = param.annotation
         default = param.default if param.default != inspect.Parameter.empty else None
@@ -151,11 +144,11 @@ class StrategyRegistry:
         """타입 힌트와 기본값에서 파라미터 타입 추론."""
         # 타입 힌트 체크
         if annotation != inspect.Parameter.empty:
-            if annotation == int or annotation == "int":
+            if annotation is int or annotation == "int":
                 return "int"
-            elif annotation == float or annotation == "float":
+            elif annotation is float or annotation == "float":
                 return "float"
-            elif annotation == bool or annotation == "bool":
+            elif annotation is bool or annotation == "bool":
                 return "bool"
 
         # 기본값으로 추론

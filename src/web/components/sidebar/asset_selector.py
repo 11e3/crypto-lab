@@ -30,7 +30,7 @@ POPULAR_TICKERS = [
 
 def get_available_tickers() -> list[str]:
     """사용 가능한 티커 목록 반환.
-    
+
     Returns:
         티커 문자열 리스트
     """
@@ -40,7 +40,7 @@ def get_available_tickers() -> list[str]:
 
 def render_asset_selector() -> list[str]:
     """자산 선택 UI 렌더링.
-    
+
     Returns:
         선택된 티커 리스트
     """

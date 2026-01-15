@@ -4,6 +4,8 @@ VBO Signal Generation Functions.
 Contains vectorized signal generation logic extracted from VanillaVBO.
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import pandas as pd
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
 
 def build_entry_signal(
     df: pd.DataFrame,
-    conditions: list["Condition"],
+    conditions: list[Condition],
 ) -> pd.Series[bool]:
     """
     Build entry signal based on configured conditions.
@@ -42,7 +44,7 @@ def build_entry_signal(
 
 def _apply_entry_condition(
     df: pd.DataFrame,
-    condition: "Condition",
+    condition: Condition,
     signal: pd.Series[bool],
 ) -> pd.Series[bool]:
     """Apply a single entry condition to the signal."""
@@ -54,17 +56,17 @@ def _apply_entry_condition(
     if name == "SMABreakout":
         return signal & (df["target"] > df["sma"])
 
-    if name in ("TrendCondition", "TrendFilter"):
+    if name == "TrendCondition":
         return signal & (df["target"] > df["sma_trend"])
 
-    if name in ("NoiseCondition", "NoiseFilter"):
+    if name == "NoiseCondition":
         return signal & (df["short_noise"] < df["long_noise"])
 
-    if name in ("NoiseThresholdCondition", "NoiseThresholdFilter"):
+    if name == "NoiseThresholdCondition":
         max_noise = getattr(condition, "max_noise", 0.7)
         return signal & (df["short_noise"] <= max_noise)
 
-    if name in ("VolatilityRangeCondition", "VolatilityFilter"):
+    if name == "VolatilityRangeCondition":
         min_vol = getattr(condition, "min_volatility_pct", 0.005)
         max_vol = getattr(condition, "max_volatility_pct", 0.15)
         range_pct = df["prev_range"] / df["open"]
@@ -80,7 +82,7 @@ def _apply_entry_condition(
 
 def build_exit_signal(
     df: pd.DataFrame,
-    conditions: list["Condition"],
+    conditions: list[Condition],
 ) -> pd.Series[bool]:
     """
     Build exit signal based on configured conditions.

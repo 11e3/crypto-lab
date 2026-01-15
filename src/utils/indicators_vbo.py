@@ -4,6 +4,8 @@ VBO (Volatility Breakout) 전략용 지표.
 노이즈 비율, 적응형 K값, 변동성 레짐 등 VBO 전략에 필요한 지표.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 
@@ -113,12 +115,12 @@ def calculate_natr(
 
 
 def calculate_volatility_regime(
-    high: "pd.Series[float]",
-    low: "pd.Series[float]",
-    close: "pd.Series[float]",
+    high: pd.Series[float],
+    low: pd.Series[float],
+    close: pd.Series[float],
     period: int = 14,
     window: int = 100,
-) -> "pd.Series[int]":
+) -> pd.Series[int]:
     """
     변동성 레짐 분류.
 
@@ -150,13 +152,13 @@ def calculate_volatility_regime(
 
 
 def calculate_adaptive_noise(
-    high: "pd.Series[float]",
-    low: "pd.Series[float]",
-    close: "pd.Series[float]",
+    high: pd.Series[float],
+    low: pd.Series[float],
+    close: pd.Series[float],
     short_period: int = 4,
     long_period: int = 8,
     atr_period: int = 14,
-) -> tuple["pd.Series[float]", "pd.Series[float]"]:
+) -> tuple[pd.Series[float], pd.Series[float]]:
     """
     ATR로 정규화된 적응형 노이즈 계산.
 

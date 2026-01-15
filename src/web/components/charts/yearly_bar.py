@@ -16,11 +16,11 @@ def calculate_yearly_returns(
     equity: np.ndarray,
 ) -> pd.DataFrame:
     """연도별 수익률 계산.
-    
+
     Args:
         dates: 날짜 배열
         equity: 포트폴리오 가치 배열
-        
+
     Returns:
         연도별 수익률 DataFrame (columns: year, return_pct)
     """
@@ -32,15 +32,17 @@ def calculate_yearly_returns(
     df["year"] = df["date"].dt.year
 
     # 연도별 첫날/마지막날 가치 계산
-    yearly = df.groupby("year").agg(
-        first_equity=("equity", "first"),
-        last_equity=("equity", "last"),
-    ).reset_index()
+    yearly = (
+        df.groupby("year")
+        .agg(
+            first_equity=("equity", "first"),
+            last_equity=("equity", "last"),
+        )
+        .reset_index()
+    )
 
     # 연도별 수익률 계산
-    yearly["return_pct"] = (
-        (yearly["last_equity"] / yearly["first_equity"] - 1) * 100
-    )
+    yearly["return_pct"] = (yearly["last_equity"] / yearly["first_equity"] - 1) * 100
 
     return yearly[["year", "return_pct"]]
 
@@ -50,7 +52,7 @@ def render_yearly_bar_chart(
     equity: np.ndarray,
 ) -> None:
     """연도별 수익률 막대 그래프 렌더링.
-    
+
     Args:
         dates: 날짜 배열
         equity: 포트폴리오 가치 배열
@@ -67,10 +69,7 @@ def render_yearly_bar_chart(
         return
 
     # 색상: 양수 = 녹색, 음수 = 빨강
-    colors = [
-        "rgb(0, 150, 0)" if r >= 0 else "rgb(200, 0, 0)"
-        for r in yearly["return_pct"]
-    ]
+    colors = ["rgb(0, 150, 0)" if r >= 0 else "rgb(200, 0, 0)" for r in yearly["return_pct"]]
 
     fig = go.Figure()
 
@@ -82,11 +81,8 @@ def render_yearly_bar_chart(
             marker_color=colors,
             text=[f"{r:.1f}%" for r in yearly["return_pct"]],
             textposition="outside",
-            textfont=dict(size=12),
-            hovertemplate=(
-                "<b>%{x}년</b><br>"
-                "Return: %{y:.2f}%<extra></extra>"
-            ),
+            textfont={"size": 12},
+            hovertemplate=("<b>%{x}년</b><br>Return: %{y:.2f}%<extra></extra>"),
         )
     )
 
@@ -105,23 +101,23 @@ def render_yearly_bar_chart(
 
     # 레이아웃
     fig.update_layout(
-        title=dict(
-            text="📊 Yearly Returns",
-            font=dict(size=18),
-        ),
-        xaxis=dict(
-            title="Year",
-            tickmode="linear",
-        ),
-        yaxis=dict(
-            title="Return (%)",
-            ticksuffix="%",
-            showgrid=True,
-            gridcolor="rgba(128, 128, 128, 0.2)",
-        ),
+        title={
+            "text": "📊 Yearly Returns",
+            "font": {"size": 18},
+        },
+        xaxis={
+            "title": "Year",
+            "tickmode": "linear",
+        },
+        yaxis={
+            "title": "Return (%)",
+            "ticksuffix": "%",
+            "showgrid": True,
+            "gridcolor": "rgba(128, 128, 128, 0.2)",
+        },
         template="plotly_white",
         showlegend=False,
-        margin=dict(l=60, r=20, t=60, b=40),
+        margin={"l": 60, "r": 20, "t": 60, "b": 40},
     )
 
     st.plotly_chart(fig, use_container_width=True)
