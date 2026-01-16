@@ -165,7 +165,6 @@ def _convert_bt_metrics_to_result(metrics: PerformanceMetrics) -> BtBacktestResu
     )
 
 
-@st.cache_data(show_spinner="Running bt VBO backtest...")
 def run_bt_backtest_service(
     symbols: tuple[str, ...],
     interval: str = "day",
