@@ -161,7 +161,8 @@ class GCSStorage:
                 return {}
 
             content = blob.download_as_text()
-            return json.loads(content)
+            result: dict[str, object] = json.loads(content)
+            return result
 
         except Exception as e:
             logger.error(f"Error reading positions: {e}")

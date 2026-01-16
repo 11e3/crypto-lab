@@ -580,10 +580,7 @@ def _render_bt_trade_history(result: BtBacktestResult) -> None:
     show_count = st.selectbox(
         "Show trades", options=[10, 25, 50, 100, "All"], index=1, key="bt_trade_count"
     )
-    if show_count == "All":
-        display_df = trades_df
-    else:
-        display_df = trades_df.tail(int(str(show_count)))
+    display_df = trades_df if show_count == "All" else trades_df.tail(int(str(show_count)))
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 
 

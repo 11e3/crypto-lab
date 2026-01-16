@@ -465,7 +465,7 @@ def _render_trade_history(result: BtBacktestResult) -> None:
         index=1,
     )
 
-    display_df = trades_df if show_count == "All" else trades_df.tail(show_count)
+    display_df = trades_df if show_count == "All" else trades_df.tail(int(str(show_count)))
 
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 

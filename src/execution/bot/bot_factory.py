@@ -161,7 +161,7 @@ class BotComponentFactory:
 
     def get_tickers(self) -> list[str]:
         """Get configured tickers."""
-        return self.trading_config["tickers"]
+        return list(self.trading_config["tickers"])
 
     def get_configs(self) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
         """Get all configuration dictionaries."""

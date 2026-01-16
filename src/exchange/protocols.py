@@ -69,6 +69,10 @@ class OrderExecutionService(Protocol):
         """Get current market price for a trading pair."""
         ...
 
+    def get_balance(self, currency: str) -> Balance:
+        """Get balance for a currency."""
+        ...
+
 
 class BalanceService(Protocol):
     """Protocol for balance queries.

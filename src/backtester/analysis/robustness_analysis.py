@@ -120,7 +120,7 @@ class RobustnessAnalyzer:
                 )
                 results.append(robustness_result)
 
-                if verbose and (idx + 1) % max(1, total_combinations // 10) == 0:
+                if verbose and (idx + 1) % max(1, int(total_combinations) // 10) == 0:
                     logger.info(
                         f"  [{idx + 1}/{int(total_combinations)}] "
                         f"Params: {params}, Return: {result.total_return:.2%}"

@@ -50,6 +50,6 @@ class StrategyInfo:
     name: str
     class_name: str
     module_path: str
-    strategy_class: type
+    strategy_class: type | None
     parameters: dict[str, ParameterSpec]
     description: str

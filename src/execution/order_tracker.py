@@ -111,9 +111,7 @@ class OrderTracker:
         Returns:
             Number of orders cleared
         """
-        filled_ids = [
-            order_id for order_id, order in self.active_orders.items() if order.is_filled
-        ]
+        filled_ids = [order_id for order_id, order in self.active_orders.items() if order.is_filled]
         for order_id in filled_ids:
             self.active_orders.pop(order_id, None)
 

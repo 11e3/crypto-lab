@@ -14,8 +14,9 @@ class ReturnMetrics:
     def calculate_returns(equity: np.ndarray) -> np.ndarray:
         """Calculate daily returns from equity curve."""
         if len(equity) < 2:
-            return np.array([])
-        return np.diff(equity) / equity[:-1]
+            return np.array([], dtype=np.float64)
+        returns: np.ndarray = np.diff(equity) / equity[:-1]
+        return returns
 
     @staticmethod
     def calculate_total_return(

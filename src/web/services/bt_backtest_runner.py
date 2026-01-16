@@ -8,17 +8,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
-import streamlit as st
 
 from src.utils.logger import get_logger
 
 if TYPE_CHECKING:
-    from bt.domain.models import PerformanceMetrics
+    from bt.domain.models import PerformanceMetrics  # type: ignore[import-untyped]
 
 logger = get_logger(__name__)
 
@@ -61,7 +59,7 @@ class BtBacktestResult:
 def is_bt_available() -> bool:
     """Check if bt library is installed and available."""
     try:
-        from bt.engine.backtest import BacktestEngine  # noqa: F401
+        from bt.engine.backtest import BacktestEngine  # type: ignore[import-untyped]  # noqa: F401
 
         return True
     except ImportError:
@@ -194,7 +192,7 @@ def run_bt_backtest_service(
 
     try:
         # Import bt library components
-        from bt.framework.facade import BacktestFacade
+        from bt.framework.facade import BacktestFacade  # type: ignore[import-untyped]
 
         symbols_list = list(symbols)
 

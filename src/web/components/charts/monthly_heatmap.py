@@ -38,18 +38,19 @@ def calculate_monthly_returns(
     monthly_returns = monthly_equity.pct_change() * 100
 
     # Create result DataFrame
-    result = pd.DataFrame({
-        "year": monthly_equity.index.year,
-        "month": monthly_equity.index.month,
-        "return_pct": monthly_returns.values
-    })
+    idx = pd.to_datetime(monthly_equity.index)
+    result = pd.DataFrame(
+        {"year": idx.year, "month": idx.month, "return_pct": monthly_returns.values}
+    )
 
     # For the first month, calculate return from start to end of that month
     first_month_start = df.index[0]
     first_month_end = monthly_equity.index[0]
     if first_month_start.month == first_month_end.month:
         # Both in same month
-        first_return = (df.loc[first_month_end, "equity"] / df.loc[first_month_start, "equity"] - 1) * 100
+        first_return = (
+            df.loc[first_month_end, "equity"] / df.loc[first_month_start, "equity"] - 1
+        ) * 100
         result.loc[0, "return_pct"] = first_return
 
     return result

@@ -146,7 +146,9 @@ def render_optimization_page() -> None:
 
         with col2:
             st.subheader("📈 Ticker Selection")
-            available, missing = validate_data_availability(DEFAULT_TICKERS, cast(Interval, interval))
+            available, missing = validate_data_availability(
+                DEFAULT_TICKERS, cast(Interval, interval)
+            )
 
             selected_tickers = st.multiselect(
                 "Tickers",

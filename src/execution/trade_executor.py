@@ -60,9 +60,7 @@ def execute_buy_order(
     min_amount: float,
 ) -> bool:
     """Execute buy order. Backward compatibility wrapper for BuyExecutor."""
-    executor = BuyExecutor(
-        order_manager, position_manager, advanced_order_manager, telegram
-    )
+    executor = BuyExecutor(order_manager, position_manager, advanced_order_manager, telegram)
     return executor.execute(
         ticker, current_price, buy_amount, trading_config, target_info, min_amount
     )

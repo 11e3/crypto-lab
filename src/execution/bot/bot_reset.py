@@ -28,7 +28,7 @@ def calculate_sma_exit(df: pd.DataFrame | None) -> float | None:
 
 def process_exits(bot: "TradingBotFacade") -> None:
     """Process exit conditions for all held positions."""
-    from src.execution.bot.bot_init import MIN_DATA_POINTS
+    from src.execution.bot.bot_factory import MIN_DATA_POINTS
 
     positions = bot.position_manager.get_all_positions()
 

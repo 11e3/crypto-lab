@@ -131,9 +131,7 @@ class OrderManager:
             logger.error(f"Unexpected error placing sell order {ticker}: {e}", exc_info=True)
             return None
 
-    def _publish_order_placed(
-        self, order: Order, ticker: str, side: str, amount: float
-    ) -> None:
+    def _publish_order_placed(self, order: Order, ticker: str, side: str, amount: float) -> None:
         """Publish order placed event."""
         if not self.event_bus:
             return
