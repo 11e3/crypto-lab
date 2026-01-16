@@ -32,18 +32,26 @@ def calculate_monthly_returns(
     df["year"] = df["date"].dt.year
     df["month"] = df["date"].dt.month
 
-    # Calculate first/last day values for each month
+    # Get last equity value for each month (end-of-month values)
     monthly = (
         df.groupby(["year", "month"])
-        .agg(
-            first_equity=("equity", "first"),
-            last_equity=("equity", "last"),
-        )
+        .agg(last_equity=("equity", "last"))
         .reset_index()
     )
 
-    # Calculate monthly returns
-    monthly["return_pct"] = (monthly["last_equity"] / monthly["first_equity"] - 1) * 100
+    # Calculate monthly returns by comparing with previous month's last value
+    monthly["prev_equity"] = monthly["last_equity"].shift(1)
+    monthly["return_pct"] = (monthly["last_equity"] / monthly["prev_equity"] - 1) * 100
+
+    # First month has no previous month, so calculate from start of that month
+    if len(monthly) > 0:
+        first_year = monthly.iloc[0]["year"]
+        first_month = monthly.iloc[0]["month"]
+        first_month_data = df[(df["year"] == first_year) & (df["month"] == first_month)]
+        if len(first_month_data) > 0:
+            first_equity = first_month_data["equity"].iloc[0]
+            last_equity = first_month_data["equity"].iloc[-1]
+            monthly.loc[0, "return_pct"] = (last_equity / first_equity - 1) * 100
 
     return monthly[["year", "month", "return_pct"]]
 
