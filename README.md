@@ -109,10 +109,6 @@ uv run python scripts/collect_30min_data.py
 ![Drawdown Chart](docs/images/drawdown_chart.png)
 *Underwater curve visualization showing drawdown periods and maximum drawdown points*
 
-#### 📅 Monthly Returns Heatmap
-![Monthly Heatmap](docs/images/monthly_heatmap.png)
-*Color-coded monthly performance heatmap with compounded yearly returns*
-
 #### 📊 Yearly Performance
 ![Yearly Returns](docs/images/yearly_returns.png)
 *Bar chart showing year-over-year returns with average performance line*
@@ -124,6 +120,10 @@ uv run python scripts/collect_30min_data.py
 #### 🔧 Parameter Optimization
 ![Optimization](docs/images/optimization.png)
 *Grid search and random search for parameter optimization with parallel processing*
+
+#### 🎲 Monte Carlo Simulation
+![Monte Carlo](docs/images/monte_carlo.png)
+*Bootstrap resampling and parametric simulation for risk-return distribution analysis*
 
 ## 🎯 Key Features
 
