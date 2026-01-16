@@ -27,33 +27,32 @@ def calculate_monthly_returns(
     if len(dates) == 0 or len(equity) == 0:
         return pd.DataFrame(columns=["year", "month", "return_pct"])
 
-    # Create DataFrame
+    # Create DataFrame with date index
     df = pd.DataFrame({"date": pd.to_datetime(dates), "equity": equity})
-    df["year"] = df["date"].dt.year
-    df["month"] = df["date"].dt.month
+    df = df.set_index("date").sort_index()
 
-    # Get last equity value for each month (end-of-month values)
-    monthly = (
-        df.groupby(["year", "month"])
-        .agg(last_equity=("equity", "last"))
-        .reset_index()
-    )
+    # Resample to get end-of-month values (forward fill to handle missing dates)
+    monthly_equity = df["equity"].resample("ME").last()
 
-    # Calculate monthly returns by comparing with previous month's last value
-    monthly["prev_equity"] = monthly["last_equity"].shift(1)
-    monthly["return_pct"] = (monthly["last_equity"] / monthly["prev_equity"] - 1) * 100
+    # Calculate monthly returns
+    monthly_returns = monthly_equity.pct_change() * 100
 
-    # First month has no previous month, so calculate from start of that month
-    if len(monthly) > 0:
-        first_year = monthly.iloc[0]["year"]
-        first_month = monthly.iloc[0]["month"]
-        first_month_data = df[(df["year"] == first_year) & (df["month"] == first_month)]
-        if len(first_month_data) > 0:
-            first_equity = first_month_data["equity"].iloc[0]
-            last_equity = first_month_data["equity"].iloc[-1]
-            monthly.loc[0, "return_pct"] = (last_equity / first_equity - 1) * 100
+    # Create result DataFrame
+    result = pd.DataFrame({
+        "year": monthly_equity.index.year,
+        "month": monthly_equity.index.month,
+        "return_pct": monthly_returns.values
+    })
 
-    return monthly[["year", "month", "return_pct"]]
+    # For the first month, calculate return from start to end of that month
+    first_month_start = df.index[0]
+    first_month_end = monthly_equity.index[0]
+    if first_month_start.month == first_month_end.month:
+        # Both in same month
+        first_return = (df.loc[first_month_end, "equity"] / df.loc[first_month_start, "equity"] - 1) * 100
+        result.loc[0, "return_pct"] = first_return
+
+    return result
 
 
 def render_monthly_heatmap(
