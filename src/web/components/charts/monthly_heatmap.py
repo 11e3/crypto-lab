@@ -163,7 +163,7 @@ def render_monthly_heatmap(
         margin={"l": 60, "r": 20, "t": 80, "b": 40},
     )
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     # Display yearly totals (compounded returns, not summed)
     yearly_data = []

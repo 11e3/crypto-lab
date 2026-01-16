@@ -351,7 +351,7 @@ def _display_monte_carlo_results() -> None:
         showlegend=True,
     )
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def _render_walk_forward() -> None:
@@ -710,7 +710,7 @@ def _display_walk_forward_results() -> None:
         barmode="group",
     )
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def _create_strategy(strategy_type: str) -> Any:

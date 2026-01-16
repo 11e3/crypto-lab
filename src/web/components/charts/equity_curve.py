@@ -142,4 +142,4 @@ def render_equity_curve(
         margin={"l": 60, "r": 20, "t": 80, "b": 60},
     )
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)

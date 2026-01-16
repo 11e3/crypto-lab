@@ -90,4 +90,4 @@ def render_underwater_curve(
         margin={"l": 60, "r": 20, "t": 60, "b": 40},
     )
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
