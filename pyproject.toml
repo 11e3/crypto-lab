@@ -7,7 +7,7 @@ name = "crypto-quant-system"
 version = "0.1.0"
 description = "Automated trading system for multiple cryptocurrency exchanges using volatility breakout strategy"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "Crypto Quant System"}
@@ -17,7 +17,8 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Financial and Insurance Industry",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Office/Business :: Financial :: Investment",
 ]
 
@@ -33,6 +34,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",  # Type-safe environment variable management
     "psutil>=5.9.0",  # Process and system utilities
+    "typing-extensions<4.15.0",  # Pin to avoid annotationlib dependency (Python 3.14+)
 ]
 
 # Web app 진입점 (streamlit run으로 실행)
