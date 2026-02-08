@@ -24,13 +24,18 @@ Part of: **[crypto-quant-system](https://github.com/11e3/crypto-quant-system)** 
   </tr>
 </table>
 
-## Screenshots
+## backtests
 
-### Backtest Results - Equity Curve
-![Backtest Results - Equity Curve](docs/images/screencapture-localhost-8501-2026-01-17-06_29_52.png)
-
-### Backtest Results - Yearly Returns
-![Backtest Results - Yearly Returns](docs/images/screencapture-localhost-8501-2026-01-17-06_30_03.png)
+<table>
+  <tr>
+    <td align="center"><b>2024</b><br>Equity Curve</td>
+    <td align="center"><b>2025</b><br>Yearly Returns</td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/screencapture-localhost-8501-2026-01-17-06_29_52.png" width="250"/></td>
+    <td><img src="docs/images/screencapture-localhost-8501-2026-01-17-06_30_03.png" width="250"/></td>
+  </tr>
+</table>
 
 ## Ecosystem Role
 
