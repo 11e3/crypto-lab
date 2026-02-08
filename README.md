@@ -9,6 +9,21 @@ Part of: **[crypto-quant-system](https://github.com/11e3/crypto-quant-system)** 
 [![Coverage](https://img.shields.io/badge/coverage-80%25+-green.svg)](https://github.com/11e3/crypto-quant-system)
 [![MyPy](https://img.shields.io/badge/mypy-97.8%25-brightgreen.svg)](https://mypy.readthedocs.io/)
 
+## Live Trading Performance (Upbit)
+
+<table>
+  <tr>
+    <td align="center"><b>2024</b><br>Return: 101.26%</td>
+    <td align="center"><b>2025</b><br>Return: 19.28%</td>
+    <td align="center"><b>2026 YTD</b><br>Return: 7.99%</td>
+  </tr>
+  <tr>
+    <td><img src="KakaoTalk_20260208_142941894_01.jpg" width="250"/></td>
+    <td><img src="KakaoTalk_20260208_142941894_02.jpg" width="250"/></td>
+    <td><img src="KakaoTalk_20260208_142941894_03.jpg" width="250"/></td>
+  </tr>
+</table>
+
 ## Screenshots
 
 ### Backtest Results - Equity Curve
