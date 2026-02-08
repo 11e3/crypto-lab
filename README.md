@@ -1,6 +1,6 @@
 # Crypto Quant System
 
-**Production-grade cryptocurrency trading platform with backtesting, live trading, and portfolio optimization.**
+**cryptocurrency trading platform with backtesting, live trading, and portfolio optimization.**
 
 Part of: **[crypto-quant-system](https://github.com/11e3/crypto-quant-system)** -> [bt](https://github.com/11e3/bt) -> [crypto-bot](https://github.com/11e3/crypto-bot) -> [crypto-regime-classifier-ml](https://github.com/11e3/crypto-regime-classifier-ml)
 
