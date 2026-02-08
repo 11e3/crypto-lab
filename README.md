@@ -24,12 +24,12 @@ Part of: **[crypto-quant-system](https://github.com/11e3/crypto-quant-system)** 
   </tr>
 </table>
 
-## backtests
+## Backtest Results
 
 <table>
   <tr>
-    <td align="center"><b>2024</b><br>Equity Curve</td>
-    <td align="center"><b>2025</b><br>Yearly Returns</td>
+    <td align="center"><br>Equity Curve</td>
+    <td align="center"><br>Yearly Returns</td>
   </tr>
   <tr>
     <td><img src="docs/images/screencapture-localhost-8501-2026-01-17-06_29_52.png" width="500"/></td>
