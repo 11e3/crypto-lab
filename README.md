@@ -18,9 +18,9 @@ Part of: **[crypto-quant-system](https://github.com/11e3/crypto-quant-system)** 
     <td align="center"><b>2026 YTD</b><br>Return: 7.99%</td>
   </tr>
   <tr>
-    <td><img src="KakaoTalk_20260208_142941894_01.jpg" width="250"/></td>
-    <td><img src="KakaoTalk_20260208_142941894_02.jpg" width="250"/></td>
-    <td><img src="KakaoTalk_20260208_142941894_03.jpg" width="250"/></td>
+    <td><img src="docs/images/KakaoTalk_20260208_142941894_01.jpg" width="250"/></td>
+    <td><img src="docs/images/KakaoTalk_20260208_142941894_02.jpg" width="250"/></td>
+    <td><img src="docs/images/KakaoTalk_20260208_142941894_03.jpg" width="250"/></td>
   </tr>
 </table>
 
