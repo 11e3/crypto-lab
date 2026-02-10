@@ -124,7 +124,7 @@ def _render_demo_mode() -> None:
 def _render_account_selector(accounts: list[str]) -> str:
     """Render account selector."""
     if not accounts:
-        accounts = ["Main"]
+        accounts = ["jh"]
 
     return st.selectbox(
         "Account",

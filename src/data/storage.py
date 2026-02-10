@@ -114,14 +114,14 @@ class GCSStorage:
     def get_bot_logs(
         self,
         date: str | datetime,
-        account: str = "Main",
+        account: str = "jh",
     ) -> pd.DataFrame:
         """
         Get bot trade logs for a specific date.
 
         Args:
             date: Date string (YYYY-MM-DD) or datetime object
-            account: Account name (default: "Main")
+            account: Account name (default: "jh")
 
         Returns:
             DataFrame with trade logs
@@ -146,12 +146,12 @@ class GCSStorage:
             logger.error(f"Error reading bot logs: {e}")
             raise GCSStorageError(f"Failed to read bot logs: {e}") from e
 
-    def get_bot_positions(self, account: str = "Main") -> dict[str, Any]:
+    def get_bot_positions(self, account: str = "jh") -> dict[str, Any]:
         """
         Get current bot positions.
 
         Args:
-            account: Account name (default: "Main")
+            account: Account name (default: "jh")
 
         Returns:
             Dictionary with current positions
@@ -175,7 +175,7 @@ class GCSStorage:
 
     def list_bot_log_dates(
         self,
-        account: str = "Main",
+        account: str = "jh",
         limit: int = 30,
     ) -> list[str]:
         """
