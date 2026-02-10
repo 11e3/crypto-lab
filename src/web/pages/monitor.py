@@ -6,8 +6,7 @@ Part of the Crypto Quant Ecosystem.
 Features:
 - Live positions display
 - Trade history from GCS logs
-- PnL summary (daily/weekly/monthly)
-- Error alerts
+- Return summary (total return, daily avg return)
 """
 
 from __future__ import annotations
@@ -93,38 +92,14 @@ gs://your-quant-bucket/
     └── processed/
         └── *.parquet
 ```
-
-### Demo Mode
-
-You can use demo data by creating local files in `data/bot_logs/`:
-```
-data/bot_logs/
-└── Main/
-    ├── trades_2025-01-16.csv
-    └── positions.json
-```
             """
         )
-
-    # Check for demo mode
-    _render_demo_mode()
-
-
-def _render_demo_mode() -> None:
-    """Render demo mode with local data."""
-    from pathlib import Path
-
-    demo_dir = Path("data/bot_logs")
-
-    if demo_dir.exists():
-        st.info("Demo mode: Using local data from data/bot_logs/")
-        # You could load local files here for demo
 
 
 def _render_account_selector(accounts: list[str]) -> str:
     """Render account selector."""
     if not accounts:
-        accounts = ["jh"]
+        accounts = ["sh", "jh"]
 
     return st.selectbox(
         "Account",
@@ -216,8 +191,20 @@ def _calculate_pnl_summary(
         try:
             trades_df = storage.get_bot_logs(date_str, account)
 
-            if not trades_df.empty and "pnl" in trades_df.columns:
-                daily_pnl = trades_df["pnl"].sum()
+            if not trades_df.empty:
+                # profit_krw 컬럼 사용 (crypto-bot TradeLogger 형식)
+                pnl_col = None
+                for col in ["profit_krw", "pnl"]:
+                    if col in trades_df.columns:
+                        pnl_col = col
+                        break
+
+                if pnl_col:
+                    trades_df[pnl_col] = pd.to_numeric(trades_df[pnl_col], errors="coerce")
+                    daily_pnl = trades_df[pnl_col].sum()
+                else:
+                    daily_pnl = 0
+
                 trade_count = len(trades_df)
             else:
                 daily_pnl = 0
@@ -240,88 +227,88 @@ def _calculate_pnl_summary(
     return pd.DataFrame(summary_data)
 
 
-def _render_pnl_summary(pnl_df: pd.DataFrame) -> None:
-    """Render PnL summary charts and metrics."""
-    st.subheader("PnL Summary")
+def _render_pnl_summary(pnl_df: pd.DataFrame, initial_capital: float = 10_000_000) -> None:
+    """Render return summary with metrics and return chart."""
+    st.subheader("Return Summary")
 
     if pnl_df.empty:
-        st.info("No PnL data available")
+        st.info("No return data available")
         return
 
-    # Summary metrics
+    # Sort by date ascending for cumulative calc
+    pnl_df = pnl_df.sort_values("date").reset_index(drop=True)
+
+    # Calculate cumulative equity and returns
+    pnl_df["cumulative_pnl"] = pnl_df["pnl"].cumsum()
+    pnl_df["equity"] = initial_capital + pnl_df["cumulative_pnl"]
+    pnl_df["return_pct"] = (pnl_df["equity"] / initial_capital - 1) * 100
+
+    # Current values
+    current_equity = pnl_df["equity"].iloc[-1]
+    total_return_pct = pnl_df["return_pct"].iloc[-1]
+    total_trades = int(pnl_df["trades"].sum())
+
+    # Daily avg return (trading days only)
+    trading_days = pnl_df[pnl_df["trades"] > 0]
+    if not trading_days.empty:
+        daily_returns = trading_days["pnl"] / initial_capital * 100
+        avg_daily_return = daily_returns.mean()
+    else:
+        avg_daily_return = 0
+
+    # Summary metrics: 현재 평가금액, 총수익률, 일평균수익률, 거래수
     col1, col2, col3, col4 = st.columns(4)
 
-    total_pnl = pnl_df["pnl"].sum()
-    total_trades = pnl_df["trades"].sum()
-    winning_days = (pnl_df["pnl"] > 0).sum()
-    losing_days = (pnl_df["pnl"] < 0).sum()
-
     with col1:
-        pnl_delta = f"{total_pnl:+,.0f}" if total_pnl != 0 else "0"
-        st.metric("Total PnL", f"{total_pnl:,.0f} KRW", delta=pnl_delta)
+        st.metric(
+            "Current Equity",
+            f"{current_equity:,.0f} KRW",
+        )
 
     with col2:
-        st.metric("Total Trades", f"{total_trades:,}")
+        st.metric(
+            "Total Return",
+            f"{total_return_pct:+.2f}%",
+        )
 
     with col3:
-        win_rate = (
-            winning_days / (winning_days + losing_days) * 100
-            if (winning_days + losing_days) > 0
-            else 0
+        st.metric(
+            "Daily Avg Return",
+            f"{avg_daily_return:+.4f}%",
         )
-        st.metric("Win Days", f"{winning_days}", delta=f"{win_rate:.1f}%")
 
     with col4:
-        avg_daily = pnl_df["pnl"].mean() if not pnl_df.empty else 0
-        st.metric("Avg Daily PnL", f"{avg_daily:,.0f} KRW")
+        st.metric("Total Trades", f"{total_trades:,}")
 
-    # PnL chart
-    if not pnl_df.empty:
-        pnl_df = pnl_df.sort_values("date")
-        pnl_df["cumulative_pnl"] = pnl_df["pnl"].cumsum()
+    # Return % chart (not PnL KRW)
+    if len(pnl_df) > 1:
+        import plotly.graph_objects as go
 
-        # Cumulative PnL chart
-        st.line_chart(
-            pnl_df.set_index("date")["cumulative_pnl"],
-            width="stretch",
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x=pnl_df["date"],
+                y=pnl_df["return_pct"],
+                mode="lines",
+                name="Cumulative Return",
+                line={"color": "#00C853", "width": 2},
+                fill="tozeroy",
+                fillcolor="rgba(0,200,83,0.1)",
+            )
         )
-
-
-def _render_alerts(storage: GCSStorage, account: str) -> None:
-    """Render alerts and notifications."""
-    st.subheader("Alerts")
-
-    # Check for recent errors or warnings
-    # This would typically check a separate alerts/errors log
-
-    # Placeholder alert examples
-    alerts: list[dict[str, str]] = []
-
-    # Check if positions file is stale
-    try:
-        positions = storage.get_bot_positions(account)
-        if positions and "updated_at" in positions:
-            last_update = datetime.fromisoformat(str(positions["updated_at"]))
-            if (datetime.now() - last_update).total_seconds() > 3600:  # 1 hour
-                alerts.append(
-                    {
-                        "type": "warning",
-                        "message": f"Position data is stale (last update: {last_update})",
-                    }
-                )
-    except Exception as e:
-        logger.debug(f"Failed to check position staleness: {e}")
-
-    if not alerts:
-        st.success("No alerts")
-    else:
-        for alert in alerts:
-            if alert["type"] == "error":
-                st.error(alert["message"])
-            elif alert["type"] == "warning":
-                st.warning(alert["message"])
-            else:
-                st.info(alert["message"])
+        fig.update_layout(
+            yaxis_title="Return (%)",
+            xaxis_title="",
+            height=350,
+            margin={"l": 50, "r": 20, "t": 20, "b": 50},
+            xaxis={
+                "tickangle": 0,
+                "dtick": max(1, len(pnl_df) // 8) * 86400000,
+                "tickformat": "%m/%d",
+            },
+            yaxis={"ticksuffix": "%"},
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 
 def render_monitor_page() -> None:
@@ -366,17 +353,13 @@ def render_monitor_page() -> None:
     # Main content
     col1, col2 = st.columns([1, 1])
 
-    # Left column: Positions and Alerts
+    # Left column: Positions
     with col1:
         try:
             positions = storage.get_bot_positions(account)
             _render_positions_card(positions)
         except Exception as e:
             st.error(f"Error loading positions: {e}")
-
-        st.divider()
-
-        _render_alerts(storage, account)
 
     # Right column: Trade History
     with col2:
@@ -388,12 +371,12 @@ def render_monitor_page() -> None:
 
     st.divider()
 
-    # PnL Summary (full width)
+    # Return Summary (full width)
     try:
         pnl_df = _calculate_pnl_summary(storage, account, days=30)
         _render_pnl_summary(pnl_df)
     except Exception as e:
-        st.error(f"Error calculating PnL summary: {e}")
+        st.error(f"Error calculating return summary: {e}")
 
 
 if __name__ == "__main__":
