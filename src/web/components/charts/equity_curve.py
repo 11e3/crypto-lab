@@ -9,7 +9,12 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-from src.web.utils.chart_utils import downsample_timeseries
+from src.web.utils.chart_utils import (
+    CHART_HEIGHT_FULL,
+    COLOR_BENCHMARK,
+    COLOR_PRIMARY,
+    downsample_timeseries,
+)
 
 __all__ = ["render_equity_curve"]
 
@@ -67,7 +72,7 @@ def render_equity_curve(
             y=normalized_equity,
             mode="lines",
             name="Portfolio",
-            line={"color": "#1f77b4", "width": 2},
+            line={"color": COLOR_PRIMARY, "width": 2},
             hovertemplate=(
                 "<b>Date</b>: %{x|%Y-%m-%d}<br>"
                 "<b>Value</b>: %{y:.2f}x<br>"
@@ -87,7 +92,7 @@ def render_equity_curve(
                 y=normalized_benchmark,
                 mode="lines",
                 name=benchmark_name,
-                line={"color": "#ff7f0e", "width": 1.5, "dash": "dash"},
+                line={"color": COLOR_BENCHMARK, "width": 1.5, "dash": "dash"},
                 hovertemplate=(
                     f"<b>{benchmark_name}</b><br>"
                     "<b>Date</b>: %{x|%Y-%m-%d}<br>"
@@ -145,6 +150,7 @@ def render_equity_curve(
             "xanchor": "right",
             "x": 1,
         },
+        height=CHART_HEIGHT_FULL,
         margin={"l": 60, "r": 20, "t": 80, "b": 60},
     )
 

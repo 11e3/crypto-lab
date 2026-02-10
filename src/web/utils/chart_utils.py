@@ -11,7 +11,26 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-__all__ = ["downsample_timeseries"]
+__all__ = [
+    "downsample_timeseries",
+    "CHART_HEIGHT_FULL",
+    "CHART_HEIGHT_SECONDARY",
+    "COLOR_PRIMARY",
+    "COLOR_POSITIVE",
+    "COLOR_NEGATIVE",
+    "COLOR_NEUTRAL",
+]
+
+# Consistent chart height constants
+CHART_HEIGHT_FULL = 450  # Main charts (equity curve)
+CHART_HEIGHT_SECONDARY = 300  # Supporting charts (drawdown, yearly bar)
+
+# Consistent color palette
+COLOR_PRIMARY = "#1f77b4"  # Portfolio line, primary data
+COLOR_POSITIVE = "#00C853"  # Positive returns, gains
+COLOR_NEGATIVE = "#FF1744"  # Negative returns, losses, drawdown
+COLOR_NEUTRAL = "#9E9E9E"  # Grid lines, baselines
+COLOR_BENCHMARK = "#ff7f0e"  # Benchmark overlay
 
 
 def downsample_timeseries(

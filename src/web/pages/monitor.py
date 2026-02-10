@@ -96,17 +96,34 @@ gs://your-quant-bucket/
         )
 
 
-def _render_account_selector(accounts: list[str]) -> str:
-    """Render account selector."""
-    if not accounts:
-        accounts = ["sh", "jh"]
+# Anonymized account display names → GCS path mapping
+_ACCOUNT_DISPLAY_MAP: dict[str, str] = {
+    "Account 1": "sh",
+    "Account 2": "jh",
+}
+_ACCOUNT_REVERSE_MAP: dict[str, str] = {v: k for k, v in _ACCOUNT_DISPLAY_MAP.items()}
 
-    return st.selectbox(
+
+def _render_account_selector(accounts: list[str]) -> str:
+    """Render account selector.
+
+    Returns the actual GCS account name (not the display name).
+    """
+    if not accounts:
+        accounts = list(_ACCOUNT_DISPLAY_MAP.values())
+
+    # Map actual account names to display names
+    display_names = [_ACCOUNT_REVERSE_MAP.get(a, a) for a in accounts]
+
+    selected_display = st.selectbox(
         "Account",
-        options=accounts,
+        options=display_names,
         index=0,
         help="Select trading account to monitor",
     )
+
+    # Map back to actual account name
+    return _ACCOUNT_DISPLAY_MAP.get(selected_display, selected_display)
 
 
 def _render_positions_card(positions: dict[str, Any]) -> None:

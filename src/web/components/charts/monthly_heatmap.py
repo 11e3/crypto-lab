@@ -5,7 +5,7 @@ Monthly returns heatmap chart.
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
+import plotly.figure_factory as ff
 import streamlit as st
 
 __all__ = ["render_monthly_heatmap", "calculate_monthly_returns"]
@@ -55,6 +55,9 @@ def calculate_monthly_returns(
             first_return = (first_month_end_equity / first_month_start_equity - 1) * 100
             result.loc[0, "return_pct"] = first_return
 
+    # Drop rows with NaN returns (partial months, edge cases)
+    result = result.dropna(subset=["return_pct"])
+
     return result
 
 
@@ -91,103 +94,97 @@ def render_monthly_heatmap(
 
     # Month names
     month_names = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ]
 
-    # Heatmap data
+    # Prepare data
     z_data = pivot.values
-    years = pivot.index.tolist()
+    years = [str(y) for y in pivot.index.tolist()]
+    num_years = len(years)
 
-    # Annotation text (return values)
-    annotations = []
-    for i, year in enumerate(years):
-        for j, _month in enumerate(all_months):
-            value = z_data[i, j]
-            if not np.isnan(value):
-                annotations.append(
-                    {
-                        "x": month_names[j],
-                        "y": str(year),
-                        "text": f"{value:.1f}%",
-                        "showarrow": False,
-                        "font": {
-                            "color": "white" if abs(value) > 5 else "black",
-                            "size": 10,
-                        },
-                    }
-                )
+    # Compute symmetric color range so 0% always maps to white
+    non_nan_values = z_data[~np.isnan(z_data)]
+    if len(non_nan_values) > 0:
+        abs_max = max(abs(float(non_nan_values.min())), abs(float(non_nan_values.max())))
+        abs_max = max(abs_max, 1.0)
+    else:
+        abs_max = 10.0
 
-    # Heatmap
-    fig = go.Figure(
-        data=go.Heatmap(
-            z=z_data,
-            x=month_names,
-            y=[str(y) for y in years],
-            colorscale=[
-                [0.0, "rgb(165, 0, 38)"],  # Dark red (large loss)
-                [0.25, "rgb(215, 48, 39)"],  # Red
-                [0.4, "rgb(244, 109, 67)"],  # Light red
-                [0.5, "rgb(255, 255, 255)"],  # White (0%)
-                [0.6, "rgb(166, 217, 106)"],  # Light green
-                [0.75, "rgb(102, 189, 99)"],  # Green
-                [1.0, "rgb(0, 104, 55)"],  # Dark green (large profit)
-            ],
-            zmid=0,
-            colorbar={
-                "title": "Return (%)",
-                "ticksuffix": "%",
-            },
-            hovertemplate=("<b>%{y} %{x}</b><br>Return: %{z:.2f}%<extra></extra>"),
-        )
+    # Cap extreme outliers for better color scale (95th percentile)
+    if len(non_nan_values) > 4:
+        p95 = float(np.percentile(np.abs(non_nan_values), 95))
+        abs_max = min(abs_max, max(p95 * 1.2, 5.0))
+
+    # Build annotation text matrix (show value or empty for NaN)
+    annotation_text = []
+    for i in range(num_years):
+        row = []
+        for j in range(12):
+            val = z_data[i, j]
+            row.append(f"{val:.1f}%" if not np.isnan(val) else "")
+        annotation_text.append(row)
+
+    # Replace NaN with 0 for plotly (ff.create_annotated_heatmap can't handle None)
+    # Empty months show as white (0% = center of diverging scale) with no annotation
+    z_display = np.nan_to_num(z_data, nan=0.0).tolist()
+
+    # Color scale: red-white-green, normalized to [-abs_max, abs_max]
+    colorscale = [
+        [0.0, "rgb(165, 0, 38)"],
+        [0.25, "rgb(215, 48, 39)"],
+        [0.4, "rgb(244, 109, 67)"],
+        [0.5, "rgb(255, 255, 255)"],
+        [0.6, "rgb(166, 217, 106)"],
+        [0.75, "rgb(102, 189, 99)"],
+        [1.0, "rgb(0, 104, 55)"],
+    ]
+
+    # Use annotated heatmap — handles single-row properly
+    fig = ff.create_annotated_heatmap(
+        z=z_display,
+        x=month_names,
+        y=years,
+        annotation_text=annotation_text,
+        colorscale=colorscale,
+        zmin=-abs_max,
+        zmax=abs_max,
+        showscale=True,
+        hovertemplate="<b>%{y} %{x}</b><br>Return: %{z:.2f}%<extra></extra>",
+        xgap=3,
+        ygap=3,
     )
 
-    # Add annotations
-    fig.update_layout(annotations=annotations)
+    # Fix annotation font colors based on cell value
+    color_threshold = abs_max * 0.35
+    for ann in fig.layout.annotations:
+        text = ann.text
+        if text and text != "":
+            try:
+                val = float(text.replace("%", ""))
+                ann.font.color = "white" if abs(val) > color_threshold else "black"
+                ann.font.size = 12
+            except ValueError:
+                ann.font.color = "black"
+                ann.font.size = 12
 
-    # Layout
+    # Fixed row height for consistent cell sizing
+    row_height = 50
+    chart_height = max(150, 80 + num_years * row_height)
+    chart_height = min(chart_height, 800)
+
     fig.update_layout(
-        title={
-            "text": "📅 Monthly Returns Heatmap",
-            "font": {"size": 18},
-        },
-        xaxis={
-            "title": "Month",
-            "side": "top",
-        },
-        yaxis={
-            "title": "Year",
-            "autorange": "reversed",  # Latest year on top
-        },
+        title={"text": "📅 Monthly Returns Heatmap", "font": {"size": 16}},
+        xaxis={"title": "", "side": "top"},
+        yaxis={"title": "", "autorange": "reversed"},
         template="plotly_white",
-        margin={"l": 60, "r": 20, "t": 80, "b": 40},
+        height=chart_height,
+        margin={"l": 50, "r": 20, "t": 60, "b": 20},
+    )
+
+    # Add colorbar config to the heatmap trace
+    fig.data[0].update(
+        colorbar={"title": "Return (%)", "ticksuffix": "%"},
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
-    # Display yearly totals (compounded returns, not summed)
-    yearly_data = []
-    for year, group in monthly.groupby("year"):
-        compounded_return = (np.prod(1 + group["return_pct"] / 100) - 1) * 100
-        yearly_data.append({"year": year, "return_pct": compounded_return})
-
-    yearly_returns = pd.DataFrame(yearly_data).set_index("year")["return_pct"]
-    if not yearly_returns.empty:
-        cols = st.columns(len(yearly_returns))
-        for i, (year, ret) in enumerate(yearly_returns.items()):
-            with cols[i]:
-                st.metric(
-                    label=f"{year}",
-                    value=f"{ret:.1f}%",
-                    delta=None,
-                )

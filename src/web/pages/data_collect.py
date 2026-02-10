@@ -79,17 +79,17 @@ def render_data_collect_page() -> None:
     with col2:
         st.markdown("### ⏱️ Interval Selection")
 
-        # Initialize interval checkbox states if not exists
-        if "intervals_initialized" not in st.session_state:
-            st.session_state.intervals_initialized = True
-            default_intervals = ["minute240", "day", "week"]
-            for interval_code, _ in INTERVALS:
-                st.session_state[f"interval_{interval_code}"] = interval_code in default_intervals
+        interval_options = [code for code, _ in INTERVALS]
+        interval_labels = {code: f"{name} ({code})" for code, name in INTERVALS}
+        default_intervals = ["minute240", "day", "week"]
 
-        selected_intervals = []
-        for interval_code, interval_name in INTERVALS:
-            if st.checkbox(f"{interval_name} ({interval_code})", key=f"interval_{interval_code}"):
-                selected_intervals.append(interval_code)
+        selected_intervals = st.multiselect(
+            "Select Intervals",
+            options=interval_options,
+            default=[i for i in default_intervals if i in interval_options],
+            format_func=lambda x: interval_labels.get(x, x),
+            key="collect_interval_multiselect",
+        )
 
     # Column 3: Options
     with col3:
@@ -100,7 +100,7 @@ def render_data_collect_page() -> None:
             help="Ignore existing data and collect all data from scratch",
         )
 
-        st.markdown("---")
+        st.divider()
 
         # Run button
         run_button = st.button(
@@ -110,7 +110,7 @@ def render_data_collect_page() -> None:
             disabled=not selected_tickers or not selected_intervals,
         )
 
-    st.markdown("---")
+    st.divider()
 
     # ===== Validation =====
     if not selected_tickers:

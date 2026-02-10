@@ -8,6 +8,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from src.web.utils.chart_utils import CHART_HEIGHT_SECONDARY, COLOR_NEGATIVE, COLOR_POSITIVE
+
 __all__ = ["render_yearly_bar_chart", "calculate_yearly_returns"]
 
 
@@ -69,7 +71,7 @@ def render_yearly_bar_chart(
         return
 
     # Colors: positive = green, negative = red
-    colors = ["rgb(0, 150, 0)" if r >= 0 else "rgb(200, 0, 0)" for r in yearly["return_pct"]]
+    colors = [COLOR_POSITIVE if r >= 0 else COLOR_NEGATIVE for r in yearly["return_pct"]]
 
     fig = go.Figure()
 
@@ -117,6 +119,7 @@ def render_yearly_bar_chart(
         },
         template="plotly_white",
         showlegend=False,
+        height=CHART_HEIGHT_SECONDARY,
         margin={"l": 60, "r": 20, "t": 60, "b": 40},
     )
 

@@ -156,9 +156,35 @@ def predict_regime(clf_data: dict[str, Any], ohlcv_df: pd.DataFrame) -> pd.Serie
     return pd.Series(predictions, index=features.index, name="regime")
 
 
+def predict_regime_proba(
+    clf_data: dict[str, Any], ohlcv_df: pd.DataFrame
+) -> pd.DataFrame:
+    """Predict regime probabilities from OHLCV data.
+
+    Args:
+        clf_data: Loaded classifier dict from joblib
+        ohlcv_df: OHLCV DataFrame
+
+    Returns:
+        DataFrame with probability columns for each class
+    """
+    features = calculate_regime_features(ohlcv_df)
+    features = features.dropna()
+
+    if len(features) == 0:
+        raise ValueError("Not enough data to calculate features (need at least 60 rows)")
+
+    x_scaled = clf_data["scaler"].transform(features[clf_data["feature_names"]])
+    probas = clf_data["model"].predict_proba(x_scaled)
+    classes = clf_data.get("classes", list(clf_data["label_encoder"].classes_))
+
+    return pd.DataFrame(probas, index=features.index, columns=classes)
+
+
 __all__ = [
     "RegimeModelLoader",
     "calculate_regime_features",
     "get_regime_model_loader",
     "predict_regime",
+    "predict_regime_proba",
 ]

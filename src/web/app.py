@@ -132,17 +132,29 @@ def show_home() -> None:
     )
 
     # System status
-    with st.expander("🔍 System Status"):
-        col1, col2, col3 = st.columns(3)
+    st.markdown("### 🔍 System Status")
+    try:
+        from src.web.services.strategy_registry import StrategyRegistry
 
-        with col1:
-            st.metric("Registered Strategies", "5")
+        registry = StrategyRegistry()
+        strategy_count = len(registry.list_strategies())
+    except Exception:
+        strategy_count = 0
 
-        with col2:
-            st.metric("Available Indicators", "20+")
+    try:
+        from src.web.config.constants import DATA_COLLECT_TICKERS
 
-        with col3:
-            st.metric("Supported Assets", "100+")
+        asset_count = len(DATA_COLLECT_TICKERS)
+    except Exception:
+        asset_count = 0
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Registered Strategies", str(strategy_count) if strategy_count else "–")
+    with col2:
+        st.metric("Available Indicators", "20+")
+    with col3:
+        st.metric("Supported Assets", str(asset_count) if asset_count else "–")
 
 
 def show_data_collect() -> None:

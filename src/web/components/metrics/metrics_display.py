@@ -22,94 +22,89 @@ def _format_value(value: float, suffix: str = "", precision: int = 2) -> str:
 def render_metrics_cards(metrics: ExtendedMetrics) -> None:
     """Render metrics cards.
 
-    Display key metrics in card format.
+    Display key metrics in a two-tier layout: core metrics always visible,
+    detailed metrics in a collapsible expander.
 
     Args:
         metrics: Extended metrics data
     """
     st.subheader("📈 Performance Summary")
 
-    # Row 1: Basic return metrics
+    # Tier 1: Core metrics (always visible) - 2 rows of 4
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(
             "Total Return",
             _format_value(metrics.total_return_pct, "%"),
-            delta=None,
         )
     with col2:
-        st.metric(
-            "CAGR",
-            _format_value(metrics.cagr_pct, "%"),
-        )
+        st.metric("CAGR", _format_value(metrics.cagr_pct, "%"))
     with col3:
-        st.metric(
-            "MDD",
-            _format_value(metrics.max_drawdown_pct, "%"),
-        )
+        st.metric("MDD", _format_value(metrics.max_drawdown_pct, "%"))
     with col4:
-        st.metric(
-            "Volatility (Annual)",
-            _format_value(metrics.volatility_pct, "%"),
-        )
+        st.metric("Sharpe Ratio", _format_value(metrics.sharpe_ratio))
 
-    # Row 2: Risk-adjusted returns
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Sharpe Ratio", _format_value(metrics.sharpe_ratio))
+        st.metric("Win Rate", _format_value(metrics.win_rate_pct, "%", 1))
     with col2:
-        st.metric("Sortino Ratio", _format_value(metrics.sortino_ratio))
+        st.metric("Profit Factor", _format_value(metrics.profit_factor))
     with col3:
         st.metric("Calmar Ratio", _format_value(metrics.calmar_ratio))
     with col4:
         st.metric("Trades", str(metrics.num_trades))
 
-    # Row 3: VaR & CVaR
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("VaR (95%)", _format_value(metrics.var_95_pct, "%"))
-    with col2:
-        st.metric("VaR (99%)", _format_value(metrics.var_99_pct, "%"))
-    with col3:
-        st.metric("CVaR (95%)", _format_value(metrics.cvar_95_pct, "%"))
-    with col4:
-        st.metric("CVaR (99%)", _format_value(metrics.cvar_99_pct, "%"))
+    # Tier 2: Detailed metrics (collapsed by default)
+    with st.expander("📊 Detailed Metrics", expanded=False):
+        # Risk-Adjusted Returns
+        st.caption("⚖️ Risk-Adjusted Returns")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Sortino Ratio", _format_value(metrics.sortino_ratio))
+        with col2:
+            st.metric("Volatility (Annual)", _format_value(metrics.volatility_pct, "%"))
+        with col3:
+            st.metric("Upside Volatility", _format_value(metrics.upside_volatility_pct, "%"))
+        with col4:
+            st.metric("Downside Volatility", _format_value(metrics.downside_volatility_pct, "%"))
 
-    # Row 4: Trading metrics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Win Rate", _format_value(metrics.win_rate_pct, "%", 1))
-    with col2:
-        st.metric("Avg Win", _format_value(metrics.avg_win_pct, "%"))
-    with col3:
-        st.metric("Avg Loss", _format_value(metrics.avg_loss_pct, "%"))
-    with col4:
-        st.metric("Profit Factor", _format_value(metrics.profit_factor))
+        # VaR & CVaR
+        st.caption("🎯 Value at Risk")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("VaR (95%)", _format_value(metrics.var_95_pct, "%"))
+        with col2:
+            st.metric("VaR (99%)", _format_value(metrics.var_99_pct, "%"))
+        with col3:
+            st.metric("CVaR (95%)", _format_value(metrics.cvar_95_pct, "%"))
+        with col4:
+            st.metric("CVaR (99%)", _format_value(metrics.cvar_99_pct, "%"))
 
-    # Row 5: Statistical metrics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Z-Score", _format_value(metrics.z_score))
-    with col2:
-        # P-value color indicator
-        p_val = metrics.p_value
-        significance = "✅" if p_val < 0.05 else "⚠️" if p_val < 0.1 else "❌"
-        st.metric("P-Value", f"{significance} {p_val:.4f}")
-    with col3:
-        st.metric("Skewness", _format_value(metrics.skewness))
-    with col4:
-        st.metric("Kurtosis", _format_value(metrics.kurtosis))
+        # Trading Statistics
+        st.caption("💹 Trade Statistics")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Avg Win", _format_value(metrics.avg_win_pct, "%"))
+        with col2:
+            st.metric("Avg Loss", _format_value(metrics.avg_loss_pct, "%"))
+        with col3:
+            st.metric("Trading Days", str(metrics.trading_days))
+        with col4:
+            st.metric("Period", _format_value(metrics.years, " years", 1))
 
-    # Row 6: Volatility and period
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Upside Volatility", _format_value(metrics.upside_volatility_pct, "%"))
-    with col2:
-        st.metric("Downside Volatility", _format_value(metrics.downside_volatility_pct, "%"))
-    with col3:
-        st.metric("Trading Days", str(metrics.trading_days))
-    with col4:
-        st.metric("Period", _format_value(metrics.years, " years", 1))
+        # Statistical Significance
+        st.caption("🔬 Statistical Significance")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Z-Score", _format_value(metrics.z_score))
+        with col2:
+            p_val = metrics.p_value
+            significance = "✅" if p_val < 0.05 else "⚠️" if p_val < 0.1 else "❌"
+            st.metric("P-Value", f"{significance} {p_val:.4f}")
+        with col3:
+            st.metric("Skewness", _format_value(metrics.skewness))
+        with col4:
+            st.metric("Kurtosis", _format_value(metrics.kurtosis))
 
 
 def render_metrics_table(metrics: ExtendedMetrics) -> None:

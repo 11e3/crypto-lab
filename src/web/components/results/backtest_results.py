@@ -15,7 +15,6 @@ import pandas as pd
 import streamlit as st
 
 from src.web.components.charts.equity_curve import render_equity_curve
-from src.web.components.charts.monthly_heatmap import render_monthly_heatmap
 from src.web.components.charts.underwater import render_underwater_curve
 from src.web.components.charts.yearly_bar import render_yearly_bar_chart
 from src.web.components.metrics.metrics_display import render_metrics_cards
@@ -149,23 +148,19 @@ def render_backtest_results(result: UnifiedBacktestResult) -> None:
     # Metrics cards
     render_metrics_cards(extended_metrics)
 
-    st.markdown("---")
+    st.divider()
 
-    # Tabs: Equity Curve, Yearly Returns, Trade History
-    tab1, tab2, tab3 = st.tabs(["📊 Equity Curve", "📆 Yearly Returns", "📋 Trade History"])
+    # All results on a single scrollable page
+    render_equity_curve(result.dates, result.equity)
+    render_underwater_curve(result.dates, result.equity)
 
-    with tab1:
-        render_equity_curve(result.dates, result.equity)
-        st.markdown("### Drawdown")
-        render_underwater_curve(result.dates, result.equity)
+    st.divider()
 
-    with tab2:
-        render_yearly_bar_chart(result.dates, result.equity)
-        st.markdown("### Monthly Heatmap")
-        render_monthly_heatmap(result.dates, result.equity)
+    render_yearly_bar_chart(result.dates, result.equity)
 
-    with tab3:
-        _render_trade_history(result)
+    st.divider()
+
+    _render_trade_history(result)
 
 
 def _render_trade_history(result: UnifiedBacktestResult) -> None:

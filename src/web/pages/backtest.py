@@ -40,14 +40,14 @@ def render_backtest_page() -> None:
 
     # Display results below settings if available
     if "bt_backtest_result" in st.session_state:
-        st.markdown("---")
+        st.divider()
         strategy_name = st.session_state.get("bt_strategy_name", "bt_VBO")
         unified = UnifiedBacktestResult.from_bt(
             st.session_state.bt_backtest_result, strategy_name
         )
         render_backtest_results(unified)
     elif "backtest_result" in st.session_state:
-        st.markdown("---")
+        st.divider()
         unified = UnifiedBacktestResult.from_event_driven(st.session_state.backtest_result)
         render_backtest_results(unified)
 
@@ -77,7 +77,7 @@ def _render_settings_section() -> None:
         st.markdown("### 📈 Strategy Settings")
         strategy_name, strategy_params = render_strategy_selector()
 
-    st.markdown("---")
+    st.divider()
 
     # Settings Summary
     with st.expander("📋 Settings Summary", expanded=False):

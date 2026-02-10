@@ -12,6 +12,7 @@ from src.strategies.volatility_breakout.regime import (
     RegimeModelLoader,
     calculate_regime_features,
     predict_regime,
+    predict_regime_proba,
 )
 from src.strategies.volatility_breakout.vbo_regime import (
     RegimeExitCondition,
@@ -161,6 +162,97 @@ class TestPredictRegime:
         # Result should only contain non-NaN feature rows
         assert len(result) == n_valid
         assert (result == "NOT_BULL").all()
+
+
+class TestPredictRegimeProba:
+    """Test probability-based regime prediction."""
+
+    _FEATURE_NAMES = [
+        "return_20d", "volatility", "rsi", "ma_alignment", "volume_ratio_20",
+    ]
+
+    def test_returns_dataframe(self, ohlcv_data: pd.DataFrame) -> None:
+        """predict_regime_proba should return a DataFrame."""
+        features = calculate_regime_features(ohlcv_data).dropna()
+        n_valid = len(features)
+
+        mock_model = MagicMock()
+        mock_scaler = MagicMock()
+        mock_label_encoder = MagicMock()
+
+        mock_scaler.transform.return_value = np.zeros((n_valid, 5))
+        mock_model.predict_proba.return_value = np.column_stack([
+            np.full(n_valid, 0.7),
+            np.full(n_valid, 0.3),
+        ])
+        mock_label_encoder.classes_ = ["BULL_TREND", "NOT_BULL"]
+
+        clf_data = {
+            "model": mock_model,
+            "scaler": mock_scaler,
+            "label_encoder": mock_label_encoder,
+            "feature_names": self._FEATURE_NAMES,
+        }
+
+        result = predict_regime_proba(clf_data, ohlcv_data)
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == n_valid
+        assert "BULL_TREND" in result.columns
+        assert "NOT_BULL" in result.columns
+
+    def test_probabilities_sum_to_one(self, ohlcv_data: pd.DataFrame) -> None:
+        """Each row's probabilities should sum to ~1.0."""
+        features = calculate_regime_features(ohlcv_data).dropna()
+        n_valid = len(features)
+
+        mock_model = MagicMock()
+        mock_scaler = MagicMock()
+        mock_label_encoder = MagicMock()
+
+        mock_scaler.transform.return_value = np.zeros((n_valid, 5))
+        mock_model.predict_proba.return_value = np.column_stack([
+            np.full(n_valid, 0.6),
+            np.full(n_valid, 0.4),
+        ])
+        mock_label_encoder.classes_ = ["BULL_TREND", "NOT_BULL"]
+
+        clf_data = {
+            "model": mock_model,
+            "scaler": mock_scaler,
+            "label_encoder": mock_label_encoder,
+            "feature_names": self._FEATURE_NAMES,
+        }
+
+        result = predict_regime_proba(clf_data, ohlcv_data)
+        row_sums = result.sum(axis=1)
+        np.testing.assert_array_almost_equal(row_sums.values, 1.0)
+
+    def test_uses_classes_from_clf_data(self, ohlcv_data: pd.DataFrame) -> None:
+        """If clf_data has 'classes' key, use it for column names."""
+        features = calculate_regime_features(ohlcv_data).dropna()
+        n_valid = len(features)
+
+        mock_model = MagicMock()
+        mock_scaler = MagicMock()
+        mock_label_encoder = MagicMock()
+
+        mock_scaler.transform.return_value = np.zeros((n_valid, 5))
+        mock_model.predict_proba.return_value = np.column_stack([
+            np.full(n_valid, 0.5),
+            np.full(n_valid, 0.5),
+        ])
+
+        clf_data = {
+            "model": mock_model,
+            "scaler": mock_scaler,
+            "label_encoder": mock_label_encoder,
+            "feature_names": self._FEATURE_NAMES,
+            "classes": ["CLASS_A", "CLASS_B"],
+        }
+
+        result = predict_regime_proba(clf_data, ohlcv_data)
+        assert "CLASS_A" in result.columns
+        assert "CLASS_B" in result.columns
 
 
 class TestRegimeFilterCondition:

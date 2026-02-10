@@ -19,6 +19,7 @@ from src.strategies.volatility_breakout.vbo_portfolio import (
     VBOPortfolioLite,
     VBOSingleCoin,
 )
+from src.strategies.volatility_breakout.vbo_hybrid import VBOHybrid
 from src.strategies.volatility_breakout.vbo_regime import VBORegime
 from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
@@ -36,6 +37,7 @@ __all__ = [
     "VBOPortfolio",
     "VBOPortfolioLite",
     "VBOSingleCoin",
+    "VBOHybrid",
     "VBORegime",
     "VBOV1",
 ]

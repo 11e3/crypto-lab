@@ -7,6 +7,8 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
+from src.web.utils.chart_utils import CHART_HEIGHT_SECONDARY, COLOR_NEGATIVE
+
 __all__ = ["render_underwater_curve"]
 
 
@@ -43,8 +45,8 @@ def render_underwater_curve(
             mode="lines",
             name="Drawdown",
             fill="tozeroy",
-            fillcolor="rgba(255, 0, 0, 0.3)",
-            line={"color": "red", "width": 1},
+            fillcolor="rgba(255, 23, 68, 0.2)",
+            line={"color": COLOR_NEGATIVE, "width": 1},
             hovertemplate=(
                 "<b>Date</b>: %{x|%Y-%m-%d}<br><b>Drawdown</b>: %{y:.2f}%<extra></extra>"
             ),
@@ -87,6 +89,7 @@ def render_underwater_curve(
         hovermode="x unified",
         template="plotly_white",
         showlegend=False,
+        height=CHART_HEIGHT_SECONDARY,
         margin={"l": 60, "r": 20, "t": 60, "b": 40},
     )
 
