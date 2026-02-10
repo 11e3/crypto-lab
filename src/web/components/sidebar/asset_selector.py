@@ -101,6 +101,9 @@ def render_asset_selector() -> list[str]:
                         if st.checkbox(ticker, key=f"ticker_{ticker}"):
                             selected_tickers.append(ticker)
 
+    # Store selected count in session_state for other components
+    st.session_state["selected_ticker_count"] = len(selected_tickers)
+
     # Display selection result
     if selected_tickers:
         st.success(f"✅ Selected assets: **{len(selected_tickers)}**")

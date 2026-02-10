@@ -130,7 +130,7 @@ class TestSignalHandler:
         )
         signal_handler.exchange.set_ohlcv_data("KRW-BTC", "day", minimal_data)
 
-        with patch("src.execution.signal_handler.logger") as mock_logger:
+        with patch("src.execution.signal_data.logger") as mock_logger:
             df = signal_handler.get_ohlcv_data("KRW-BTC")
             assert df is None
             # Verify warning was logged (lines 72-75)
@@ -145,7 +145,9 @@ class TestSignalHandler:
 
     def test_get_ohlcv_data_error(self, signal_handler: SignalHandler) -> None:
         """Test getting OHLCV data with error."""
-        with patch.object(signal_handler.exchange, "get_ohlcv", side_effect=Exception("API Error")):
+        with patch.object(
+            signal_handler.exchange, "get_ohlcv", side_effect=ConnectionError("API Error")
+        ):
             df = signal_handler.get_ohlcv_data("KRW-BTC")
             assert df is None
 
@@ -257,7 +259,7 @@ class TestSignalHandler:
         signal_handler.exchange.set_ohlcv_data("KRW-BTC", "day", sample_ohlcv_data)
 
         with patch.object(
-            signal_handler.strategy, "calculate_indicators", side_effect=Exception("Error")
+            signal_handler.strategy, "calculate_indicators", side_effect=ValueError("Error")
         ):
             entry_signal = signal_handler.check_entry_signal("KRW-BTC", current_price=100.0)
             assert entry_signal is False
@@ -342,7 +344,7 @@ class TestSignalHandler:
             patch.object(
                 signal_handler.exchange,
                 "get_current_price",
-                side_effect=Exception("Price error"),
+                side_effect=ConnectionError("Price error"),
             ),
             patch("src.execution.signal_handler.logger") as mock_logger,
         ):
@@ -389,7 +391,7 @@ class TestSignalHandler:
         signal_handler.exchange.set_ohlcv_data("KRW-BTC", "day", sample_ohlcv_data)
 
         with patch.object(
-            signal_handler.strategy, "calculate_indicators", side_effect=Exception("Error")
+            signal_handler.strategy, "calculate_indicators", side_effect=ValueError("Error")
         ):
             exit_signal = signal_handler.check_exit_signal("KRW-BTC")
             assert exit_signal is False
@@ -439,7 +441,7 @@ class TestSignalHandler:
         )
         signal_handler.exchange.set_ohlcv_data("KRW-BTC", "day", minimal_data)
 
-        with patch("src.execution.signal_handler.logger") as mock_logger:
+        with patch("src.execution.signal_metrics.logger") as mock_logger:
             metrics = signal_handler.calculate_metrics("KRW-BTC", required_period=10)
             assert metrics is None
             # Verify warning was logged (lines 206-209)
@@ -511,7 +513,7 @@ class TestSignalHandler:
         with patch.object(
             signal_handler.strategy,
             "calculate_indicators",
-            side_effect=Exception("Calculation error"),
+            side_effect=ValueError("Calculation error"),
         ):
             metrics = signal_handler.calculate_metrics("KRW-BTC", required_period=10)
             assert metrics is None

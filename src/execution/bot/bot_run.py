@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import pyupbit
 
+from src.exchange import ExchangeError
 from src.utils.logger import get_logger
 
 if TYPE_CHECKING:
@@ -87,7 +88,7 @@ def _validate_api_connection(bot: "TradingBotFacade") -> bool:
         bot.exchange.get_balance("KRW")
         logger.info("SUCCESS: API Keys valid.")
         return True
-    except Exception as e:
+    except (ExchangeError, ConnectionError, OSError) as e:
         logger.error(f"!!! API CONNECTION FAILED: {e}")
         time.sleep(3)
         return False

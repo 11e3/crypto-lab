@@ -10,6 +10,7 @@ import os
 import sys
 from typing import TYPE_CHECKING, Any
 
+from src.exchange import ExchangeError
 from src.execution.trade_executor_orders import create_advanced_orders
 from src.utils.logger import get_logger
 
@@ -82,7 +83,7 @@ class BuyExecutor:
             else:
                 logger.warning(f"Buy failed for {ticker}: order not created")
                 return False
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError, ValueError) as e:
             logger.error(f"Buy error for {ticker}: {e}", exc_info=True)
             return False
 
@@ -155,7 +156,7 @@ class SellExecutor:
                 self._send_notification(ticker)
                 logger.info(f"Sold all {ticker}")
                 return True
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.error(f"Sell error for {ticker}: {e}", exc_info=True)
         return False
 
@@ -174,7 +175,7 @@ class SellExecutor:
                 curr_price,
                 amount=balance.available,
             )
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.debug(f"Sell notification skipped for {ticker}: {e}")
 
     @staticmethod

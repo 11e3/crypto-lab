@@ -4,6 +4,7 @@ Strategy metrics calculation for signal generation.
 Separates metrics calculation responsibility from signal detection (SRP).
 """
 
+from src.exchange import ExchangeError
 from src.execution.signal_data import SignalDataLoader
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
@@ -76,6 +77,6 @@ class SignalMetricsCalculator:
                 "sma": float(latest["sma"]),
                 "sma_trend": float(latest["sma_trend"]),
             }
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
             logger.error(f"Error calculating metrics for {ticker}: {e}", exc_info=True)
             return None

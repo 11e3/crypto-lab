@@ -11,11 +11,11 @@ import streamlit as st
 from src.backtester import BacktestConfig, optimize_strategy_parameters
 from src.data.collector_fetch import Interval
 from src.utils.logger import get_logger
+from src.web.config.constants import DEFAULT_TICKERS, INTERVAL_DISPLAY_MAP, OPTIMIZATION_METRICS
 from src.web.services.bt_backtest_runner import (
     BtBacktestResult,
     get_available_bt_symbols,
     get_default_model_path,
-    is_bt_available,
     run_bt_backtest_regime_service,
     run_bt_backtest_service,
 )
@@ -26,18 +26,22 @@ logger = get_logger(__name__)
 
 __all__ = ["render_optimization_page"]
 
-# Optimization metric options
-METRICS = [
-    ("sharpe_ratio", "Sharpe Ratio"),
-    ("cagr", "CAGR"),
-    ("total_return", "Total Return"),
-    ("calmar_ratio", "Calmar Ratio"),
-    ("win_rate", "Win Rate"),
-    ("profit_factor", "Profit Factor"),
-]
 
-# Default tickers
-DEFAULT_TICKERS = ["KRW-BTC", "KRW-ETH", "KRW-XRP", "KRW-SOL"]
+
+class BtOptimizationResult:
+    """Result of bt strategy optimization (compatible with display function)."""
+
+    def __init__(
+        self,
+        best_params: dict[str, Any],
+        best_score: float,
+        all_params: list[dict[str, Any]],
+        all_scores: list[float],
+    ) -> None:
+        self.best_params = best_params
+        self.best_score = best_score
+        self.all_params = all_params
+        self.all_scores = all_scores
 
 
 @st.cache_resource(ttl=60)
@@ -65,9 +69,6 @@ def render_optimization_page() -> None:
         st.error("⚠️ No strategies available for optimization.")
         return
 
-    # Check bt availability
-    bt_available = is_bt_available()
-
     # ===== Configuration Section =====
     with st.expander("⚙️ Optimization Settings", expanded=True):
         # Row 1: Strategy and Method
@@ -77,12 +78,10 @@ def render_optimization_page() -> None:
             st.subheader("📈 Strategy")
             strategy_names = [s.name for s in strategies]
 
-            # Format strategy names to show bt availability
+            # Format strategy names to show engine type
             def format_strategy_name(name: str) -> str:
                 if is_bt_strategy(name):
-                    if bt_available:
-                        return f"{name} [bt]"
-                    return f"{name} [bt - unavailable]"
+                    return f"{name} [bt]"
                 return name
 
             selected_strategy_name = st.selectbox(
@@ -99,9 +98,6 @@ def render_optimization_page() -> None:
             if selected_strategy and selected_strategy.description:
                 st.caption(f"ℹ️ {selected_strategy.description}")
 
-            # Warning for bt strategies if not available
-            if is_bt and not bt_available:
-                st.error("⚠️ bt library is not installed. Cannot optimize this strategy.")
 
         with col2:
             st.subheader("⚙️ Optimization Method")
@@ -130,8 +126,10 @@ def render_optimization_page() -> None:
             st.subheader("📊 Optimization Metric")
             metric = st.selectbox(
                 "Optimization Target",
-                options=[m[0] for m in METRICS],
-                format_func=lambda x: next(name for code, name in METRICS if code == x),
+                options=[m[0] for m in OPTIMIZATION_METRICS],
+                format_func=lambda x: next(
+                    name for code, name in OPTIMIZATION_METRICS if code == x
+                ),
                 index=0,
             )
 
@@ -194,7 +192,7 @@ def render_optimization_page() -> None:
             interval = st.selectbox(
                 "Data Interval",
                 options=["minute240", "day", "week"],
-                format_func=lambda x: {"minute240": "4 Hours", "day": "Daily", "week": "Weekly"}[x],
+                format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
                 index=1,
             )
 
@@ -274,9 +272,7 @@ def render_optimization_page() -> None:
 
     # Run optimization
     if run_button:
-        if is_bt and not bt_available:
-            st.error("⚠️ bt library is not installed. Cannot run optimization.")
-        elif is_bt:
+        if is_bt:
             # bt strategy optimization
             _run_bt_optimization(
                 strategy_name=selected_strategy_name,
@@ -649,20 +645,6 @@ def _run_bt_optimization(
 
     # Create result object compatible with display function
     best_params, best_result, best_score = all_results[0]
-
-    # Create a simple result object
-    class BtOptimizationResult:
-        def __init__(
-            self,
-            best_params: dict[str, Any],
-            best_score: float,
-            all_params: list[dict[str, Any]],
-            all_scores: list[float],
-        ):
-            self.best_params = best_params
-            self.best_score = best_score
-            self.all_params = all_params
-            self.all_scores = all_scores
 
     result_obj = BtOptimizationResult(
         best_params=best_params,

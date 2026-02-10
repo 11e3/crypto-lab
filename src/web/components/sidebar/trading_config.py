@@ -121,13 +121,16 @@ def render_trading_config() -> TradingConfig:
         )
 
     with col2:
+        # Auto-sync with selected ticker count (key changes force widget reset)
+        ticker_count = st.session_state.get("selected_ticker_count", 4) or 4
         max_slots = st.number_input(
             "Max Slots",
             min_value=1,
             max_value=20,
-            value=4,
+            value=ticker_count,
             step=1,
-            help="Maximum number of assets to hold simultaneously",
+            key=f"max_slots_{ticker_count}",
+            help="Maximum number of assets to hold simultaneously (auto-synced with selected assets)",
         )
 
     st.markdown("---")

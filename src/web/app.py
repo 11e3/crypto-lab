@@ -3,13 +3,21 @@
 Main application for cryptocurrency backtesting web interface.
 """
 
-from dotenv import load_dotenv
+import sys
+from pathlib import Path
+
+# Add project root to sys.path so `src.*` imports work with streamlit
+_project_root = str(Path(__file__).resolve().parents[2])
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
+from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv()  # Load .env file before anything else
 
-import streamlit as st
+import streamlit as st  # noqa: E402
 
-from src.utils.logger import get_logger, setup_logging
+from src.utils.logger import get_logger, setup_logging  # noqa: E402
 
 # Initialize logging
 setup_logging()

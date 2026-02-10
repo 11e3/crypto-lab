@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
+from src.exchange import ExchangeError
 from src.utils.logger import get_logger
 
 if TYPE_CHECKING:
@@ -55,7 +56,7 @@ def _send_exit_notification(bot: "TradingBotFacade", ticker: str, min_data_point
                     yesterday_close,
                     reason=f"Close {yesterday_close:.0f} < SMA {sma_exit:.0f}",
                 )
-    except Exception as e:
+    except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
         logger.error(f"Error sending exit notification for {ticker}: {e}", exc_info=True)
 
 

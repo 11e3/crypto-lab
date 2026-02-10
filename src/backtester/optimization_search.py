@@ -56,7 +56,7 @@ def grid_search(
 
     tasks = []
     for combo in combinations:
-        params = dict(zip(param_names, combo, strict=False))
+        params = dict(zip(param_names, combo, strict=True))
         strategy = strategy_factory(params)
         task_name = f"{strategy.name}_{'_'.join(str(v) for v in combo)}"
         tasks.append(

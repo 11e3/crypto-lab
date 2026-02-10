@@ -112,7 +112,7 @@ class TestCalculateSortinoRatio:
         """Test calculate_sortino_ratio with negative returns to trigger mean_excess calculation."""
         returns = np.array([0.01, -0.02, 0.01, -0.01, 0.02])
         risk_free_rate = 0.001
-        result = calculate_sortino_ratio(returns, risk_free_rate=risk_free_rate, annualization=252)
+        result = calculate_sortino_ratio(returns, risk_free_rate=risk_free_rate, annualization_factor=252)
 
         assert isinstance(result, (int, float))
 

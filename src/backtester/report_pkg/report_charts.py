@@ -52,7 +52,7 @@ def plot_equity_curve(
     ax.fill_between(
         report.dates,
         report.initial_capital,
-        report.equity_curve,
+        report.equity_curve,  # type: ignore[arg-type]
         alpha=0.3,
         color="blue",
     )
@@ -68,7 +68,7 @@ def plot_equity_curve(
         ax2.fill_between(
             report.dates,
             0,
-            -report.metrics.drawdown_curve,
+            -report.metrics.drawdown_curve,  # type: ignore[arg-type]
             alpha=0.3,
             color="red",
             label="Drawdown",
@@ -106,7 +106,7 @@ def plot_drawdown(
     ax.fill_between(
         report.dates,
         0,
-        -report.metrics.drawdown_curve,
+        -report.metrics.drawdown_curve,  # type: ignore[arg-type]
         color="red",
         alpha=0.5,
     )
@@ -165,9 +165,9 @@ def plot_monthly_heatmap(
 
     # Set ticks
     ax.set_xticks(range(len(monthly.columns)))
-    ax.set_xticklabels(monthly.columns)
-    ax.set_yticks(range(len(monthly.index)))
-    ax.set_yticklabels(monthly.index)
+    ax.set_xticklabels(monthly.columns)  # type: ignore[operator]
+    ax.set_yticks(range(len(monthly.index)))  # type: ignore[operator]
+    ax.set_yticklabels(monthly.index)  # type: ignore[operator]
 
     # Add colorbar
     cbar = plt.colorbar(im, ax=ax, shrink=0.8)

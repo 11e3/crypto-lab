@@ -141,33 +141,35 @@ class TestMonteCarloSimulator:
                 "No valid returns found for Monte Carlo simulation"
             )
 
-    @patch("numpy.random.choice")
-    def test_bootstrap(
-        self, mock_choice: MagicMock, mock_backtest_result_for_mc: BacktestResult
-    ) -> None:
+    def test_bootstrap(self, mock_backtest_result_for_mc: BacktestResult) -> None:
         simulator = MonteCarloSimulator(mock_backtest_result_for_mc)
         n_simulations = 10
         n_periods = 5
-        mock_choice.return_value = np.tile(simulator.daily_returns[:n_periods], (n_simulations, 1))
+
+        mock_rng = MagicMock()
+        mock_rng.choice.return_value = np.tile(
+            simulator.daily_returns[:n_periods], (n_simulations, 1)
+        )
+        simulator._rng = mock_rng
 
         simulated_returns = simulator._bootstrap(n_simulations, n_periods)
         assert isinstance(simulated_returns, np.ndarray)
         assert simulated_returns.shape == (n_simulations, n_periods)
-        mock_choice.assert_called_once()
+        mock_rng.choice.assert_called_once()
 
-    @patch("numpy.random.normal")
-    def test_parametric(
-        self, mock_normal: MagicMock, mock_backtest_result_for_mc: BacktestResult
-    ) -> None:
+    def test_parametric(self, mock_backtest_result_for_mc: BacktestResult) -> None:
         simulator = MonteCarloSimulator(mock_backtest_result_for_mc)
         n_simulations = 10
         n_periods = 5
-        mock_normal.return_value = np.zeros((n_simulations, n_periods))  # Simplistic mock
+
+        mock_rng = MagicMock()
+        mock_rng.normal.return_value = np.zeros((n_simulations, n_periods))
+        simulator._rng = mock_rng
 
         simulated_returns = simulator._parametric(n_simulations, n_periods)
         assert isinstance(simulated_returns, np.ndarray)
         assert simulated_returns.shape == (n_simulations, n_periods)
-        mock_normal.assert_called_once()
+        mock_rng.normal.assert_called_once()
 
     def test_build_result(self, mock_backtest_result_for_mc: BacktestResult) -> None:
         simulator = MonteCarloSimulator(mock_backtest_result_for_mc)

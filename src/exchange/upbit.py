@@ -6,6 +6,7 @@ from typing import cast
 
 import pandas as pd
 import pyupbit
+import requests
 
 from src.exceptions.exchange import ExchangeConnectionError, ExchangeError
 from src.exchange.base import Exchange
@@ -33,7 +34,7 @@ class UpbitExchange(Exchange):
         try:
             self.client = pyupbit.Upbit(access_key, secret_key)
             self.client.get_balances()
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
             _get_logger().error(f"Failed to initialize Upbit client: {e}", exc_info=True)
             raise ExchangeConnectionError(f"Failed to connect to Upbit: {e}") from e
 
@@ -46,7 +47,7 @@ class UpbitExchange(Exchange):
 
             locked = self._get_locked_amount(currency)
             return Balance(currency=currency, balance=float(balance), locked=locked)
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
             _get_logger().error(f"Error getting balance for {currency}: {e}", exc_info=True)
             raise ExchangeError(f"Failed to get balance for {currency}: {e}") from e
 
@@ -58,8 +59,8 @@ class UpbitExchange(Exchange):
                 return sum(
                     float(order.get("locked", 0.0)) for order in orders if isinstance(order, dict)
                 )
-        except Exception as e:
-            _get_logger().debug(f"Could not retrieve locked amount for {currency}: {e}")
+        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
+            _get_logger().warning(f"Could not retrieve locked amount for {currency}: {e}")
         return 0.0
 
     def get_current_price(self, symbol: str) -> float:
@@ -69,7 +70,9 @@ class UpbitExchange(Exchange):
             if price is None:
                 raise ExchangeError(f"No price data available for {symbol}")
             return float(price)
-        except Exception as e:
+        except ExchangeError:
+            raise
+        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
             _get_logger().error(f"Error getting price for {symbol}: {e}", exc_info=True)
             raise ExchangeError(f"Failed to get price for {symbol}: {e}") from e
 
@@ -89,7 +92,9 @@ class UpbitExchange(Exchange):
                 volume=volume,
                 timestamp=datetime.now(),
             )
-        except Exception as e:
+        except ExchangeError:
+            raise
+        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
             _get_logger().error(f"Error getting ticker for {symbol}: {e}", exc_info=True)
             raise ExchangeError(f"Failed to get ticker for {symbol}: {e}") from e
 
@@ -114,7 +119,7 @@ class UpbitExchange(Exchange):
                 _get_logger().warning(f"No OHLCV data for {symbol}")
                 return None
             return cast(pd.DataFrame, df)
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
             _get_logger().error(f"Error getting OHLCV for {symbol}: {e}", exc_info=True)
             return None
 

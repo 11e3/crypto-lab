@@ -161,7 +161,7 @@ class BootstrapAnalyzer:
                         f"Filtered outlier sample {i}: return={total_ret:.2%}, sharpe={sharpe:.2f}"
                     )
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, IndexError) as e:
                 logger.debug(f"Bootstrap sample {i} failed: {e}")
                 continue
 

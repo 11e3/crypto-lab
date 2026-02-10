@@ -33,6 +33,12 @@ def optimize_mpt(
     mean_returns = returns.mean() * 252
     cov_matrix = returns.cov() * 252
 
+    # Check for singular/ill-conditioned covariance matrix
+    cond = np.linalg.cond(cov_matrix.values)
+    if cond > 1e12 or np.isnan(cond):
+        logger.warning(f"Covariance matrix ill-conditioned (cond={cond:.2e}), using equal weights")
+        return PortfolioWeights(weights=dict.fromkeys(tickers, 1.0 / n_assets), method="mpt")
+
     def objective(weights: np.ndarray) -> float:
         port_ret: float = float(np.dot(weights, mean_returns))
         port_vol: float = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))
@@ -94,6 +100,14 @@ def optimize_risk_parity(
     tickers = list(returns.columns)
     n_assets = len(tickers)
     cov_matrix = returns.cov() * 252
+
+    # Check for singular/ill-conditioned covariance matrix
+    cond = np.linalg.cond(cov_matrix.values)
+    if cond > 1e12 or np.isnan(cond):
+        logger.warning(f"Covariance matrix ill-conditioned (cond={cond:.2e}), using equal weights")
+        return PortfolioWeights(
+            weights=dict.fromkeys(tickers, 1.0 / n_assets), method="risk_parity"
+        )
 
     def objective(weights: np.ndarray) -> float:
         port_vol = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))

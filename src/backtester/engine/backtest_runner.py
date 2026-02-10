@@ -80,7 +80,8 @@ def _find_missing_tickers(data_files: dict[str, Path]) -> list[str]:
                     df = pd.read_parquet(filepath)
                     if df.empty or len(df) < 10:
                         missing.append(ticker)
-            except Exception:
+            except (OSError, pd.errors.EmptyDataError, ValueError) as e:
+                logger.debug(f"Failed to check data file for {ticker}: {e}")
                 missing.append(ticker)
     return missing
 
@@ -101,5 +102,5 @@ def _collect_missing_data(tickers: list[str], data_dir: Path, interval: str) -> 
         try:
             collector.collect(ticker, interval_type, full_refresh=False)
             logger.info(f"Collected data for {ticker}")
-        except Exception as e:
+        except (OSError, ConnectionError, TimeoutError, ValueError) as e:
             logger.error(f"Failed to collect data for {ticker}: {e}")

@@ -26,6 +26,7 @@ def generate_periods(
     optimization_days: int,
     test_days: int,
     step_days: int,
+    gap_days: int = 1,
 ) -> list[WalkForwardPeriod]:
     """
     Generate walk-forward periods.
@@ -36,6 +37,7 @@ def generate_periods(
         optimization_days: Length of optimization period
         test_days: Length of test period
         step_days: Step size between periods
+        gap_days: Gap between optimization end and test start to prevent data leakage
 
     Returns:
         List of WalkForwardPeriod objects
@@ -49,8 +51,8 @@ def generate_periods(
         opt_start = current_date
         opt_end = opt_start + timedelta(days=optimization_days)
 
-        # Test period (immediately after optimization)
-        test_start = opt_end
+        # Test period (with gap after optimization to prevent data leakage)
+        test_start = opt_end + timedelta(days=gap_days)
         test_end = test_start + timedelta(days=test_days)
 
         # Skip if test period extends beyond end_date
@@ -106,7 +108,7 @@ def optimize_period(
 
         tasks = []
         for combo in combinations:
-            params = dict(zip(param_names, combo, strict=False))
+            params = dict(zip(param_names, combo, strict=True))
             strategy = strategy_factory(params)
             task_name = f"{strategy.name}_{'_'.join(str(v) for v in combo)}"
             tasks.append(

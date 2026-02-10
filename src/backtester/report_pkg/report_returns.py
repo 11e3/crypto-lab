@@ -5,7 +5,15 @@ Monthly and yearly returns calculation utilities.
 import numpy as np
 import pandas as pd
 
-__all__ = ["calculate_monthly_returns", "calculate_yearly_returns"]
+__all__ = ["calculate_monthly_returns", "calculate_yearly_returns", "build_equity_dataframe"]
+
+
+def build_equity_dataframe(equity_curve: np.ndarray, dates: np.ndarray) -> pd.DataFrame:
+    """Build a DatetimeIndex DataFrame from equity curve and dates arrays."""
+    df = pd.DataFrame({"date": dates, "equity": equity_curve})
+    df["date"] = pd.to_datetime(df["date"])
+    df.set_index("date", inplace=True)
+    return df
 
 
 def calculate_monthly_returns(
@@ -22,9 +30,7 @@ def calculate_monthly_returns(
     Returns:
         Pivot table with monthly returns by year
     """
-    df = pd.DataFrame({"date": dates, "equity": equity_curve})
-    df["date"] = pd.to_datetime(df["date"])
-    df.set_index("date", inplace=True)
+    df = build_equity_dataframe(equity_curve, dates)
 
     monthly = df["equity"].resample("ME").last()
     monthly_returns = monthly.pct_change() * 100
@@ -71,9 +77,7 @@ def calculate_yearly_returns(
     Returns:
         Series with yearly returns indexed by year
     """
-    df = pd.DataFrame({"date": dates, "equity": equity_curve})
-    df["date"] = pd.to_datetime(df["date"])
-    df.set_index("date", inplace=True)
+    df = build_equity_dataframe(equity_curve, dates)
 
     yearly = df["equity"].resample("YE").last()
     yearly_returns = yearly.pct_change() * 100

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 import streamlit as st
 
@@ -97,9 +98,9 @@ class BacktestService:
 @st.cache_data(show_spinner="Running backtest...")
 def run_backtest_service(
     strategy_name: str,
-    strategy_params: dict,
+    strategy_params: dict[str, Any],
     data_files_dict: dict[str, str],  # {ticker: file_path_str}
-    config_dict: dict,
+    config_dict: dict[str, Any],
     start_date_str: str | None,
     end_date_str: str | None,
 ) -> BacktestResult | None:

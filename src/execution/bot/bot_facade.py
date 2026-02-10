@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from src.exchange import Exchange
+from src.exchange import Exchange, ExchangeError
 from src.execution.bot.bot_init import (
     check_existing_holdings,
     create_bot_components,
@@ -61,7 +61,7 @@ class TradingBotFacade:
         try:
             balance = self.exchange.get_balance("KRW")
             return balance.available
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.error(f"Error getting KRW balance: {e}", exc_info=True)
             return 0.0
 

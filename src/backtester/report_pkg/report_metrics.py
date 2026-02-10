@@ -14,7 +14,16 @@ from src.backtester.report_pkg.report_returns import (
     calculate_monthly_returns,
     calculate_yearly_returns,
 )
-from src.config import ANNUALIZATION_FACTOR, RISK_FREE_RATE
+from src.config import ANNUALIZATION_FACTOR
+from src.utils.metrics_core import (
+    calculate_cagr,
+    calculate_calmar_ratio,
+    calculate_daily_returns,
+    calculate_drawdown_series,
+    calculate_mdd,
+    calculate_sharpe_ratio,
+    calculate_sortino_ratio,
+)
 
 __all__ = [
     "PerformanceMetrics",
@@ -24,36 +33,6 @@ __all__ = [
     "calculate_yearly_returns",
     "metrics_to_dataframe",
 ]
-
-
-def calculate_sortino_ratio(
-    returns: np.ndarray,
-    risk_free_rate: float = RISK_FREE_RATE,
-    annualization: float = ANNUALIZATION_FACTOR,
-) -> float:
-    """
-    Calculate Sortino ratio (downside deviation).
-
-    Args:
-        returns: Array of returns
-        risk_free_rate: Risk-free rate (daily)
-        annualization: Annualization factor
-
-    Returns:
-        Sortino ratio
-    """
-    excess_returns = returns - risk_free_rate
-    downside_returns = np.minimum(excess_returns, 0)
-    downside_std = np.std(downside_returns)
-
-    if downside_std <= 0:
-        return 0.0
-
-    mean_excess: float = float(np.mean(excess_returns))
-    sqrt_annualization: float = float(np.sqrt(annualization))
-    downside_std_float: float = float(downside_std)
-    result: float = (mean_excess / downside_std_float) * sqrt_annualization
-    return result
 
 
 def calculate_metrics(
@@ -81,17 +60,16 @@ def calculate_metrics(
     final_equity = equity_curve[-1]
     total_return_pct = (final_equity / initial_capital - 1) * 100
 
-    cagr_pct = _calculate_cagr(total_days, initial_capital, final_equity)
-    daily_returns = _calculate_daily_returns(equity_curve)
+    cagr_pct = calculate_cagr(initial_capital, final_equity, total_days)
+    daily_returns = calculate_daily_returns(equity_curve, prepend_zero=True)
     volatility_pct = np.std(daily_returns) * np.sqrt(ANNUALIZATION_FACTOR) * 100
 
-    cummax = np.maximum.accumulate(equity_curve)
-    drawdown = (cummax - equity_curve) / cummax
-    mdd_pct = np.nanmax(drawdown) * 100
+    drawdown = calculate_drawdown_series(equity_curve)
+    mdd_pct = calculate_mdd(equity_curve)
 
-    sharpe_ratio = _calculate_sharpe(daily_returns)
+    sharpe_ratio = calculate_sharpe_ratio(daily_returns, ANNUALIZATION_FACTOR)
     sortino_ratio = calculate_sortino_ratio(daily_returns)
-    calmar_ratio = cagr_pct / mdd_pct if mdd_pct > 0 else 0.0
+    calmar_ratio = calculate_calmar_ratio(cagr_pct, mdd_pct)
 
     trade_stats = calculate_trade_statistics(trades_df)
 
@@ -119,35 +97,6 @@ def calculate_metrics(
         dates=dates,
         daily_returns=daily_returns,
     )
-
-
-def _calculate_cagr(total_days: int, initial: float, final: float) -> float:
-    """Calculate CAGR percentage."""
-    if total_days <= 0 or initial <= 0:
-        return 0.0
-    if final <= 0:
-        return -100.0
-    ratio = final / initial
-    if ratio <= 0:
-        return -100.0
-    with np.errstate(over="ignore"):
-        cagr_raw = (np.exp((365.0 / total_days) * np.log(ratio)) - 1) * 100
-    return 1e18 if np.isinf(cagr_raw) else float(cagr_raw)
-
-
-def _calculate_daily_returns(equity_curve: np.ndarray) -> np.ndarray:
-    """Calculate daily returns from equity curve."""
-    daily_returns = np.diff(equity_curve) / equity_curve[:-1]
-    return np.insert(daily_returns, 0, 0)
-
-
-def _calculate_sharpe(daily_returns: np.ndarray) -> float:
-    """Calculate Sharpe ratio."""
-    if np.std(daily_returns) > 0:
-        return float(
-            (np.mean(daily_returns) / np.std(daily_returns)) * np.sqrt(ANNUALIZATION_FACTOR)
-        )
-    return 0.0
 
 
 def metrics_to_dataframe(metrics: PerformanceMetrics) -> pd.DataFrame:

@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from src.exchange import Exchange
+from src.exchange import Exchange, ExchangeError
 from src.execution.position_manager import PositionManager
 from src.execution.signal_handler import SignalHandler
 from src.utils.logger import get_logger
@@ -93,5 +93,5 @@ def check_existing_holdings(
                     amount=balance.available,
                 )
                 logger.info(f"Recovered: Holding {ticker}")
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError, ValueError) as e:
             logger.error(f"Error checking holdings for {ticker}: {e}", exc_info=True)

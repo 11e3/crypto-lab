@@ -60,8 +60,9 @@ def _patch_pyupbit_errors() -> None:
             "if TYPE_CHECKING:\n    from requests import Response\nelse:\n    Response = object  # Runtime placeholder",
         )
 
-        # Write back the patched content
-        errors_file.write_text(patched_content, encoding="utf-8")
+        # Only write if content actually changed
+        if patched_content != content:
+            errors_file.write_text(patched_content, encoding="utf-8")
 
     except Exception:
         # Silently fail if patching doesn't work
@@ -111,7 +112,9 @@ def _patch_pyjwt_utils() -> None:
             "if TYPE_CHECKING:",
         )
 
-        utils_file.write_text(patched_content, encoding="utf-8")
+        # Only write if content actually changed
+        if patched_content != content:
+            utils_file.write_text(patched_content, encoding="utf-8")
 
     except Exception:
         pass
@@ -145,7 +148,9 @@ def _patch_pyjwt_jwks_client() -> None:
             "if TYPE_CHECKING:\n    pass  # SSLContext moved above",
         )
 
-        jwks_file.write_text(patched_content, encoding="utf-8")
+        # Only write if content actually changed
+        if patched_content != content:
+            jwks_file.write_text(patched_content, encoding="utf-8")
 
     except Exception:
         pass

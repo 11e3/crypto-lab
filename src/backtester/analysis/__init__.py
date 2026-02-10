@@ -3,6 +3,7 @@ Analysis subpackage for backtesting.
 
 Contains modules for:
 - Bootstrap analysis
+- CPCV (Combinatorially Purged Cross-Validation)
 - Monte Carlo simulation
 - Permutation testing
 - Robustness analysis
@@ -13,6 +14,11 @@ from src.backtester.analysis.bootstrap_analysis import (
     BootstrapResult,
 )
 from src.backtester.analysis.bootstrap_backtest import simple_backtest_vectorized
+from src.backtester.analysis.cpcv import (
+    CombinatorialPurgedCV,
+    CPCVResult,
+    CPCVSummary,
+)
 from src.backtester.analysis.monte_carlo import (
     MonteCarloResult,
     MonteCarloSimulator,
@@ -30,6 +36,10 @@ __all__ = [
     "BootstrapAnalyzer",
     "BootstrapResult",
     "simple_backtest_vectorized",
+    # CPCV
+    "CombinatorialPurgedCV",
+    "CPCVResult",
+    "CPCVSummary",
     # Monte Carlo
     "MonteCarloResult",
     "MonteCarloSimulator",

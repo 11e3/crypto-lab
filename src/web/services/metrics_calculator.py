@@ -12,9 +12,14 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from src.utils.metrics_core import (
+    calculate_cagr,
+    calculate_calmar_ratio,
+    calculate_daily_returns,
+    calculate_mdd,
+)
 from src.web.services.metrics import (
     RatioMetrics,
-    ReturnMetrics,
     RiskMetrics,
     StatisticalMetrics,
     TradeMetrics,
@@ -24,7 +29,6 @@ __all__ = [
     "ExtendedMetrics",
     "calculate_extended_metrics",
     # Re-export metric calculators
-    "ReturnMetrics",
     "RiskMetrics",
     "RatioMetrics",
     "StatisticalMetrics",
@@ -110,14 +114,14 @@ def calculate_extended_metrics(
         years = trading_days / 365.0
 
     # Daily returns
-    returns = ReturnMetrics.calculate_returns(equity)
+    returns = calculate_daily_returns(equity)
 
     # Return metrics
     initial_value = float(equity[0])
     final_value = float(equity[-1])
-    total_return = ReturnMetrics.calculate_total_return(initial_value, final_value)
-    cagr = ReturnMetrics.calculate_cagr(initial_value, final_value, years)
-    max_dd = ReturnMetrics.calculate_max_drawdown(equity)
+    total_return = (final_value / initial_value - 1) * 100 if initial_value > 0 else 0.0
+    cagr = calculate_cagr(initial_value, final_value, years * 365)
+    max_dd = calculate_mdd(equity)
 
     # Risk metrics
     volatility = RiskMetrics.calculate_volatility(returns)
@@ -131,7 +135,7 @@ def calculate_extended_metrics(
     # Risk-adjusted returns
     sharpe = RatioMetrics.calculate_sharpe_ratio(returns, risk_free_rate)
     sortino = RatioMetrics.calculate_sortino_ratio(returns, risk_free_rate)
-    calmar = RatioMetrics.calculate_calmar_ratio(cagr, max_dd)
+    calmar = calculate_calmar_ratio(cagr, max_dd)
 
     # Statistical metrics
     z_score, p_value = StatisticalMetrics.calculate_z_score_and_pvalue(returns)

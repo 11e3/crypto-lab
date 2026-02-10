@@ -163,7 +163,7 @@ def _calculate_fallback_sizes(
         ticker = tickers[idx]
         if ticker in ticker_historical_data:
             hist_df = ticker_historical_data[ticker]
-            candidate_historical[ticker] = hist_df.iloc[: d_idx + 1]
+            candidate_historical[ticker] = hist_df.iloc[:d_idx] if d_idx > 0 else hist_df.iloc[:1]
 
     return calculate_multi_asset_position_sizes(
         method=config.position_sizing,  # type: ignore[arg-type]

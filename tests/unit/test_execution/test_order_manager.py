@@ -82,7 +82,7 @@ class TestOrderManager:
 
     def test_place_buy_order_unexpected_error(self, mock_exchange: MockExchange) -> None:
         """Test buy order with unexpected error."""
-        mock_exchange.buy_market_order = MagicMock(side_effect=ValueError("Unexpected error"))
+        mock_exchange.buy_market_order = MagicMock(side_effect=ConnectionError("Unexpected error"))
         manager = OrderManager(mock_exchange, publish_events=False)
 
         order = manager.place_buy_order("KRW-BTC", 50000.0)
@@ -155,7 +155,7 @@ class TestOrderManager:
         buy_order = manager.place_buy_order("KRW-BTC", 50_000.0)
         assert buy_order is not None
 
-        mock_exchange.sell_market_order = MagicMock(side_effect=ValueError("Unexpected error"))
+        mock_exchange.sell_market_order = MagicMock(side_effect=ConnectionError("Unexpected error"))
         order = manager.place_sell_order("KRW-BTC", 0.001)
         assert order is None
 
@@ -307,7 +307,7 @@ class TestOrderManager:
         order = manager.place_buy_order("KRW-BTC", 50000.0)
         assert order is not None
 
-        mock_exchange.get_order_status = MagicMock(side_effect=ValueError("Error"))
+        mock_exchange.get_order_status = MagicMock(side_effect=ConnectionError("Error"))
         status = manager.get_order_status(order.order_id)
 
         assert status is None
@@ -403,7 +403,7 @@ class TestOrderManager:
         order = manager.place_buy_order("KRW-BTC", 50000.0)
         assert order is not None
 
-        mock_exchange.cancel_order = MagicMock(side_effect=ValueError("Error"))
+        mock_exchange.cancel_order = MagicMock(side_effect=ConnectionError("Error"))
         success = manager.cancel_order(order.order_id)
 
         assert success is False

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
+import requests
 
 from src.exceptions.exchange import (
     ExchangeConnectionError,
@@ -43,7 +44,7 @@ class TestUpbitExchange:
 
     def test_initialization_connection_error(self, mock_client: MagicMock) -> None:
         """Test UpbitExchange initialization with connection error."""
-        mock_client.get_balances.side_effect = Exception("Connection failed")
+        mock_client.get_balances.side_effect = ConnectionError("Connection failed")
         with (
             patch("src.exchange.upbit.pyupbit.Upbit", return_value=mock_client),
             pytest.raises(ExchangeConnectionError),
@@ -90,7 +91,7 @@ class TestUpbitExchange:
     ) -> None:
         """Test getting balance when get_order raises exception (lines 81-83)."""
         mock_client.get_balance.return_value = 1000000.0
-        mock_client.get_order.side_effect = Exception("Order API error")
+        mock_client.get_order.side_effect = requests.RequestException("Order API error")
 
         balance = exchange.get_balance("KRW")
 
@@ -101,7 +102,7 @@ class TestUpbitExchange:
 
     def test_get_balance_error(self, exchange: UpbitExchange, mock_client: MagicMock) -> None:
         """Test getting balance with API error."""
-        mock_client.get_balance.side_effect = Exception("API Error")
+        mock_client.get_balance.side_effect = requests.RequestException("API Error")
 
         with pytest.raises(ExchangeError, match="Failed to get balance"):
             exchange.get_balance("KRW")
@@ -124,7 +125,8 @@ class TestUpbitExchange:
         """Test getting current price with error."""
         with (
             patch(
-                "src.exchange.upbit.pyupbit.get_current_price", side_effect=Exception("API Error")
+                "src.exchange.upbit.pyupbit.get_current_price",
+                side_effect=requests.RequestException("API Error"),
             ),
             pytest.raises(ExchangeError, match="Failed to get price"),
         ):
@@ -158,7 +160,7 @@ class TestUpbitExchange:
         with (
             patch(
                 "src.exchange.upbit.pyupbit.get_ticker",
-                side_effect=Exception("API Error"),
+                side_effect=requests.RequestException("API Error"),
                 create=True,
             ),
             pytest.raises(ExchangeError, match="Failed to get ticker"),
@@ -200,7 +202,10 @@ class TestUpbitExchange:
 
     def test_get_ohlcv_error(self, exchange: UpbitExchange) -> None:
         """Test getting OHLCV data with error."""
-        with patch("src.exchange.upbit.pyupbit.get_ohlcv", side_effect=Exception("API Error")):
+        with patch(
+            "src.exchange.upbit.pyupbit.get_ohlcv",
+            side_effect=requests.RequestException("API Error"),
+        ):
             df = exchange.get_ohlcv("KRW-BTC", interval="day")
             assert df is None
 
@@ -238,14 +243,14 @@ class TestUpbitExchange:
         self, exchange: UpbitExchange, mock_client: MagicMock
     ) -> None:
         """Test placing buy market order with insufficient balance."""
-        mock_client.buy_market_order.side_effect = Exception("insufficient funds bid")
+        mock_client.buy_market_order.side_effect = ValueError("insufficient funds bid")
 
         with pytest.raises(InsufficientBalanceError):
             exchange.buy_market_order("KRW-BTC", 50000.0)
 
     def test_buy_market_order_error(self, exchange: UpbitExchange, mock_client: MagicMock) -> None:
         """Test placing buy market order with error."""
-        mock_client.buy_market_order.side_effect = Exception("API Error")
+        mock_client.buy_market_order.side_effect = requests.RequestException("API Error")
 
         with pytest.raises(ExchangeError, match="Failed to place buy order"):
             exchange.buy_market_order("KRW-BTC", 50000.0)
@@ -275,7 +280,7 @@ class TestUpbitExchange:
         self, exchange: UpbitExchange, mock_client: MagicMock
     ) -> None:
         """Test placing sell market order with insufficient balance."""
-        mock_client.sell_market_order.side_effect = Exception("insufficient funds ask")
+        mock_client.sell_market_order.side_effect = ValueError("insufficient funds ask")
 
         with pytest.raises(InsufficientBalanceError):
             exchange.sell_market_order("KRW-BTC", 0.001)
@@ -300,7 +305,7 @@ class TestUpbitExchange:
 
     def test_sell_market_order_error(self, exchange: UpbitExchange, mock_client: MagicMock) -> None:
         """Test placing sell market order with error."""
-        mock_client.sell_market_order.side_effect = Exception("API Error")
+        mock_client.sell_market_order.side_effect = requests.RequestException("API Error")
 
         with pytest.raises(ExchangeError, match="Failed to place sell order"):
             exchange.sell_market_order("KRW-BTC", 0.001)
@@ -438,7 +443,7 @@ class TestUpbitExchange:
 
     def test_get_order_status_error(self, exchange: UpbitExchange, mock_client: MagicMock) -> None:
         """Test getting order status with error."""
-        mock_client.get_order.side_effect = Exception("API Error")
+        mock_client.get_order.side_effect = requests.RequestException("API Error")
 
         with pytest.raises(ExchangeError, match="Failed to get order status"):
             exchange.get_order_status("order-uuid-123")
@@ -454,7 +459,7 @@ class TestUpbitExchange:
 
     def test_cancel_order_error(self, exchange: UpbitExchange, mock_client: MagicMock) -> None:
         """Test cancelling an order with error."""
-        mock_client.cancel_order.side_effect = Exception("API Error")
+        mock_client.cancel_order.side_effect = requests.RequestException("API Error")
 
         with pytest.raises(ExchangeError, match="Failed to cancel order"):
             exchange.cancel_order("order-uuid-123")

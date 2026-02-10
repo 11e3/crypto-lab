@@ -1,23 +1,25 @@
-"""bt library backtest execution service.
+"""Backtest execution service for bt-family strategies.
 
-Service for running backtests using the external bt library.
-Integrates bt library's VBO strategy with crypto-quant-system dashboard.
+Runs VBO Portfolio, VBO Regime, Momentum, and Buy-and-Hold strategies
+using the native CQS vectorized engine. Previously delegated to the
+external bt library; now fully integrated.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any
 
+import numpy as np
 import pandas as pd
 
+from src.backtester.engine.vectorized import VectorizedBacktestEngine
+from src.backtester.models import BacktestConfig, BacktestResult
+from src.strategies.base import Strategy
 from src.utils.logger import get_logger
-
-if TYPE_CHECKING:
-    from bt.domain.models import PerformanceMetrics
+from src.utils.metrics_core import calculate_sortino_ratio
 
 logger = get_logger(__name__)
 
@@ -48,7 +50,10 @@ def get_default_model_path() -> Path:
 
 @dataclass
 class BtBacktestResult:
-    """Result container for bt library backtest."""
+    """Result container for bt-family strategy backtests.
+
+    Maintains backward compatibility with the previous bt library integration.
+    """
 
     # Performance metrics
     total_return: float
@@ -59,8 +64,8 @@ class BtBacktestResult:
     win_rate: float
     profit_factor: float
     num_trades: int
-    avg_win_pct: float  # Average win rate (percentage)
-    avg_loss_pct: float  # Average loss rate (percentage)
+    avg_win_pct: float
+    avg_loss_pct: float
     final_equity: float
 
     # Time series data
@@ -69,25 +74,19 @@ class BtBacktestResult:
     yearly_returns: dict[int, float]
 
     # Trade data
-    trades: list[dict]
+    trades: list[dict[str, Any]]
 
 
-@lru_cache(maxsize=1)
 def is_bt_available() -> bool:
-    """Check if bt library is installed and available.
+    """Check if bt-family strategies are available.
 
-    Result is cached permanently since bt availability doesn't change at runtime.
+    Always returns True since strategies are now natively integrated.
     """
-    try:
-        from bt.engine.backtest import BacktestEngine  # noqa: F401
-
-        return True
-    except ImportError:
-        return False
+    return True
 
 
 def get_available_bt_symbols(interval: str = "day") -> list[str]:
-    """Get list of symbols available for bt backtest.
+    """Get list of symbols available for backtest.
 
     Args:
         interval: Time interval (default: "day")
@@ -98,104 +97,158 @@ def get_available_bt_symbols(interval: str = "day") -> list[str]:
     symbols = []
     if DATA_DIR.exists():
         for file in DATA_DIR.glob(f"KRW-*_{interval}.parquet"):
-            # Extract symbol from KRW-{symbol}_{interval}.parquet
             symbol = file.stem.replace(f"_{interval}", "").replace("KRW-", "")
             symbols.append(symbol)
     return sorted(symbols)
 
 
-def _load_data_for_bt(symbol: str, interval: str = "day") -> pd.DataFrame:
-    """Load data from crypto-quant-system for bt library.
-
-    Args:
-        symbol: Trading symbol (e.g., "BTC")
-        interval: Time interval
-
-    Returns:
-        DataFrame with OHLCV data
-
-    Raises:
-        FileNotFoundError: If data file doesn't exist
-    """
-    file_path = DATA_DIR / f"KRW-{symbol}_{interval}.parquet"
-
-    if not file_path.exists():
-        raise FileNotFoundError(f"Data file not found: {file_path}")
-
-    df = pd.read_parquet(file_path)
-
-    # Ensure datetime column
-    if "datetime" not in df.columns:
-        if "timestamp" in df.columns:
-            df["datetime"] = pd.to_datetime(df["timestamp"])
-        elif df.index.name == "datetime" or isinstance(df.index, pd.DatetimeIndex):
-            df = df.reset_index()
-            df.rename(columns={df.columns[0]: "datetime"}, inplace=True)
-
-    df["datetime"] = pd.to_datetime(df["datetime"])
-
-    return df
+def _get_data_files(
+    symbols: list[str], interval: str = "day"
+) -> dict[str, Path]:
+    """Build data file paths for given symbols."""
+    data_files: dict[str, Path] = {}
+    for symbol in symbols:
+        ticker = f"KRW-{symbol}"
+        file_path = DATA_DIR / f"{ticker}_{interval}.parquet"
+        if file_path.exists():
+            data_files[ticker] = file_path
+        else:
+            logger.warning(f"Data not found for {symbol}: {file_path}")
+    return data_files
 
 
-def _convert_bt_metrics_to_result(metrics: PerformanceMetrics) -> BtBacktestResult:
-    """Convert bt library PerformanceMetrics to BtBacktestResult.
+def _convert_result(result: BacktestResult) -> BtBacktestResult:
+    """Convert native BacktestResult to BtBacktestResult."""
+    # Calculate sortino ratio from equity curve
+    equity = np.array(result.equity_curve)
+    if len(equity) > 1:
+        daily_returns = np.diff(equity) / equity[:-1]
+        sortino = calculate_sortino_ratio(daily_returns)
+    else:
+        sortino = 0.0
 
-    Args:
-        metrics: bt library PerformanceMetrics
-
-    Returns:
-        BtBacktestResult
-    """
-    # Convert trades to dict format and calculate avg win/loss percentages
-    trades_list = []
+    # Calculate avg win/loss percentages
     win_returns: list[float] = []
     loss_returns: list[float] = []
+    trades_list: list[dict[str, Any]] = []
 
-    for trade in metrics.trades:
-        return_pct = float(trade.return_pct)
+    for trade in result.trades:
+        return_pct = trade.pnl_pct
         trades_list.append(
             {
-                "symbol": trade.symbol,
-                "entry_date": trade.entry_date,
-                "exit_date": trade.exit_date,
-                "entry_price": float(trade.entry_price),
-                "exit_price": float(trade.exit_price),
-                "quantity": float(trade.quantity),
-                "pnl": float(trade.pnl),
+                "symbol": trade.ticker,
+                "entry_date": (
+                    datetime.combine(trade.entry_date, datetime.min.time())
+                    if isinstance(trade.entry_date, date)
+                    and not isinstance(trade.entry_date, datetime)
+                    else trade.entry_date
+                ),
+                "exit_date": (
+                    datetime.combine(trade.exit_date, datetime.min.time())
+                    if trade.exit_date
+                    and isinstance(trade.exit_date, date)
+                    and not isinstance(trade.exit_date, datetime)
+                    else trade.exit_date
+                ),
+                "entry_price": trade.entry_price,
+                "exit_price": trade.exit_price or 0.0,
+                "quantity": (
+                    trade.amount / trade.entry_price if trade.entry_price > 0 else 0.0
+                ),
+                "pnl": trade.pnl,
                 "return_pct": return_pct,
             }
         )
 
-        # Categorize by win/loss for average calculation
         if return_pct > 0:
             win_returns.append(return_pct)
         elif return_pct < 0:
             loss_returns.append(return_pct)
 
-    # Calculate average win/loss percentages
     avg_win_pct = sum(win_returns) / len(win_returns) if win_returns else 0.0
     avg_loss_pct = sum(loss_returns) / len(loss_returns) if loss_returns else 0.0
 
-    # Convert yearly returns
-    yearly_returns_dict = {year: float(ret) for year, ret in metrics.yearly_returns.items()}
+    # Convert dates to datetime objects
+    dates_list: list[datetime] = []
+    if result.dates is not None and len(result.dates) > 0:
+        dates_array = pd.to_datetime(result.dates)
+        dates_list = [d.to_pydatetime() for d in dates_array]
+
+    # Calculate yearly returns
+    yearly_returns: dict[int, float] = {}
+    if len(equity) > 1 and len(dates_list) > 0:
+        df_equity = pd.DataFrame(
+            {"equity": equity[: len(dates_list)]},
+            index=pd.DatetimeIndex(dates_list),
+        )
+        dt_index = pd.DatetimeIndex(df_equity.index)
+        for year, group in df_equity.groupby(dt_index.year):
+            if len(group) >= 2:
+                year_return = (
+                    group["equity"].iloc[-1] / group["equity"].iloc[0] - 1
+                ) * 100
+                yearly_returns[int(str(year))] = float(year_return)
 
     return BtBacktestResult(
-        total_return=float(metrics.total_return),
-        cagr=float(metrics.cagr),
-        mdd=float(metrics.mdd),
-        sharpe_ratio=float(metrics.sharpe_ratio),
-        sortino_ratio=float(metrics.sortino_ratio),
-        win_rate=float(metrics.win_rate),
-        profit_factor=float(metrics.profit_factor),
-        num_trades=metrics.num_trades,
+        total_return=result.total_return,
+        cagr=result.cagr,
+        mdd=result.mdd,
+        sharpe_ratio=result.sharpe_ratio,
+        sortino_ratio=sortino,
+        win_rate=result.win_rate,
+        profit_factor=result.profit_factor,
+        num_trades=result.total_trades,
         avg_win_pct=avg_win_pct,
         avg_loss_pct=avg_loss_pct,
-        final_equity=float(metrics.final_equity),
-        equity_curve=[float(e) for e in metrics.equity_curve],
-        dates=list(metrics.dates),
-        yearly_returns=yearly_returns_dict,
+        final_equity=float(equity[-1]) if len(equity) > 0 else 0.0,
+        equity_curve=[float(e) for e in equity],
+        dates=dates_list,
+        yearly_returns=yearly_returns,
         trades=trades_list,
     )
+
+
+def _run_native_backtest(
+    strategy: Strategy,
+    symbols: list[str],
+    interval: str,
+    initial_cash: int,
+    fee: float,
+    slippage: float,
+    start_date: date | None,
+    end_date: date | None,
+) -> BtBacktestResult | None:
+    """Run a backtest using the native vectorized engine."""
+    data_files = _get_data_files(symbols, interval)
+    if not data_files:
+        logger.error("No data loaded for any symbol")
+        return None
+
+    config = BacktestConfig(
+        initial_capital=float(initial_cash),
+        fee_rate=fee,
+        slippage_rate=slippage,
+        max_slots=len(data_files),
+        use_cache=False,
+    )
+
+    engine = VectorizedBacktestEngine(config)
+
+    try:
+        result = engine.run(
+            strategy=strategy,
+            data_files=data_files,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        logger.info(
+            f"Backtest completed: CAGR={result.cagr:.2f}%, "
+            f"MDD={result.mdd:.2f}%, Trades={result.total_trades}"
+        )
+        return _convert_result(result)
+    except Exception as e:
+        logger.exception(f"Backtest failed: {e}")
+        return None
 
 
 def run_bt_backtest_service(
@@ -209,103 +262,42 @@ def run_bt_backtest_service(
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> BtBacktestResult | None:
-    """Run VBO backtest using bt library.
+    """Run VBO Portfolio backtest with BTC MA filter.
 
     Args:
-        symbols: Tuple of symbols to trade (tuple for caching)
+        symbols: Tuple of symbols to trade
         interval: Time interval
         initial_cash: Initial capital in KRW
         fee: Trading fee (0.0005 = 0.05%)
         slippage: Slippage (0.0005 = 0.05%)
-        multiplier: Multiplier for long-term indicators
-        lookback: Lookback period for short-term indicators
+        multiplier: Multiplier for long-term MA
+        lookback: Lookback period for short-term MA
         start_date: Backtest start date (inclusive)
         end_date: Backtest end date (inclusive)
 
     Returns:
         BtBacktestResult or None on failure
     """
-    if not is_bt_available():
-        logger.error("bt library is not installed")
-        return None
+    from src.strategies.volatility_breakout.vbo_portfolio import VBOPortfolio
 
-    try:
-        # Import bt library components
-        from bt.framework.facade import BacktestFacade
+    strategy = VBOPortfolio(
+        name="VBOPortfolio",
+        ma_short=lookback,
+        btc_ma=lookback * multiplier,
+        data_dir=DATA_DIR,
+        interval=interval,
+    )
 
-        symbols_list = list(symbols)
-
-        # Initialize facade
-        facade = BacktestFacade()
-
-        # Load data for all symbols into dict
-        data: dict[str, pd.DataFrame] = {}
-        for symbol in symbols_list:
-            try:
-                df = _load_data_for_bt(symbol, interval)
-                data[symbol] = df
-                logger.info(f"Loaded {symbol}: {len(df)} rows")
-            except FileNotFoundError:
-                logger.warning(f"Data not found for {symbol}")
-            except Exception as e:
-                logger.error(f"Error loading {symbol}: {e}")
-
-        if not data:
-            logger.error("No data loaded for any symbol")
-            return None
-
-        # Filter data by date range (in run_bt_backtest_service)
-        if start_date or end_date:
-            for symbol in list(data.keys()):
-                df = data[symbol]
-                if "datetime" in df.columns:
-                    if start_date:
-                        df = df[df["datetime"].dt.date >= start_date]
-                    if end_date:
-                        df = df[df["datetime"].dt.date <= end_date]
-                    data[symbol] = df
-                    logger.info(f"Filtered {symbol}: {len(df)} rows after date filter")
-
-        loaded_symbols = list(data.keys())
-
-        # Run backtest with VBO strategy
-        logger.info(f"Running bt backtest with {len(loaded_symbols)} symbols...")
-        backtest_config: dict[str, object] = {
-            "initial_cash": initial_cash,
-            "fee": fee,
-            "slippage": slippage,
-            "lookback": lookback,
-            "multiplier": multiplier,
-        }
-
-        # Add date range to config if provided
-        if start_date:
-            backtest_config["start_date"] = start_date.isoformat()
-        if end_date:
-            backtest_config["end_date"] = end_date.isoformat()
-        results = facade.run_backtest(
-            strategy="vbo",
-            symbols=loaded_symbols,
-            data=data,
-            config=backtest_config,
-        )
-
-        # Extract metrics from results (key is "performance", not "metrics")
-        metrics = results.get("performance")
-        if not metrics:
-            logger.error("No metrics in backtest results")
-            return None
-
-        logger.info(
-            f"bt backtest completed: CAGR={float(metrics.cagr):.2f}%, "
-            f"MDD={float(metrics.mdd):.2f}%, Trades={metrics.num_trades}"
-        )
-
-        return _convert_bt_metrics_to_result(metrics)
-
-    except Exception as e:
-        logger.exception(f"bt backtest failed: {e}")
-        return None
+    return _run_native_backtest(
+        strategy=strategy,
+        symbols=list(symbols),
+        interval=interval,
+        initial_cash=initial_cash,
+        fee=fee,
+        slippage=slippage,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
 
 def run_bt_backtest_regime_service(
@@ -320,118 +312,51 @@ def run_bt_backtest_regime_service(
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> BtBacktestResult | None:
-    """Run VBO Regime backtest using bt library.
-
-    Uses ML regime model instead of BTC MA20 for market filter.
+    """Run VBO Regime backtest with ML model filter.
 
     Args:
-        symbols: Tuple of symbols to trade (tuple for caching)
+        symbols: Tuple of symbols to trade
         interval: Time interval
         initial_cash: Initial capital in KRW
-        fee: Trading fee (0.0005 = 0.05%)
-        slippage: Slippage (0.0005 = 0.05%)
-        ma_short: Short MA period for individual coins (default: 5)
-        noise_ratio: Volatility breakout multiplier (default: 0.5)
-        model_path: Path to regime model (.joblib), uses default if None
-        start_date: Backtest start date (inclusive)
-        end_date: Backtest end date (inclusive)
+        fee: Trading fee
+        slippage: Slippage
+        ma_short: Short MA period
+        noise_ratio: Volatility breakout multiplier
+        model_path: Path to regime model (.joblib)
+        start_date: Backtest start date
+        end_date: Backtest end date
 
     Returns:
         BtBacktestResult or None on failure
     """
-    if not is_bt_available():
-        logger.error("bt library is not installed")
-        return None
-
-    # Use default model path if not provided
     if model_path is None:
         model_path = str(get_default_model_path())
 
-    # Verify model exists
     if not Path(model_path).exists():
         logger.error(f"Regime model not found: {model_path}")
         return None
 
-    try:
-        # Import bt library components
-        from bt.framework.facade import BacktestFacade
+    from src.strategies.volatility_breakout.vbo_regime import VBORegime
 
-        symbols_list = list(symbols)
+    strategy = VBORegime(
+        name="VBORegime",
+        ma_short=ma_short,
+        noise_ratio=noise_ratio,
+        model_path=model_path,
+        data_dir=DATA_DIR,
+        interval=interval,
+    )
 
-        # Initialize facade
-        facade = BacktestFacade()
-
-        # Load data for all symbols into dict
-        data: dict[str, pd.DataFrame] = {}
-        for symbol in symbols_list:
-            try:
-                df = _load_data_for_bt(symbol, interval)
-                data[symbol] = df
-                logger.info(f"Loaded {symbol}: {len(df)} rows")
-            except FileNotFoundError:
-                logger.warning(f"Data not found for {symbol}")
-            except Exception as e:
-                logger.error(f"Error loading {symbol}: {e}")
-
-        if not data:
-            logger.error("No data loaded for any symbol")
-            return None
-
-        # Filter data by date range
-        if start_date or end_date:
-            for symbol in list(data.keys()):
-                df = data[symbol]
-                if "datetime" in df.columns:
-                    if start_date:
-                        df = df[df["datetime"].dt.date >= start_date]
-                    if end_date:
-                        df = df[df["datetime"].dt.date <= end_date]
-                    data[symbol] = df
-                    logger.info(f"Filtered {symbol}: {len(df)} rows after date filter")
-
-        loaded_symbols = list(data.keys())
-
-        # Run backtest with VBO Regime strategy
-        logger.info(f"Running bt regime backtest with {len(loaded_symbols)} symbols...")
-        backtest_config: dict[str, object] = {
-            "initial_cash": initial_cash,
-            "fee": fee,
-            "slippage": slippage,
-            "ma_short": ma_short,
-            "noise_ratio": noise_ratio,
-            "model_path": model_path,
-            "btc_symbol": "BTC",
-        }
-
-        # Add date range to config if provided
-        if start_date:
-            backtest_config["start_date"] = start_date.isoformat()
-        if end_date:
-            backtest_config["end_date"] = end_date.isoformat()
-
-        results = facade.run_backtest(
-            strategy="vbo_regime",
-            symbols=loaded_symbols,
-            data=data,
-            config=backtest_config,
-        )
-
-        # Extract metrics from results
-        metrics = results.get("performance")
-        if not metrics:
-            logger.error("No metrics in backtest results")
-            return None
-
-        logger.info(
-            f"bt regime backtest completed: CAGR={float(metrics.cagr):.2f}%, "
-            f"MDD={float(metrics.mdd):.2f}%, Trades={metrics.num_trades}"
-        )
-
-        return _convert_bt_metrics_to_result(metrics)
-
-    except Exception as e:
-        logger.exception(f"bt regime backtest failed: {e}")
-        return None
+    return _run_native_backtest(
+        strategy=strategy,
+        symbols=list(symbols),
+        interval=interval,
+        initial_cash=initial_cash,
+        fee=fee,
+        slippage=slippage,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
 
 def run_bt_backtest_generic_service(
@@ -445,7 +370,7 @@ def run_bt_backtest_generic_service(
     end_date: date | None = None,
     **strategy_params: int | float | str,
 ) -> BtBacktestResult | None:
-    """Run backtest using bt library with any strategy.
+    """Run backtest with any bt-family strategy type.
 
     Args:
         strategy_type: Strategy type (momentum, buy_and_hold, vbo_single_coin, vbo_portfolio)
@@ -461,86 +386,75 @@ def run_bt_backtest_generic_service(
     Returns:
         BtBacktestResult or None on failure
     """
-    if not is_bt_available():
-        logger.error("bt library is not installed")
+    strategy = _create_strategy(strategy_type, interval, **strategy_params)
+    if strategy is None:
+        logger.error(f"Unknown strategy type: {strategy_type}")
         return None
 
-    try:
-        from bt.framework.facade import BacktestFacade
+    return _run_native_backtest(
+        strategy=strategy,
+        symbols=list(symbols),
+        interval=interval,
+        initial_cash=initial_cash,
+        fee=fee,
+        slippage=slippage,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
-        symbols_list = list(symbols)
-        facade = BacktestFacade()
 
-        # Load data for all symbols
-        data: dict[str, pd.DataFrame] = {}
-        for symbol in symbols_list:
-            try:
-                df = _load_data_for_bt(symbol, interval)
-                data[symbol] = df
-                logger.info(f"Loaded {symbol}: {len(df)} rows")
-            except FileNotFoundError:
-                logger.warning(f"Data not found for {symbol}")
-            except Exception as e:
-                logger.error(f"Error loading {symbol}: {e}")
+def _create_strategy(
+    strategy_type: str,
+    interval: str = "day",
+    **params: int | float | str,
+) -> Strategy | None:
+    """Create a Strategy instance from strategy type string."""
+    from src.strategies.momentum import MomentumStrategy
+    from src.strategies.volatility_breakout.vbo import VanillaVBO
+    from src.strategies.volatility_breakout.vbo_portfolio import (
+        VBOPortfolio,
+        VBOSingleCoin,
+    )
 
-        if not data:
-            logger.error("No data loaded for any symbol")
-            return None
+    if strategy_type == "momentum":
+        lookback = int(params.get("lookback", 20))
+        return MomentumStrategy(name="Momentum", rsi_period=lookback)
 
-        # Filter data by date range
-        if start_date or end_date:
-            for symbol in list(data.keys()):
-                df = data[symbol]
-                if "datetime" in df.columns:
-                    if start_date:
-                        df = df[df["datetime"].dt.date >= start_date]
-                    if end_date:
-                        df = df[df["datetime"].dt.date <= end_date]
-                    data[symbol] = df
-                    logger.info(f"Filtered {symbol}: {len(df)} rows after date filter")
-
-        loaded_symbols = list(data.keys())
-
-        # Build backtest config
-        backtest_config: dict[str, object] = {
-            "initial_cash": initial_cash,
-            "fee": fee,
-            "slippage": slippage,
-            **strategy_params,
-        }
-
-        # Add date range to config if provided
-        if start_date:
-            backtest_config["start_date"] = start_date.isoformat()
-        if end_date:
-            backtest_config["end_date"] = end_date.isoformat()
-
-        # Add btc_symbol for strategies that need it
-        if strategy_type in ("vbo_single_coin", "vbo_portfolio"):
-            backtest_config.setdefault("btc_symbol", "BTC")
-
-        logger.info(f"Running bt {strategy_type} backtest with {len(loaded_symbols)} symbols...")
-
-        results = facade.run_backtest(
-            strategy=strategy_type,
-            symbols=loaded_symbols,
-            data=data,
-            config=backtest_config,
+    if strategy_type == "buy_and_hold":
+        return VanillaVBO(
+            name="BuyAndHold",
+            use_default_conditions=False,
+            entry_conditions=[],
+            exit_conditions=[],
         )
 
-        # Extract metrics from results
-        metrics = results.get("performance")
-        if not metrics:
-            logger.error("No metrics in backtest results")
-            return None
-
-        logger.info(
-            f"bt {strategy_type} backtest completed: CAGR={float(metrics.cagr):.2f}%, "
-            f"MDD={float(metrics.mdd):.2f}%, Trades={metrics.num_trades}"
+    if strategy_type == "vbo_single_coin":
+        return VBOSingleCoin(
+            name="VBOSingleCoin",
+            ma_short=int(params.get("ma_short", 5)),
+            btc_ma=int(params.get("btc_ma", 20)),
+            noise_ratio=float(params.get("noise_ratio", 0.5)),
+            data_dir=DATA_DIR,
+            interval=interval,
         )
 
-        return _convert_bt_metrics_to_result(metrics)
+    if strategy_type == "vbo_portfolio":
+        return VBOPortfolio(
+            name="VBOPortfolio",
+            ma_short=int(params.get("ma_short", 5)),
+            btc_ma=int(params.get("btc_ma", 20)),
+            noise_ratio=float(params.get("noise_ratio", 0.5)),
+            data_dir=DATA_DIR,
+            interval=interval,
+        )
 
-    except Exception as e:
-        logger.exception(f"bt {strategy_type} backtest failed: {e}")
-        return None
+    if strategy_type == "vbo":
+        return VBOPortfolio(
+            name="VBOPortfolio",
+            ma_short=int(params.get("lookback", 5)),
+            btc_ma=int(params.get("lookback", 5)) * int(params.get("multiplier", 2)),
+            data_dir=DATA_DIR,
+            interval=interval,
+        )
+
+    return None

@@ -148,7 +148,7 @@ class UpbitDataCollector:
                     count = self.collect(ticker, interval, full_refresh)
                     results[key] = count
                     time.sleep(UPBIT_API_RATE_LIMIT_DELAY)  # Rate limiting between pairs
-                except Exception as e:
+                except (OSError, ConnectionError, TimeoutError, ValueError) as e:
                     logger.error(f"Error collecting {key}: {e}", exc_info=True)
                     results[key] = -1
 

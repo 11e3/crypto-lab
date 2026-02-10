@@ -56,6 +56,7 @@ class MonteCarloSimulator:
         self.result = result
         self.initial_capital = self._get_initial_capital(result, initial_capital)
         self.daily_returns = self._extract_returns(result)
+        self._rng = np.random.default_rng()
 
     def _get_initial_capital(self, result: BacktestResult, initial_capital: float | None) -> float:
         """Determine initial capital from various sources."""
@@ -86,8 +87,7 @@ class MonteCarloSimulator:
         random_seed: int | None = None,
     ) -> MonteCarloResult:
         """Run Monte Carlo simulation."""
-        if random_seed is not None:
-            np.random.seed(random_seed)
+        self._rng = np.random.default_rng(random_seed)
 
         if n_periods is None:
             n_periods = len(self.daily_returns)
@@ -105,7 +105,7 @@ class MonteCarloSimulator:
         """Bootstrap method: resample from historical returns."""
         if len(self.daily_returns) == 0:
             return np.zeros((n_simulations, n_periods))
-        return np.random.choice(self.daily_returns, size=(n_simulations, n_periods), replace=True)
+        return self._rng.choice(self.daily_returns, size=(n_simulations, n_periods), replace=True)
 
     def _parametric(self, n_simulations: int, n_periods: int) -> np.ndarray:
         """Parametric method: sample from normal distribution."""
@@ -114,7 +114,7 @@ class MonteCarloSimulator:
         else:
             mean_return = np.mean(self.daily_returns)
             std_return = np.std(self.daily_returns)
-        return np.random.normal(mean_return, std_return, size=(n_simulations, n_periods))
+        return self._rng.normal(mean_return, std_return, size=(n_simulations, n_periods))
 
     def _build_result(self, simulated_returns: np.ndarray, n_simulations: int) -> MonteCarloResult:
         """Build MonteCarloResult from simulated returns."""

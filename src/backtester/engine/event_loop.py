@@ -145,11 +145,15 @@ def calculate_portfolio_equity(
     Returns:
         Total equity value
     """
-    portfolio_value = sum(
-        pos.amount * float(current_data[ticker]["close"])
-        for ticker, pos in positions.items()
-        if ticker in current_data
-    )
+    portfolio_value = 0.0
+    for ticker, pos in positions.items():
+        if ticker in current_data:
+            close_price = current_data[ticker]["close"]
+            if pd.notna(close_price):
+                portfolio_value += pos.amount * float(close_price)
+            else:
+                # Fallback to entry price if close is NaN
+                portfolio_value += pos.amount * pos.entry_price
     return cash + portfolio_value
 
 

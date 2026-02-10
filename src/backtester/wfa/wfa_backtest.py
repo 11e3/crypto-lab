@@ -10,6 +10,7 @@ import pandas as pd
 from src.backtester.models import BacktestResult
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
+from src.utils.metrics_core import calculate_daily_returns, calculate_mdd, calculate_sharpe_ratio
 
 logger = get_logger(__name__)
 
@@ -105,10 +106,12 @@ def _calculate_metrics(
     total_return = (equity[-1] - initial_capital) / initial_capital if equity else 0.0
 
     # Sharpe 비율
-    sharpe = _calculate_sharpe(equity)
+    equity_arr = np.array(equity)
+    returns = calculate_daily_returns(equity_arr)
+    sharpe = calculate_sharpe_ratio(returns, 252)
 
     # Max Drawdown
-    max_drawdown = _calculate_max_drawdown(equity)
+    max_drawdown = calculate_mdd(equity_arr)
 
     # 승률
     winning_trades, win_rate = _calculate_win_rate(trades)
@@ -124,30 +127,6 @@ def _calculate_metrics(
 
     return result
 
-
-def _calculate_sharpe(equity: list[float]) -> float:
-    """Sharpe 비율 계산."""
-    if len(equity) <= 1:
-        return 0.0
-
-    returns = np.diff(equity) / np.array(equity[:-1])
-    std = float(np.std(returns))
-
-    if std > 0:
-        return float(np.mean(returns) / std * np.sqrt(252))
-    return 0.0
-
-
-def _calculate_max_drawdown(equity: list[float]) -> float:
-    """최대 낙폭 계산."""
-    if len(equity) <= 1:
-        return 0.0
-
-    equity_arr = np.array(equity)
-    cummax = np.maximum.accumulate(equity_arr)
-    dd = (equity_arr - cummax) / cummax
-
-    return float(np.min(dd)) if len(dd) > 0 else 0.0
 
 
 def _calculate_win_rate(trades: list[float]) -> tuple[int, float]:

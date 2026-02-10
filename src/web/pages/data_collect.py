@@ -7,39 +7,15 @@ import streamlit as st
 
 from src.data.collector_factory import DataCollectorFactory
 from src.utils.logger import get_logger
+from src.web.config.constants import DATA_COLLECT_INTERVALS, DATA_COLLECT_TICKERS
 
 logger = get_logger(__name__)
 
 __all__ = ["render_data_collect_page"]
 
-# Default ticker list
-DEFAULT_TICKERS = [
-    "KRW-BTC",
-    "KRW-ETH",
-    "KRW-XRP",
-    "KRW-SOL",
-    "KRW-DOGE",
-    "KRW-TRX",
-    "KRW-ADA",
-    "KRW-AVAX",
-    "KRW-SHIB",
-    "KRW-LINK",
-]
-
-# Supported intervals
-INTERVALS = [
-    ("minute1", "1 min"),
-    ("minute3", "3 min"),
-    ("minute5", "5 min"),
-    ("minute10", "10 min"),
-    ("minute15", "15 min"),
-    ("minute30", "30 min"),
-    ("minute60", "1 hour"),
-    ("minute240", "4 hours"),
-    ("day", "Daily"),
-    ("week", "Weekly"),
-    ("month", "Monthly"),
-]
+# Local aliases
+DEFAULT_TICKERS = DATA_COLLECT_TICKERS
+INTERVALS = DATA_COLLECT_INTERVALS
 
 
 def render_data_collect_page() -> None:
@@ -55,31 +31,27 @@ def render_data_collect_page() -> None:
     with col1:
         st.markdown("### 📈 Ticker Selection")
 
-        # Initialize checkbox states if not exists
-        if "collect_tickers_initialized" not in st.session_state:
-            st.session_state.collect_tickers_initialized = True
-            default_selected = DEFAULT_TICKERS[:6]
-            for ticker in DEFAULT_TICKERS:
-                st.session_state[f"collect_{ticker}"] = ticker in default_selected
-
         # Quick selection buttons
         btn_col1, btn_col2 = st.columns(2)
         with btn_col1:
             if st.button("Select All", key="select_all_tickers"):
-                for ticker in DEFAULT_TICKERS:
-                    st.session_state[f"collect_{ticker}"] = True
+                st.session_state.collect_selected_tickers = list(DEFAULT_TICKERS)
                 st.rerun()
         with btn_col2:
             if st.button("Deselect All", key="deselect_all_tickers"):
-                for ticker in DEFAULT_TICKERS:
-                    st.session_state[f"collect_{ticker}"] = False
+                st.session_state.collect_selected_tickers = []
                 st.rerun()
 
-        # Ticker checkboxes (state managed entirely via session_state keys)
-        selected_tickers = []
-        for ticker in DEFAULT_TICKERS:
-            if st.checkbox(ticker, key=f"collect_{ticker}"):
-                selected_tickers.append(ticker)
+        # Ticker multiselect
+        if "collect_selected_tickers" not in st.session_state:
+            st.session_state.collect_selected_tickers = DEFAULT_TICKERS[:6]
+
+        selected_tickers = st.multiselect(
+            "Select Tickers",
+            options=DEFAULT_TICKERS,
+            default=st.session_state.collect_selected_tickers,
+            key="collect_ticker_multiselect",
+        )
 
         # Custom ticker input
         if "custom_collect_tickers" not in st.session_state:

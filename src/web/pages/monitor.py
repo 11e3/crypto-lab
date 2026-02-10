@@ -13,7 +13,7 @@ Features:
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import streamlit as st
@@ -134,7 +134,7 @@ def _render_account_selector(accounts: list[str]) -> str:
     )
 
 
-def _render_positions_card(positions: dict) -> None:
+def _render_positions_card(positions: dict[str, Any]) -> None:
     """Render current positions card."""
     st.subheader("Current Positions")
 
@@ -301,7 +301,7 @@ def _render_alerts(storage: GCSStorage, account: str) -> None:
     try:
         positions = storage.get_bot_positions(account)
         if positions and "updated_at" in positions:
-            last_update = datetime.fromisoformat(positions["updated_at"])
+            last_update = datetime.fromisoformat(str(positions["updated_at"]))
             if (datetime.now() - last_update).total_seconds() > 3600:  # 1 hour
                 alerts.append(
                     {
@@ -338,30 +338,30 @@ def render_monitor_page() -> None:
         _render_gcs_not_configured()
         return
 
-    # Sidebar controls
-    with st.sidebar:
-        st.subheader("Monitor Settings")
-
-        # Account selector
+    # Monitor controls (inline, not sidebar)
+    with st.expander("⚙️ Monitor Settings", expanded=True):
         accounts = storage.list_accounts()
-        account = _render_account_selector(accounts)
+        ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3)
 
-        # Date selector for trade history
-        log_dates = storage.list_bot_log_dates(account, limit=30)
-        if log_dates:
-            selected_date = st.selectbox(
-                "Trade History Date",
-                options=log_dates,
-                index=0,
-                help="Select date to view trade history",
-            )
-        else:
-            selected_date = datetime.now().strftime("%Y-%m-%d")
+        with ctrl_col1:
+            account = _render_account_selector(accounts)
 
-        # Refresh button
-        if st.button("Refresh Data", width="stretch"):
-            st.cache_data.clear()
-            st.rerun()
+        with ctrl_col2:
+            log_dates = storage.list_bot_log_dates(account, limit=30)
+            if log_dates:
+                selected_date = st.selectbox(
+                    "Trade History Date",
+                    options=log_dates,
+                    index=0,
+                    help="Select date to view trade history",
+                )
+            else:
+                selected_date = datetime.now().strftime("%Y-%m-%d")
+
+        with ctrl_col3:
+            if st.button("🔄 Refresh Data", width="stretch"):
+                st.cache_data.clear()
+                st.rerun()
 
     # Main content
     col1, col2 = st.columns([1, 1])

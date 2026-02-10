@@ -7,6 +7,13 @@ Helper functions for performance metrics calculation.
 import numpy as np
 
 from src.backtester.models import Trade
+from src.utils.metrics_core import (
+    calculate_cagr,
+    calculate_calmar_ratio,
+    calculate_daily_returns,
+    calculate_mdd,
+    calculate_sharpe_ratio,
+)
 
 __all__ = [
     "calculate_return_metrics",
@@ -38,10 +45,7 @@ def calculate_return_metrics(
     total_return = (final / initial_capital - 1) * 100
 
     total_days = (dates[-1] - dates[0]).days
-    if total_days > 0 and initial_capital > 0 and final > 0:
-        cagr = ((final / initial_capital) ** (365.0 / total_days) - 1) * 100
-    else:
-        cagr = 0.0
+    cagr = calculate_cagr(initial_capital, final, total_days)
 
     return total_return, cagr
 
@@ -63,22 +67,12 @@ def calculate_risk_metrics_from_equity(
     if len(equity_curve) < 2:
         return 0.0, 0.0, 0.0
 
-    # Maximum Drawdown
-    cummax = np.maximum.accumulate(equity_curve)
-    drawdown = (cummax - equity_curve) / cummax
-    mdd = float(np.nanmax(drawdown) * 100)
+    mdd = calculate_mdd(equity_curve)
+    calmar = calculate_calmar_ratio(cagr, mdd)
+    returns = calculate_daily_returns(equity_curve)
+    sharpe = calculate_sharpe_ratio(returns)
 
-    # Calmar Ratio
-    calmar_ratio = cagr / mdd if mdd > 0 else 0.0
-
-    # Sharpe Ratio
-    returns = np.diff(equity_curve) / equity_curve[:-1]
-    if len(returns) > 0 and np.std(returns) > 0:
-        sharpe_ratio = float(np.mean(returns) / np.std(returns) * np.sqrt(252))
-    else:
-        sharpe_ratio = 0.0
-
-    return mdd, calmar_ratio, sharpe_ratio
+    return mdd, calmar, sharpe
 
 
 def calculate_trade_stats(trades: list[Trade]) -> dict[str, float]:
@@ -112,7 +106,9 @@ def calculate_trade_stats(trades: list[Trade]) -> dict[str, float]:
     if winning and losing:
         total_profit = sum(t.pnl for t in winning)
         total_loss = abs(sum(t.pnl for t in losing))
-        profit_factor = total_profit / total_loss if total_loss > 0 else 0.0
+        profit_factor = total_profit / total_loss if total_loss > 0 else 999.99
+    elif winning:
+        profit_factor = 999.99  # All winning trades, JSON-safe sentinel
     else:
         profit_factor = 0.0
 

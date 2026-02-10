@@ -14,10 +14,11 @@ import json
 import logging
 import sys
 import traceback
+from collections.abc import Callable
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 # =============================================================================
 # JSON Formatter
@@ -151,9 +152,7 @@ class StructuredLogger:
             )
         else:
             console_handler.setFormatter(
-                logging.Formatter(
-                    "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-                )
+                logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s")
             )
         self._logger.addHandler(console_handler)
 
@@ -200,12 +199,12 @@ class StructuredLogger:
     class _ContextManager:
         """Context manager for temporary logging context."""
 
-        def __init__(self, logger: "StructuredLogger", context: dict[str, Any]):
+        def __init__(self, logger: StructuredLogger, context: dict[str, Any]):
             self._logger = logger
             self._context = context
             self._previous_context: dict[str, Any] = {}
 
-        def __enter__(self) -> "StructuredLogger._ContextManager":
+        def __enter__(self) -> StructuredLogger._ContextManager:
             self._previous_context = self._logger._context.copy()
             self._logger._context.update(self._context)
             return self
@@ -217,12 +216,12 @@ class StructuredLogger:
         """Create a context manager with additional logging context."""
         return self._ContextManager(self, kwargs)
 
-    def bind(self, **kwargs: Any) -> "StructuredLogger":
+    def bind(self, **kwargs: Any) -> StructuredLogger:
         """Add permanent context to the logger."""
         self._context.update(kwargs)
         return self
 
-    def unbind(self, *keys: str) -> "StructuredLogger":
+    def unbind(self, *keys: str) -> StructuredLogger:
         """Remove context keys from the logger."""
         for key in keys:
             self._context.pop(key, None)
@@ -277,7 +276,7 @@ def log_execution(
     level: int = logging.INFO,
     log_args: bool = True,
     log_result: bool = False,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Decorator to log function execution.
 
@@ -287,7 +286,7 @@ def log_execution(
             ...
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             _logger = logger or get_logger(func.__module__)

@@ -11,6 +11,13 @@ from src.backtester.models import BacktestConfig, BacktestResult
 from src.config import ANNUALIZATION_FACTOR
 from src.risk.metrics import PortfolioRiskMetrics, calculate_portfolio_risk_metrics
 from src.utils.logger import get_logger
+from src.utils.metrics_core import (
+    calculate_cagr,
+    calculate_calmar_ratio,
+    calculate_daily_returns,
+    calculate_mdd,
+    calculate_sharpe_ratio,
+)
 
 logger = get_logger(__name__)
 
@@ -52,22 +59,18 @@ def calculate_metrics_vectorized(
 
     # CAGR (annualized return)
     total_days = (dates[-1] - dates[0]).days
-    if total_days > 0 and initial > 0 and final > 0:
-        result.cagr = ((final / initial) ** (365.0 / total_days) - 1) * 100
+    result.cagr = calculate_cagr(initial, final, total_days)
 
     # MDD (maximum drawdown)
-    cummax = np.maximum.accumulate(equity_curve)
-    drawdown = (cummax - equity_curve) / cummax
-    result.mdd = np.nanmax(drawdown) * 100
+    result.mdd = calculate_mdd(equity_curve)
 
     # Calmar Ratio
-    result.calmar_ratio = result.cagr / result.mdd if result.mdd > 0 else 0.0
+    result.calmar_ratio = calculate_calmar_ratio(result.cagr, result.mdd)
 
-    # Sharpe Ratio
-    returns = np.diff(equity_curve) / equity_curve[:-1]
-    daily_returns = np.insert(returns, 0, 0)
-    if len(returns) > 0 and np.std(returns) > 0:
-        result.sharpe_ratio = (np.mean(returns) / np.std(returns)) * np.sqrt(ANNUALIZATION_FACTOR)
+    # Sharpe Ratio & daily returns
+    daily_returns = calculate_daily_returns(equity_curve, prepend_zero=True)
+    returns = daily_returns[1:]  # without prepended zero for Sharpe
+    result.sharpe_ratio = calculate_sharpe_ratio(returns, ANNUALIZATION_FACTOR)
 
     # Risk metrics
     result.risk_metrics = _calculate_risk_metrics(
@@ -133,7 +136,7 @@ def _calculate_risk_metrics(
             benchmark_returns=None,
             annualization_factor=ANNUALIZATION_FACTOR,
         )
-    except Exception as e:
+    except (ValueError, ZeroDivisionError, FloatingPointError) as e:
         logger.warning(f"Failed to calculate risk metrics: {e}")
         return None
 
@@ -156,4 +159,4 @@ def _calculate_trade_statistics(result: BacktestResult, trades_df: pd.DataFrame)
 
     total_profit = closed.loc[closed["pnl"] > 0, "pnl"].sum()
     total_loss = abs(closed.loc[closed["pnl"] <= 0, "pnl"].sum())
-    result.profit_factor = total_profit / total_loss if total_loss > 0 else float("inf")
+    result.profit_factor = total_profit / total_loss if total_loss > 0 else 999.99

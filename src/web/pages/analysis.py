@@ -13,33 +13,20 @@ from src.data.collector_fetch import Interval
 from src.strategies.volatility_breakout import create_vbo_strategy
 from src.utils.logger import get_logger
 from src.web.components.sidebar.strategy_selector import get_cached_registry
+from src.web.config.constants import (
+    DEFAULT_TICKERS,
+    INTERVAL_DISPLAY_MAP,
+    OPTIMIZATION_METRICS,
+)
 from src.web.services.data_loader import validate_data_availability
+from src.web.services.strategy_registry import (
+    create_analysis_strategy,
+    map_strategy_to_internal_type,
+)
 
 logger = get_logger(__name__)
 
 __all__ = ["render_analysis_page"]
-
-# Default tickers
-DEFAULT_TICKERS = ["KRW-BTC", "KRW-ETH", "KRW-XRP", "KRW-SOL"]
-
-# Optimization metric options
-METRICS = [
-    ("sharpe_ratio", "Sharpe Ratio"),
-    ("cagr", "CAGR"),
-    ("total_return", "Total Return"),
-    ("calmar_ratio", "Calmar Ratio"),
-    ("win_rate", "Win Rate"),
-    ("profit_factor", "Profit Factor"),
-]
-
-# Internal strategy type mapping (for non-bt strategies)
-INTERNAL_STRATEGY_TYPES = {
-    "vanilla": "Vanilla VBO",
-    "minimal": "Minimal VBO",
-    "legacy": "Legacy VBO",
-    "momentum": "Momentum",
-    "mean-reversion": "Mean Reversion",
-}
 
 
 def render_analysis_page() -> None:
@@ -84,23 +71,13 @@ def _render_monte_carlo() -> None:
         with col1:
             st.markdown("##### 📈 Strategy")
 
-            # Use strategy from registry if available, otherwise fallback to internal types
-            if strategy_names:
-                selected_strategy = st.selectbox(
-                    "Strategy",
-                    options=strategy_names,
-                    key="mc_strategy_name",
-                    help="Select a registered strategy",
-                )
-                # Map to internal type for backward compatibility
-                strategy_type = _map_strategy_to_type(selected_strategy)
-            else:
-                strategy_type = st.selectbox(
-                    "Strategy Type",
-                    options=list(INTERNAL_STRATEGY_TYPES.keys()),
-                    format_func=lambda x: INTERNAL_STRATEGY_TYPES.get(x, x),
-                    key="mc_strategy",
-                )
+            selected_strategy = st.selectbox(
+                "Strategy",
+                options=strategy_names if strategy_names else ["VanillaVBO"],
+                key="mc_strategy_name",
+                help="Select a registered strategy",
+            )
+            strategy_type = map_strategy_to_internal_type(selected_strategy)
 
             st.markdown("##### 💰 Trading Settings")
             initial_capital = st.number_input(
@@ -161,7 +138,7 @@ def _render_monte_carlo() -> None:
             interval = st.selectbox(
                 "Interval",
                 options=["minute240", "day", "week"],
-                format_func=lambda x: {"minute240": "4 Hours", "day": "Daily", "week": "Weekly"}[x],
+                format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
                 index=1,
                 key="mc_interval",
             )
@@ -262,7 +239,7 @@ def _run_monte_carlo(
 
     try:
         # Create strategy
-        strategy = _create_strategy(strategy_type)
+        strategy = create_analysis_strategy(strategy_type)
 
         # Configuration
         config = BacktestConfig(
@@ -400,22 +377,13 @@ def _render_walk_forward() -> None:
         with col1:
             st.markdown("##### 📈 Strategy")
 
-            # Use strategy from registry if available
-            if strategy_names:
-                selected_strategy = st.selectbox(
-                    "Strategy",
-                    options=strategy_names,
-                    key="wf_strategy_name",
-                    help="Select a registered strategy",
-                )
-                strategy_type = _map_strategy_to_type(selected_strategy)
-            else:
-                strategy_type = st.selectbox(
-                    "Strategy Type",
-                    options=["vanilla", "legacy"],
-                    format_func=lambda x: "Vanilla VBO" if x == "vanilla" else "Legacy VBO",
-                    key="wf_strategy",
-                )
+            selected_strategy = st.selectbox(
+                "Strategy",
+                options=strategy_names if strategy_names else ["VanillaVBO"],
+                key="wf_strategy_name",
+                help="Select a registered strategy",
+            )
+            strategy_type = map_strategy_to_internal_type(selected_strategy)
 
             st.markdown("##### 📅 Period Settings")
             optimization_days = st.slider(
@@ -447,8 +415,10 @@ def _render_walk_forward() -> None:
             st.markdown("##### 📊 Optimization Metric")
             metric = st.selectbox(
                 "Optimization Target",
-                options=[m[0] for m in METRICS],
-                format_func=lambda x: next(name for code, name in METRICS if code == x),
+                options=[m[0] for m in OPTIMIZATION_METRICS],
+                format_func=lambda x: next(
+                    name for code, name in OPTIMIZATION_METRICS if code == x
+                ),
                 key="wf_metric",
             )
 
@@ -498,7 +468,7 @@ def _render_walk_forward() -> None:
             interval = st.selectbox(
                 "Interval",
                 options=["minute240", "day", "week"],
-                format_func=lambda x: {"minute240": "4 Hours", "day": "Daily", "week": "Weekly"}[x],
+                format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
                 index=1,
                 key="wf_interval",
             )
@@ -794,58 +764,3 @@ def _display_walk_forward_results() -> None:
     st.plotly_chart(fig, use_container_width=True)
 
 
-def _map_strategy_to_type(strategy_name: str) -> str:
-    """Map registered strategy name to internal type.
-
-    Args:
-        strategy_name: Strategy name from registry
-
-    Returns:
-        Internal strategy type string
-    """
-    # Map common strategy names to internal types
-    name_lower = strategy_name.lower()
-
-    if "vanilla" in name_lower or "vbo" in name_lower:
-        if "legacy" in name_lower:
-            return "legacy"
-        elif "minimal" in name_lower:
-            return "minimal"
-        return "vanilla"
-    elif "momentum" in name_lower:
-        return "momentum"
-    elif "mean" in name_lower and "reversion" in name_lower:
-        return "mean-reversion"
-    else:
-        return "vanilla"  # Default
-
-
-def _create_strategy(strategy_type: str) -> Any:
-    """Create strategy object."""
-    from src.strategies.mean_reversion import MeanReversionStrategy
-    from src.strategies.momentum import MomentumStrategy
-
-    if strategy_type == "vanilla":
-        return create_vbo_strategy(
-            name="VanillaVBO",
-            use_trend_filter=False,
-            use_noise_filter=False,
-        )
-    elif strategy_type == "minimal":
-        return create_vbo_strategy(
-            name="MinimalVBO",
-            use_trend_filter=False,
-            use_noise_filter=False,
-        )
-    elif strategy_type == "legacy":
-        return create_vbo_strategy(
-            name="LegacyVBO",
-            use_trend_filter=True,
-            use_noise_filter=True,
-        )
-    elif strategy_type == "momentum":
-        return MomentumStrategy(name="Momentum")
-    elif strategy_type == "mean-reversion":
-        return MeanReversionStrategy(name="MeanReversion")
-    else:
-        return create_vbo_strategy(name="DefaultVBO")

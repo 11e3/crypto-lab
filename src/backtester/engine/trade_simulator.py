@@ -61,6 +61,8 @@ def process_stop_loss_take_profit(
 
         current_price = closes[t_idx, d_idx]
         entry_price = state.position_entry_prices[t_idx]
+        if entry_price <= 0:
+            continue
         pnl_pct = current_price / entry_price - 1.0
 
         should_exit, is_stop_loss, is_take_profit = _check_exit_conditions(pnl_pct, config)
@@ -208,8 +210,9 @@ def finalize_open_positions(
             entry_price = state.position_entry_prices[t_idx]
             amount = state.position_amounts[t_idx]
 
-            # Get final closing price (last non-NaN value)
-            final_price = _get_final_price(closes, t_idx, entry_price)
+            # Get final closing price (last non-NaN value) with sell slippage
+            raw_price = _get_final_price(closes, t_idx, entry_price)
+            final_price = calculator.apply_slippage(raw_price, is_buy=False)
 
             # Calculate unrealized P&L
             costs = calculator.calculate_exit_costs(entry_price, final_price, amount)

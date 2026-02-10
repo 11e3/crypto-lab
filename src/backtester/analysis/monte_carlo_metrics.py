@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from src.utils.metrics_core import calculate_mdd, calculate_sharpe_ratio
+
 
 def calculate_simulation_metrics(
     simulated_equities: np.ndarray,
@@ -34,8 +36,8 @@ def calculate_simulation_metrics(
         simulated_cagrs[i] = _calculate_cagr(
             equity_curve, initial_capital, n_periods, annualization_factor
         )
-        simulated_mdds[i] = _calculate_mdd(equity_curve)
-        simulated_sharpes[i] = _calculate_sharpe(returns, annualization_factor)
+        simulated_mdds[i] = calculate_mdd(equity_curve)
+        simulated_sharpes[i] = calculate_sharpe_ratio(returns, annualization_factor)
 
     return simulated_cagrs, simulated_mdds, simulated_sharpes
 
@@ -53,20 +55,6 @@ def _calculate_cagr(
         ) * 100
         return result
     return -100.0
-
-
-def _calculate_mdd(equity_curve: np.ndarray) -> float:
-    """Calculate Maximum Drawdown for an equity curve."""
-    cummax = np.maximum.accumulate(equity_curve)
-    drawdown = (cummax - equity_curve) / cummax
-    return float(np.nanmax(drawdown) * 100) if len(drawdown) > 0 else 0.0
-
-
-def _calculate_sharpe(returns: np.ndarray, annualization_factor: float) -> float:
-    """Calculate Sharpe Ratio for returns."""
-    if len(returns) > 0 and np.std(returns) > 0:
-        return float((np.mean(returns) / np.std(returns)) * np.sqrt(annualization_factor))
-    return 0.0
 
 
 def calculate_statistics(

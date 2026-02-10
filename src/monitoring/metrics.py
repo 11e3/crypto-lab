@@ -11,9 +11,10 @@ Provides metrics for trading, ML, and pipeline operations with support for:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Callable, Generator
+from typing import Any
 
 from prometheus_client import (
     REGISTRY,
@@ -21,7 +22,6 @@ from prometheus_client import (
     Counter,
     Gauge,
     Histogram,
-    Summary,
     push_to_gateway,
     start_http_server,
 )
@@ -216,9 +216,7 @@ class TradingMetrics(MetricsExporter):
         self.win_rate.set(win_rate)
 
     @contextmanager
-    def track_order(
-        self, symbol: str, action: str
-    ) -> Generator[dict[str, Any], None, None]:
+    def track_order(self, symbol: str, action: str) -> Generator[dict[str, Any], None, None]:
         """Context manager to track order execution."""
         start_time = time.time()
         result: dict[str, Any] = {"status": "pending"}
@@ -394,10 +392,10 @@ class MLMetrics(MetricsExporter):
         if "class" in result:
             self.record_prediction(model, result["class"], latency)
 
-    def track_prediction_decorator(self, model: str) -> Callable:
+    def track_prediction_decorator(self, model: str) -> Callable[..., Any]:
         """Decorator to track prediction latency."""
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 with self.track_prediction(model) as result:

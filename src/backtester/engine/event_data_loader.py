@@ -71,7 +71,7 @@ def load_event_data(
             if "entry_price" not in df.columns:
                 df["entry_price"] = df.get("target", df["close"])
             if "exit_price" not in df.columns:
-                df["exit_price"] = df["close"]
+                df["exit_price"] = df.get("exit_price_base", df["close"])
 
             logger.info(
                 f"Loaded {ticker}: {len(df)} rows, {df['entry_signal'].sum()} entry signals"

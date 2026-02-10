@@ -7,6 +7,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from src.backtester.report_pkg.report_returns import build_equity_dataframe
+
 __all__ = ["calculate_monthly_returns_for_html"]
 
 
@@ -24,9 +26,7 @@ def calculate_monthly_returns_for_html(
     Returns:
         Dictionary with years, months, values, text, yearly_returns, yearly_labels
     """
-    df = pd.DataFrame({"date": dates, "equity": equity_curve})
-    df["date"] = pd.to_datetime(df["date"])
-    df.set_index("date", inplace=True)
+    df = build_equity_dataframe(equity_curve, dates)
 
     # Resample to monthly
     monthly = df["equity"].resample("ME").last()

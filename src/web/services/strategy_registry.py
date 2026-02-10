@@ -14,12 +14,84 @@ from src.web.services.parameter_models import ParameterSpec, StrategyInfo
 
 logger = get_logger(__name__)
 
-__all__ = ["StrategyRegistry", "is_bt_strategy"]
+__all__ = [
+    "StrategyRegistry",
+    "is_bt_strategy",
+    "get_bt_strategy_type",
+    "map_strategy_to_internal_type",
+    "create_analysis_strategy",
+]
+
+# bt strategy name → (engine_type, display_name)
+BT_STRATEGY_MAPPING: dict[str, tuple[str, str]] = {
+    "bt_VBO": ("vbo", "bt VBO"),
+    "bt_VBO_Regime": ("vbo_regime", "bt VBO Regime"),
+    "bt_Momentum": ("momentum", "bt Momentum"),
+    "bt_BuyAndHold": ("buy_and_hold", "bt Buy & Hold"),
+    "bt_VBO_SingleCoin": ("vbo_single_coin", "bt VBO Single Coin"),
+    "bt_VBO_Portfolio": ("vbo_portfolio", "bt VBO Portfolio"),
+}
 
 
 def is_bt_strategy(name: str) -> bool:
     """Check if strategy is from bt library."""
     return name.startswith("bt_")
+
+
+def get_bt_strategy_type(name: str) -> tuple[str, str]:
+    """Return (bt_engine_type, display_name) for a bt strategy."""
+    return BT_STRATEGY_MAPPING.get(name, ("vbo", "bt VBO"))
+
+
+def map_strategy_to_internal_type(strategy_name: str) -> str:
+    """Map registered strategy name to internal engine type.
+
+    Used by analysis page for Monte Carlo / Walk-Forward.
+    """
+    name_lower = strategy_name.lower()
+
+    if "vanilla" in name_lower or "vbo" in name_lower:
+        if "legacy" in name_lower:
+            return "legacy"
+        elif "minimal" in name_lower:
+            return "minimal"
+        return "vanilla"
+    elif "momentum" in name_lower:
+        return "momentum"
+    elif "mean" in name_lower and "reversion" in name_lower:
+        return "mean-reversion"
+    return "vanilla"
+
+
+def create_analysis_strategy(strategy_type: str) -> Any:
+    """Create strategy instance for Monte Carlo / Walk-Forward analysis."""
+    from src.strategies.mean_reversion import MeanReversionStrategy
+    from src.strategies.momentum import MomentumStrategy
+    from src.strategies.volatility_breakout import create_vbo_strategy
+
+    if strategy_type == "vanilla":
+        return create_vbo_strategy(
+            name="VanillaVBO",
+            use_trend_filter=False,
+            use_noise_filter=False,
+        )
+    elif strategy_type == "minimal":
+        return create_vbo_strategy(
+            name="MinimalVBO",
+            use_trend_filter=False,
+            use_noise_filter=False,
+        )
+    elif strategy_type == "legacy":
+        return create_vbo_strategy(
+            name="LegacyVBO",
+            use_trend_filter=True,
+            use_noise_filter=True,
+        )
+    elif strategy_type == "momentum":
+        return MomentumStrategy(name="Momentum")
+    elif strategy_type == "mean-reversion":
+        return MeanReversionStrategy(name="MeanReversion")
+    return create_vbo_strategy(name="DefaultVBO")
 
 
 class StrategyRegistry:

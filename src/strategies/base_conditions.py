@@ -7,11 +7,14 @@ Contains condition abstractions for composable entry/exit logic:
 - CompositeCondition: Combines conditions with AND/OR logic
 """
 
+import logging
 from abc import ABC, abstractmethod
 
 import pandas as pd
 
 from src.strategies.base_models import OHLCV
+
+logger = logging.getLogger(__name__)
 
 
 class Condition(ABC):
@@ -93,9 +96,13 @@ class CompositeCondition(Condition):
 
         raw_results = [c.evaluate(current, history, indicators) for c in self.conditions]
         results: list[bool] = []
-        for r in raw_results:
+        for i, r in enumerate(raw_results):
             if isinstance(r, pd.Series):
                 # Use the latest value when vectorized signals are returned
+                if len(r) > 1:
+                    logger.debug(
+                        f"Condition '{self.conditions[i].name}' returned Series of length {len(r)}; using last value"
+                    )
                 results.append(bool(r.iloc[-1]))
             else:
                 results.append(bool(r))

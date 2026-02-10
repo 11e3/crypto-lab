@@ -15,7 +15,7 @@ import json
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
@@ -41,8 +41,13 @@ def _get_gcs_client() -> Client:
         raise GCSStorageError(
             "google-cloud-storage not installed. Install with: pip install google-cloud-storage"
         ) from e
-    except Exception as e:
+    except (OSError, ValueError, TypeError, RuntimeError) as e:
         raise GCSStorageError(f"Failed to create GCS client: {e}") from e
+    except Exception as e:
+        # google.auth.exceptions.DefaultCredentialsError and similar auth errors
+        if "google.auth" in type(e).__module__:
+            raise GCSStorageError(f"GCS credentials not configured: {e}") from e
+        raise
 
 
 class GCSStorage:
@@ -137,11 +142,11 @@ class GCSStorage:
 
             return pd.read_csv(StringIO(content))
 
-        except Exception as e:
+        except (GCSStorageError, OSError, ValueError, KeyError) as e:
             logger.error(f"Error reading bot logs: {e}")
             raise GCSStorageError(f"Failed to read bot logs: {e}") from e
 
-    def get_bot_positions(self, account: str = "Main") -> dict:
+    def get_bot_positions(self, account: str = "Main") -> dict[str, Any]:
         """
         Get current bot positions.
 
@@ -161,10 +166,10 @@ class GCSStorage:
                 return {}
 
             content = blob.download_as_text()
-            result: dict[str, object] = json.loads(content)
+            result: dict[str, Any] = json.loads(content)
             return result
 
-        except Exception as e:
+        except (GCSStorageError, OSError, ValueError, KeyError) as e:
             logger.error(f"Error reading positions: {e}")
             raise GCSStorageError(f"Failed to read positions: {e}") from e
 
@@ -204,7 +209,7 @@ class GCSStorage:
             dates.sort(reverse=True)
             return dates[:limit]
 
-        except Exception as e:
+        except (GCSStorageError, OSError, ValueError) as e:
             logger.error(f"Error listing log dates: {e}")
             return []
 
@@ -233,7 +238,7 @@ class GCSStorage:
 
             return sorted(accounts)
 
-        except Exception as e:
+        except (GCSStorageError, OSError, ValueError) as e:
             logger.error(f"Error listing accounts: {e}")
             return []
 
@@ -276,7 +281,7 @@ class GCSStorage:
 
         except GCSStorageError:
             raise
-        except Exception as e:
+        except (OSError, ValueError, KeyError) as e:
             raise GCSStorageError(f"Failed to download model: {e}") from e
 
     def upload_model(
@@ -306,10 +311,10 @@ class GCSStorage:
             logger.info(f"Uploaded model: {local_path} -> {uri}")
             return uri
 
-        except Exception as e:
+        except (GCSStorageError, OSError, ValueError) as e:
             raise GCSStorageError(f"Failed to upload model: {e}") from e
 
-    def list_models(self) -> list[dict]:
+    def list_models(self) -> list[dict[str, Any]]:
         """
         List available models.
 
@@ -339,7 +344,7 @@ class GCSStorage:
 
             return models
 
-        except Exception as e:
+        except (GCSStorageError, OSError, ValueError) as e:
             logger.error(f"Error listing models: {e}")
             return []
 
@@ -374,7 +379,7 @@ class GCSStorage:
             logger.info(f"Uploaded data: {local_path} -> {uri}")
             return uri
 
-        except Exception as e:
+        except (GCSStorageError, OSError, ValueError) as e:
             raise GCSStorageError(f"Failed to upload data: {e}") from e
 
     def download_data(
@@ -412,10 +417,10 @@ class GCSStorage:
 
         except GCSStorageError:
             raise
-        except Exception as e:
+        except (OSError, ValueError, KeyError) as e:
             raise GCSStorageError(f"Failed to download data: {e}") from e
 
-    def list_data(self) -> list[dict]:
+    def list_data(self) -> list[dict[str, Any]]:
         """
         List available processed data files.
 
@@ -445,7 +450,7 @@ class GCSStorage:
 
             return data_files
 
-        except Exception as e:
+        except (GCSStorageError, OSError, ValueError) as e:
             logger.error(f"Error listing data: {e}")
             return []
 

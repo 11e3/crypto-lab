@@ -90,7 +90,9 @@ def execute_exit(
     exit_price = exit_price * (1 - config.slippage_rate)
 
     revenue = position.amount * exit_price * (1 - config.fee_rate)
-    cost = position.amount * position.entry_price
+    # Match the actual cost deducted from cash during entry:
+    # execute_entry: cost = amount * entry_price * (1 + fee_rate)
+    cost = position.amount * position.entry_price * (1 + config.fee_rate)
     pnl = revenue - cost
     pnl_pct = (exit_price / position.entry_price - 1) * 100
 

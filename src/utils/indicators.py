@@ -79,9 +79,9 @@ def sma(series: pd.Series, period: int, exclude_current: bool = False) -> pd.Ser
         SMA series
     """
     if exclude_current:
-        # Exclude current bar: use past 'period' bars (matching legacy/bt.py)
-        # rolling(window=period) includes current bar, so we shift by 1
-        return series.rolling(window=period, min_periods=period).mean().shift(1)
+        # Exclude current bar: shift first, then compute rolling mean
+        # This gives the mean of bars [i-period, ..., i-1] at index i
+        return series.shift(1).rolling(window=period, min_periods=period).mean()
     else:
         return series.rolling(window=period, min_periods=period).mean()
 
@@ -164,8 +164,8 @@ def noise_ratio(
     """
     price_range = high - low
     body = (close - open_).abs()
-    # Avoid division by zero
-    result = np.where(price_range > 0, 1 - body / price_range, 0.0)
+    # Avoid division by zero: NaN for zero range (undefined ratio)
+    result = np.where(price_range > 0, 1 - body / price_range, np.nan)
     return pd.Series(result, index=open_.index)
 
 

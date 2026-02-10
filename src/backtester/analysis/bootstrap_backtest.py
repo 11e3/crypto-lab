@@ -8,6 +8,11 @@ import pandas as pd
 from src.backtester.models import BacktestResult
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
+from src.utils.metrics_core import (
+    calculate_daily_returns,
+    calculate_mdd,
+    calculate_sharpe_ratio,
+)
 
 __all__ = ["simple_backtest_vectorized"]
 
@@ -77,15 +82,10 @@ def simple_backtest_vectorized(
         result.total_return = (equity[-1] - initial_capital) / initial_capital if equity else 0.0
 
         if len(equity) > 1:
-            returns = np.diff(equity) / equity[:-1]
-            result.sharpe_ratio = (
-                float(np.mean(returns) / (np.std(returns) + 1e-8) * np.sqrt(252))
-                if np.std(returns) > 0
-                else 0.0
-            )
-            cummax = np.maximum.accumulate(equity)
-            dd = (np.array(equity) - cummax) / cummax
-            result.mdd = float(np.min(dd)) if len(dd) > 0 else 0.0
+            equity_arr = np.array(equity, dtype=np.float64)
+            returns = calculate_daily_returns(equity_arr)
+            result.sharpe_ratio = calculate_sharpe_ratio(returns, annualization_factor=252)
+            result.mdd = calculate_mdd(equity_arr)
         else:
             result.sharpe_ratio = 0.0
             result.mdd = 0.0

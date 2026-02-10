@@ -13,6 +13,13 @@ __all__ = ["calculate_update_count", "merge_ohlcv_data"]
 logger = get_logger(__name__)
 
 
+def _make_naive(ts: datetime) -> datetime:
+    """Strip timezone info for consistent comparison."""
+    if ts.tzinfo is not None:
+        return ts.replace(tzinfo=None)
+    return ts
+
+
 def calculate_update_count(
     latest_timestamp: datetime,
     interval: str,
@@ -27,13 +34,16 @@ def calculate_update_count(
     Returns:
         Number of candles to fetch
     """
+    now = datetime.now()
+    latest = _make_naive(latest_timestamp)
+
     if interval == "day":
-        days_since = (datetime.now() - latest_timestamp).days
+        days_since = (now - latest).days
         return min(days_since + 10, 200)
     elif interval.startswith("minute"):
         try:
             minutes = int(interval.replace("minute", ""))
-            minutes_since = (datetime.now() - latest_timestamp).total_seconds() / 60
+            minutes_since = (now - latest).total_seconds() / 60
             return min(int(minutes_since / minutes) + 10, 200)
         except ValueError:
             return 200
@@ -57,8 +67,8 @@ def merge_ohlcv_data(
     Returns:
         Tuple of (merged DataFrame, number of new rows added)
     """
-    # Filter to only new data
-    new_df = new_df[new_df.index > latest_timestamp]
+    # Filter to new data (>= to avoid dropping exact timestamp matches)
+    new_df = new_df[new_df.index >= latest_timestamp]
 
     if len(new_df) == 0:
         return existing_df, 0

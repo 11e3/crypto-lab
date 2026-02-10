@@ -72,13 +72,13 @@ def mock_components() -> dict[str, MagicMock]:
 def bot(mock_config: MagicMock, mock_components: dict[str, MagicMock]) -> TradingBotFacade:
     """Create a TradingBotFacade instance with mocked dependencies."""
     with (
-        patch("src.execution.bot.bot_init.get_config", return_value=mock_config),
-        patch("src.execution.bot.bot_init.get_notifier", return_value=mock_components["telegram"]),
-        patch("src.execution.bot.bot_init.get_event_bus"),
-        patch("src.execution.bot.bot_init.TradeHandler"),
-        patch("src.execution.bot.bot_init.NotificationHandler"),
+        patch("src.execution.bot.bot_factory.get_config", return_value=mock_config),
+        patch("src.execution.bot.bot_factory.get_notifier", return_value=mock_components["telegram"]),
+        patch("src.execution.bot.bot_factory.get_event_bus"),
+        patch("src.execution.bot.bot_factory.TradeHandler"),
+        patch("src.execution.bot.bot_factory.NotificationHandler"),
         patch(
-            "src.execution.bot.bot_init.AdvancedOrderManager",
+            "src.execution.bot.bot_factory.AdvancedOrderManager",
             return_value=mock_components["advanced_order_manager"],
         ),
     ):
@@ -113,7 +113,7 @@ class TestTradingBotFacade:
         mock_components["exchange"].get_balance.assert_called_with("KRW")
 
         # Exception case
-        mock_components["exchange"].get_balance.side_effect = Exception("API Error")
+        mock_components["exchange"].get_balance.side_effect = ConnectionError("API Error")
         assert bot.get_krw_balance() == 0.0
 
     def test_initialize_targets(
@@ -343,7 +343,7 @@ class TestTradingBotFacade:
     ) -> None:
         """Test error handling in sell_all."""
         ticker = "KRW-BTC"
-        mock_components["order_manager"].sell_all.side_effect = Exception("Sell Failed")
+        mock_components["order_manager"].sell_all.side_effect = ConnectionError("Sell Failed")
 
         result = bot._sell_all(ticker)
 
@@ -353,9 +353,9 @@ class TestTradingBotFacade:
     def test_create_bot_factory(self, mock_config: MagicMock) -> None:
         """Test the create_bot factory function."""
         with (
-            patch("src.execution.bot.bot_init.get_config", return_value=mock_config),
-            patch("src.execution.bot.bot_init.get_notifier"),
-            patch("src.execution.bot.bot_init.ExchangeFactory"),
+            patch("src.execution.bot.bot_factory.get_config", return_value=mock_config),
+            patch("src.execution.bot.bot_factory.get_notifier"),
+            patch("src.execution.bot.bot_factory.ExchangeFactory"),
         ):
             from src.execution.bot.bot_facade import create_bot
 

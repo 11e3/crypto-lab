@@ -6,23 +6,18 @@ Page for backtest execution and result display.
 from __future__ import annotations
 
 from datetime import date as date_type
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-import numpy as np
 import streamlit as st
 
-from src.backtester.models import BacktestConfig, BacktestResult
+from src.backtester.models import BacktestConfig
 from src.utils.logger import get_logger
 
 if TYPE_CHECKING:
     from src.web.components.sidebar.trading_config import TradingConfig
-    from src.web.services.bt_backtest_runner import BtBacktestResult
-from src.web.components.charts.equity_curve import render_equity_curve
-from src.web.components.charts.monthly_heatmap import render_monthly_heatmap
-from src.web.components.charts.underwater import render_underwater_curve
-from src.web.components.charts.yearly_bar import render_yearly_bar_chart
-from src.web.components.metrics.metrics_display import (
-    render_metrics_cards,
+from src.web.components.results.backtest_results import (
+    UnifiedBacktestResult,
+    render_backtest_results,
 )
 from src.web.components.sidebar.asset_selector import render_asset_selector
 from src.web.components.sidebar.date_config import render_date_config
@@ -30,7 +25,6 @@ from src.web.components.sidebar.strategy_selector import render_strategy_selecto
 from src.web.components.sidebar.trading_config import render_trading_config
 from src.web.services.backtest_runner import run_backtest_service
 from src.web.services.data_loader import get_data_files, validate_data_availability
-from src.web.services.metrics_calculator import calculate_extended_metrics
 
 logger = get_logger(__name__)
 
@@ -47,10 +41,15 @@ def render_backtest_page() -> None:
     # Display results below settings if available
     if "bt_backtest_result" in st.session_state:
         st.markdown("---")
-        _display_bt_results(st.session_state.bt_backtest_result)
+        strategy_name = st.session_state.get("bt_strategy_name", "bt_VBO")
+        unified = UnifiedBacktestResult.from_bt(
+            st.session_state.bt_backtest_result, strategy_name
+        )
+        render_backtest_results(unified)
     elif "backtest_result" in st.session_state:
         st.markdown("---")
-        _display_results(st.session_state.backtest_result)
+        unified = UnifiedBacktestResult.from_event_driven(st.session_state.backtest_result)
+        render_backtest_results(unified)
 
 
 def _render_settings_section() -> None:
@@ -59,6 +58,11 @@ def _render_settings_section() -> None:
 
     # Split settings into 3 columns
     col1, col2, col3 = st.columns([1, 1, 1])
+
+    # Render asset selector first so ticker count is available for max_slots default
+    with col3:
+        st.markdown("### 🪙 Asset Selection")
+        selected_tickers = render_asset_selector()
 
     # ===== Column 1: Date & Trading Settings =====
     with col1:
@@ -72,11 +76,6 @@ def _render_settings_section() -> None:
     with col2:
         st.markdown("### 📈 Strategy Settings")
         strategy_name, strategy_params = render_strategy_selector()
-
-    # ===== Column 3: Asset Selection =====
-    with col3:
-        st.markdown("### 🪙 Asset Selection")
-        selected_tickers = render_asset_selector()
 
     st.markdown("---")
 
@@ -155,7 +154,7 @@ def _render_settings_section() -> None:
 
 def _run_event_driven_backtest(
     strategy_name: str,
-    strategy_params: dict,
+    strategy_params: dict[str, Any],
     available_tickers: list[str],
     trading_config: TradingConfig,
     start_date: date_type | None,
@@ -213,7 +212,7 @@ def _run_event_driven_backtest(
 
 def _run_bt_backtest(
     strategy_name: str,
-    strategy_params: dict,
+    strategy_params: dict[str, Any],
     available_tickers: list[str],
     trading_config: TradingConfig,
     start_date: date_type | None,
@@ -229,19 +228,10 @@ def _run_bt_backtest(
     # Convert tickers: KRW-BTC -> BTC
     symbols = [t.replace("KRW-", "") for t in available_tickers]
 
-    # Strategy name to bt strategy type mapping
-    strategy_mapping = {
-        "bt_VBO": ("vbo", "bt VBO"),
-        "bt_VBO_Regime": ("vbo_regime", "bt VBO Regime"),
-        "bt_Momentum": ("momentum", "bt Momentum"),
-        "bt_BuyAndHold": ("buy_and_hold", "bt Buy & Hold"),
-        "bt_VBO_SingleCoin": ("vbo_single_coin", "bt VBO Single Coin"),
-        "bt_VBO_Portfolio": ("vbo_portfolio", "bt VBO Portfolio"),
-    }
+    # Strategy name to bt strategy type mapping (centralized in strategy_registry)
+    from src.web.services.strategy_registry import get_bt_strategy_type
 
-    bt_strategy_type, strategy_display = strategy_mapping.get(
-        strategy_name, ("vbo", "bt VBO")
-    )
+    bt_strategy_type, strategy_display = get_bt_strategy_type(strategy_name)
 
     # Run backtest based on strategy type
     if strategy_name == "bt_VBO_Regime":
@@ -334,215 +324,3 @@ def _show_config_summary(
             - Assets: {len(selected_tickers)}
             """
         )
-
-
-def _display_results(result: BacktestResult) -> None:
-    """Display backtest results.
-
-    Args:
-        result: BacktestResult object
-    """
-    st.subheader("📊 Backtest Results")
-
-    # Extract trade returns
-    trade_returns = [t.pnl_pct / 100 for t in result.trades if t.pnl_pct is not None]
-
-    # Calculate extended metrics (cached in session state)
-    equity = np.array(result.equity_curve)
-    dates = np.array(result.dates) if hasattr(result, "dates") and result.dates else np.arange(len(equity))
-
-    # Generate cache key (cache metrics by equity hash)
-    cache_key = f"metrics_{hash(equity.tobytes())}"
-
-    if cache_key not in st.session_state:
-        # Calculate metrics (only once)
-        st.session_state[cache_key] = calculate_extended_metrics(
-            equity=equity,
-            trade_returns=trade_returns,
-            dates=dates,
-        )
-
-    extended_metrics = st.session_state[cache_key]
-
-    # Metrics cards (displayed directly, not in tab)
-    render_metrics_cards(extended_metrics)
-
-    st.markdown("---")
-
-    # Tab configuration (3 tabs like bt results)
-    tab1, tab2, tab3 = st.tabs(["📊 Equity Curve", "📆 Yearly Returns", "📋 Trade History"])
-
-    with tab1:
-        render_equity_curve(dates, equity)
-        st.markdown("### Drawdown")
-        render_underwater_curve(dates, equity)
-
-    with tab2:
-        render_yearly_bar_chart(dates, equity)
-        st.markdown("### Monthly Heatmap")
-        render_monthly_heatmap(dates, equity)
-
-    with tab3:
-        if result.trades:
-            import pandas as pd
-
-            st.markdown(f"### Trade History ({len(result.trades):,} trades)")
-
-            trades_df = pd.DataFrame(
-                [
-                    {
-                        "Ticker": t.ticker,
-                        "Entry Date": str(t.entry_date),
-                        "Entry Price": f"{t.entry_price:,.0f}",
-                        "Exit Date": str(t.exit_date) if t.exit_date else "-",
-                        "Exit Price": f"{t.exit_price:,.0f}" if t.exit_price else "-",
-                        "P&L": f"{t.pnl:,.0f}",
-                        "P&L %": f"{t.pnl_pct:.2f}%",
-                    }
-                    for t in result.trades
-                ]
-            )
-
-            show_count = st.selectbox(
-                "Show trades", options=[10, 25, 50, 100, "All"], index=1, key="trade_count"
-            )
-            display_df = trades_df if show_count == "All" else trades_df.tail(int(str(show_count)))
-            st.dataframe(display_df, width="stretch", hide_index=True)
-        else:
-            st.info("No trades executed.")
-
-
-def _display_bt_results(result: BtBacktestResult) -> None:
-    """Display bt library backtest results.
-
-    Args:
-        result: BtBacktestResult object
-    """
-    # Get strategy name from session state
-    strategy_name = st.session_state.get("bt_strategy_name", "bt_VBO")
-    strategy_display = "bt VBO Regime" if strategy_name == "bt_VBO_Regime" else "bt VBO"
-
-    st.subheader(f"📊 {strategy_display} Backtest Results")
-
-    # Extract trade returns for extended metrics calculation
-    trade_returns = [t["return_pct"] / 100 for t in result.trades if t.get("return_pct")]
-
-    # Calculate extended metrics (same as default strategy)
-    equity = np.array(result.equity_curve)
-    dates = np.array(result.dates) if result.dates else None
-
-    # Generate cache key
-    cache_key = f"bt_metrics_{hash(equity.tobytes())}"
-
-    if cache_key not in st.session_state:
-        st.session_state[cache_key] = calculate_extended_metrics(
-            equity=equity,
-            trade_returns=trade_returns,
-            dates=dates,
-        )
-
-    extended_metrics = st.session_state[cache_key]
-
-    # Use the same metrics display as default strategy
-    render_metrics_cards(extended_metrics)
-
-    st.markdown("---")
-
-    # Tab configuration (Statistics tab removed)
-    tab1, tab2, tab3 = st.tabs(["📊 Equity Curve", "📆 Yearly Returns", "📋 Trade History"])
-
-    with tab1:
-        # Use the same normalized equity curve as default strategy
-        dates_array = np.array(result.dates)
-        render_equity_curve(dates_array, equity)
-        st.markdown("### Drawdown")
-        render_underwater_curve(dates_array, equity)
-
-    with tab2:
-        _render_bt_yearly_chart(result)
-        st.markdown("### Monthly Heatmap")
-        render_monthly_heatmap(np.array(result.dates), equity)
-
-    with tab3:
-        _render_bt_trade_history(result)
-
-
-def _render_bt_yearly_chart(result: BtBacktestResult) -> None:
-    """Render bt yearly returns chart."""
-    import pandas as pd
-    import plotly.graph_objects as go
-
-    years = sorted(result.yearly_returns.keys())
-    returns = [result.yearly_returns[y] for y in years]
-    colors = ["#2ECC71" if r >= 0 else "#E74C3C" for r in returns]
-
-    fig = go.Figure()
-    fig.add_trace(
-        go.Bar(
-            x=years,
-            y=returns,
-            marker_color=colors,
-            text=[f"{r:.1f}%" for r in returns],
-            textposition="outside",
-        )
-    )
-
-    avg_return = np.mean(returns)
-    fig.add_hline(
-        y=avg_return,
-        line_dash="dash",
-        line_color="gray",
-        annotation_text=f"Avg: {avg_return:.1f}%",
-        annotation_position="right",
-    )
-
-    fig.update_layout(
-        title="Yearly Returns",
-        xaxis_title="Year",
-        yaxis_title="Return (%)",
-        height=400,
-        showlegend=False,
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Table
-    yearly_df = pd.DataFrame({"Year": years, "Return (%)": [f"{r:.2f}%" for r in returns]})
-    st.dataframe(yearly_df, width="stretch", hide_index=True)
-
-
-def _render_bt_trade_history(result: BtBacktestResult) -> None:
-    """Render bt trade history."""
-    import pandas as pd
-
-    if not result.trades:
-        st.info("No trades executed.")
-        return
-
-    st.markdown(f"### Trade History ({len(result.trades):,} trades)")
-
-    trades_df = pd.DataFrame(result.trades)
-    trades_df["entry_date"] = pd.to_datetime(trades_df["entry_date"]).dt.strftime("%Y-%m-%d")
-    trades_df["exit_date"] = pd.to_datetime(trades_df["exit_date"]).dt.strftime("%Y-%m-%d")
-    trades_df["entry_price"] = trades_df["entry_price"].apply(lambda x: f"{x:,.0f}")
-    trades_df["exit_price"] = trades_df["exit_price"].apply(lambda x: f"{x:,.0f}")
-    trades_df["pnl"] = trades_df["pnl"].apply(lambda x: f"{x:,.0f}")
-    trades_df["return_pct"] = trades_df["return_pct"].apply(lambda x: f"{x:.2f}%")
-
-    trades_df = trades_df.rename(
-        columns={
-            "symbol": "Symbol",
-            "entry_date": "Entry Date",
-            "exit_date": "Exit Date",
-            "entry_price": "Entry Price",
-            "exit_price": "Exit Price",
-            "pnl": "P&L",
-            "return_pct": "Return",
-        }
-    )
-
-    show_count = st.selectbox(
-        "Show trades", options=[10, 25, 50, 100, "All"], index=1, key="bt_trade_count"
-    )
-    display_df = trades_df if show_count == "All" else trades_df.tail(int(str(show_count)))
-    st.dataframe(display_df, width="stretch", hide_index=True)

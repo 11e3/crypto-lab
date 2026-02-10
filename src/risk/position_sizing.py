@@ -10,9 +10,9 @@ Provides various position sizing methods:
 
 from typing import Literal
 
-import numpy as np
 import pandas as pd
 
+from src.risk.volatility import calculate_return_volatility
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -50,7 +50,8 @@ def calculate_position_size(
         return 0.0
 
     if method == "equal":
-        return _equal_sizing(available_cash, available_slots)
+        size = _equal_sizing(available_cash, available_slots)
+        return max(0.0, min(size, available_cash))
 
     if historical_data is None or len(historical_data) < lookback_period:
         logger.warning(
@@ -59,11 +60,11 @@ def calculate_position_size(
         return _equal_sizing(available_cash, available_slots)
 
     if method == "volatility":
-        return _volatility_based_sizing(
+        size = _volatility_based_sizing(
             available_cash, available_slots, historical_data, lookback_period
         )
     elif method == "fixed-risk":
-        return _fixed_risk_sizing(
+        size = _fixed_risk_sizing(
             available_cash,
             available_slots,
             current_price,
@@ -72,12 +73,15 @@ def calculate_position_size(
             lookback_period,
         )
     elif method == "inverse-volatility":
-        return _inverse_volatility_sizing(
+        size = _inverse_volatility_sizing(
             available_cash, available_slots, historical_data, lookback_period
         )
     else:
         logger.warning(f"Unknown position sizing method: {method}, using equal sizing")
-        return _equal_sizing(available_cash, available_slots)
+        size = _equal_sizing(available_cash, available_slots)
+
+    # Ensure position size is never negative or exceeding available cash
+    return max(0.0, min(size, available_cash))
 
 
 def _equal_sizing(available_cash: float, available_slots: int) -> float:
@@ -99,15 +103,8 @@ def _volatility_based_sizing(
     Allocates more capital to less volatile assets.
     Uses inverse volatility weighting normalized across all slots.
     """
-    if len(historical_data) < lookback_period:
-        return _equal_sizing(available_cash, available_slots)
-
-    # Calculate volatility (standard deviation of returns)
-    recent_data = historical_data.tail(lookback_period)
-    returns = recent_data["close"].pct_change().dropna()
-    volatility = float(returns.std())
-
-    if volatility <= 0 or np.isnan(volatility):
+    volatility = calculate_return_volatility(historical_data, lookback_period)
+    if volatility is None:
         return _equal_sizing(available_cash, available_slots)
 
     # Inverse volatility weight (lower volatility = higher weight)
@@ -133,15 +130,8 @@ def _fixed_risk_sizing(
     Allocates capital such that each position has the same risk (volatility).
     Position size = (target_risk * portfolio_value) / (volatility * price)
     """
-    if len(historical_data) < lookback_period:
-        return _equal_sizing(available_cash, available_slots)
-
-    # Calculate volatility
-    recent_data = historical_data.tail(lookback_period)
-    returns = recent_data["close"].pct_change().dropna()
-    volatility = float(returns.std())
-
-    if volatility <= 0 or np.isnan(volatility) or current_price <= 0:
+    volatility = calculate_return_volatility(historical_data, lookback_period)
+    if volatility is None or current_price <= 0:
         return _equal_sizing(available_cash, available_slots)
 
     # Calculate position size based on target risk
@@ -169,15 +159,8 @@ def _inverse_volatility_sizing(
     Allocates more to less volatile assets.
     Similar to volatility-based but with different normalization.
     """
-    if len(historical_data) < lookback_period:
-        return _equal_sizing(available_cash, available_slots)
-
-    # Calculate volatility
-    recent_data = historical_data.tail(lookback_period)
-    returns = recent_data["close"].pct_change().dropna()
-    volatility = returns.std()
-
-    if volatility <= 0 or np.isnan(volatility):
+    volatility = calculate_return_volatility(historical_data, lookback_period)
+    if volatility is None:
         return _equal_sizing(available_cash, available_slots)
 
     # Inverse volatility: lower volatility gets more capital

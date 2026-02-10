@@ -55,6 +55,7 @@ class TradeCostCalculator:
         entry_price: float,
         exit_price: float,
         amount: float,
+        original_investment: float | None = None,
     ) -> TradeCosts:
         """
         Calculate all costs for exiting a position.
@@ -62,17 +63,36 @@ class TradeCostCalculator:
         Args:
             entry_price: Entry price per unit
             exit_price: Exit price per unit
-            amount: Position size
+            amount: Position size (already fee-reduced from calculate_buy_amount)
+            original_investment: Original investment amount before entry fee.
+                If None, estimated as amount * entry_price / (1 - fee_rate).
 
         Returns:
             TradeCosts with all calculated values
         """
         revenue = amount * exit_price * (1 - self.fee_rate)
-        cost = amount * entry_price
+
+        # amount is already fee-reduced, so recover original investment
+        if original_investment is not None:
+            cost = original_investment
+        else:
+            cost = amount * entry_price / (1 - self.fee_rate) if self.fee_rate < 1 else 0.0
+
         pnl = revenue - cost
         pnl_pct = (exit_price / entry_price - 1) * 100 if entry_price > 0 else 0.0
 
-        commission = amount * (entry_price + exit_price) * self.fee_rate
+        # Commission: entry fee is already embedded in amount, report exit fee only
+        exit_commission = amount * exit_price * self.fee_rate
+        entry_commission = (
+            cost * self.fee_rate
+            if original_investment is not None
+            else (
+                amount * entry_price * self.fee_rate / (1 - self.fee_rate)
+                if self.fee_rate < 1
+                else 0.0
+            )
+        )
+        commission = entry_commission + exit_commission
         slippage = amount * (entry_price + exit_price) * self.slippage_rate
 
         return TradeCosts(
@@ -107,7 +127,10 @@ class TradeCostCalculator:
         pnl = return_money - invest_amount
         pnl_pct = (sell_price / buy_price - 1) * 100 if buy_price > 0 else 0.0
 
-        commission = amount * (buy_price + sell_price) * self.fee_rate
+        # Entry fee is already embedded in amount; report both fees correctly
+        entry_commission = invest_amount * self.fee_rate
+        exit_commission = amount * sell_price * self.fee_rate
+        commission = entry_commission + exit_commission
         slippage = amount * (buy_price + sell_price) * self.slippage_rate
 
         return TradeCosts(

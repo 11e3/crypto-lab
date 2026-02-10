@@ -6,7 +6,7 @@ Separates data fetching responsibility from signal detection (SRP).
 
 import pandas as pd
 
-from src.exchange import MarketDataService
+from src.exchange import ExchangeError, MarketDataService
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -63,6 +63,6 @@ class SignalDataLoader:
                 )
                 return None
             return df
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.error(f"Error getting OHLCV for {ticker}: {e}", exc_info=True)
             return None

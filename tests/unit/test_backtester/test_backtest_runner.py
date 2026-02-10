@@ -116,7 +116,7 @@ class TestCollectMissingData:
     def test_collect_failure(self, mock_factory: MagicMock, tmp_path: Path) -> None:
         """Test data collection failure (line 105)."""
         mock_collector = MagicMock()
-        mock_collector.collect.side_effect = Exception("Collection failed")
+        mock_collector.collect.side_effect = ConnectionError("Collection failed")
         mock_factory.create.return_value = mock_collector
 
         # Should not raise exception, just log error

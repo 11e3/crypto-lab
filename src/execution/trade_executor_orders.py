@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
+from src.exchange import ExchangeError
 from src.utils.logger import get_logger
 
 if TYPE_CHECKING:
@@ -116,7 +117,7 @@ def check_advanced_orders(
                     advanced_order_manager,
                     trading_config,
                 )
-    except Exception as e:
+    except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
         logger.warning(f"Error checking advanced orders for {ticker}: {e}")
     return False
 

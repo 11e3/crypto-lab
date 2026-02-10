@@ -114,7 +114,7 @@ class TestValidateApiConnection:
     @patch("time.sleep")
     def test_validate_failure(self, mock_sleep: MagicMock, mock_bot_facade: MagicMock) -> None:
         """Test failed API validation."""
-        mock_bot_facade.exchange.get_balance.side_effect = Exception("API Error")
+        mock_bot_facade.exchange.get_balance.side_effect = ConnectionError("API Error")
 
         result = _validate_api_connection(mock_bot_facade)
 
@@ -184,7 +184,7 @@ class TestRunTradingLoop:
 
     def test_api_validation_failure(self, mock_bot_facade: MagicMock) -> None:
         """Test early return when API validation fails."""
-        mock_bot_facade.exchange.get_balance.side_effect = Exception("API Error")
+        mock_bot_facade.exchange.get_balance.side_effect = ConnectionError("API Error")
 
         with patch("time.sleep"):
             run_trading_loop(mock_bot_facade)
@@ -225,10 +225,3 @@ class TestRunTradingLoop:
         mock_main_loop.assert_called_once()
 
 
-class TestDailyResetWindowSeconds:
-    """Tests for DAILY_RESET_WINDOW_SECONDS constant."""
-
-    def test_constant_value(self) -> None:
-        """Test that constant has expected value."""
-        assert DAILY_RESET_WINDOW_SECONDS == 10
-        assert isinstance(DAILY_RESET_WINDOW_SECONDS, int)

@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 import pandas as pd
+import requests
 
 from src.exceptions.exchange import (
     ExchangeError,
@@ -53,7 +54,9 @@ def execute_buy_market_order(client: Any, symbol: str, amount: float) -> Order:
             created_at=datetime.now(),
             metadata=result,
         )
-    except Exception as e:
+    except (ExchangeOrderError, InsufficientBalanceError):
+        raise
+    except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
         _get_logger().error(f"Error placing buy order for {symbol}: {e}", exc_info=True)
         if "insufficient" in str(e).lower():
             raise InsufficientBalanceError(f"Insufficient balance: {e}") from e
@@ -92,7 +95,9 @@ def execute_sell_market_order(client: Any, symbol: str, amount: float) -> Order:
             created_at=datetime.now(),
             metadata=result,
         )
-    except Exception as e:
+    except (ExchangeOrderError, InsufficientBalanceError):
+        raise
+    except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
         _get_logger().error(f"Error placing sell order for {symbol}: {e}", exc_info=True)
         if "insufficient" in str(e).lower():
             raise InsufficientBalanceError(f"Insufficient balance: {e}") from e
@@ -128,7 +133,7 @@ def fetch_order_status(client: Any, order_id: str) -> Order:
         return _parse_order_result(order_id, result)
     except ExchangeError:
         raise
-    except Exception as e:
+    except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
         _get_logger().error(f"Error getting order status for {order_id}: {e}", exc_info=True)
         raise ExchangeError(f"Failed to get order status: {e}") from e
 
@@ -181,6 +186,6 @@ def cancel_existing_order(client: Any, order_id: str) -> bool:
     try:
         result = client.cancel_order(order_id)
         return result is not None
-    except Exception as e:
+    except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
         _get_logger().error(f"Error cancelling order {order_id}: {e}", exc_info=True)
         raise ExchangeError(f"Failed to cancel order: {e}") from e

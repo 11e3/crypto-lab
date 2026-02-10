@@ -1,0 +1,172 @@
+"""
+Core metric calculation functions.
+
+Single source of truth for MDD, Sharpe, CAGR, daily returns, Calmar, and Sortino.
+All functions are pure math (numpy + scalars), no pandas or domain model dependencies.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+
+from src.config import ANNUALIZATION_FACTOR, RISK_FREE_RATE
+
+__all__ = [
+    "calculate_calmar_ratio",
+    "calculate_cagr",
+    "calculate_daily_returns",
+    "calculate_drawdown_series",
+    "calculate_mdd",
+    "calculate_sharpe_ratio",
+    "calculate_sortino_ratio",
+]
+
+
+def calculate_drawdown_series(equity_curve: np.ndarray) -> np.ndarray:
+    """Calculate drawdown fraction series from equity curve.
+
+    Args:
+        equity_curve: Daily equity values.
+
+    Returns:
+        Array of drawdown fractions (0 to 1 range, 0 = no drawdown).
+    """
+    if len(equity_curve) < 2:
+        return np.zeros_like(equity_curve)
+    cummax = np.maximum.accumulate(equity_curve)
+    drawdown: np.ndarray = (cummax - equity_curve) / cummax
+    return drawdown
+
+
+def calculate_mdd(equity_curve: np.ndarray) -> float:
+    """Calculate Maximum Drawdown as a positive percentage.
+
+    Args:
+        equity_curve: Daily equity values.
+
+    Returns:
+        MDD as positive percentage (e.g. 15.3 means 15.3% drawdown).
+        Returns 0.0 if fewer than 2 data points.
+    """
+    if len(equity_curve) < 2:
+        return 0.0
+    drawdown = calculate_drawdown_series(equity_curve)
+    return float(np.nanmax(drawdown) * 100)
+
+
+def calculate_daily_returns(
+    equity_curve: np.ndarray,
+    *,
+    prepend_zero: bool = False,
+) -> np.ndarray:
+    """Calculate daily returns from equity curve.
+
+    Args:
+        equity_curve: Daily equity values.
+        prepend_zero: If True, prepend a 0.0 return so output length matches input.
+
+    Returns:
+        Array of daily returns.
+    """
+    if len(equity_curve) < 2:
+        if prepend_zero:
+            return np.zeros(len(equity_curve))
+        return np.array([], dtype=np.float64)
+    returns: np.ndarray = np.diff(equity_curve) / equity_curve[:-1]
+    if prepend_zero:
+        returns = np.insert(returns, 0, 0.0)
+    return returns
+
+
+def calculate_sharpe_ratio(
+    returns: np.ndarray,
+    annualization_factor: float = ANNUALIZATION_FACTOR,
+) -> float:
+    """Calculate annualized Sharpe ratio.
+
+    Args:
+        returns: Array of period returns.
+        annualization_factor: Trading days per year (365 for crypto, 252 for stocks).
+
+    Returns:
+        Annualized Sharpe ratio. Returns 0.0 if empty or zero std.
+    """
+    if len(returns) == 0:
+        return 0.0
+    std = float(np.std(returns))
+    if std <= 0:
+        return 0.0
+    return float(np.mean(returns) / std * np.sqrt(annualization_factor))
+
+
+def calculate_cagr(
+    initial_value: float,
+    final_value: float,
+    total_days: int | float,
+) -> float:
+    """Calculate Compound Annual Growth Rate as percentage.
+
+    Uses log-based formula for numerical stability with overflow guard.
+
+    Args:
+        initial_value: Starting portfolio value.
+        final_value: Ending portfolio value.
+        total_days: Number of calendar days.
+
+    Returns:
+        CAGR as percentage (e.g. 12.5 means 12.5%).
+        Returns 0.0 if total_days <= 0 or initial_value <= 0.
+        Returns -100.0 if final_value <= 0.
+    """
+    if total_days <= 0 or initial_value <= 0:
+        return 0.0
+    if final_value <= 0:
+        return -100.0
+    ratio = final_value / initial_value
+    if ratio <= 0:
+        return -100.0
+    with np.errstate(over="ignore"):
+        cagr_raw = (np.exp((365.0 / total_days) * np.log(ratio)) - 1) * 100
+    if np.isinf(cagr_raw):
+        return 1e18
+    return float(cagr_raw)
+
+
+def calculate_calmar_ratio(cagr_pct: float, mdd_pct: float) -> float:
+    """Calculate Calmar ratio (CAGR / MDD).
+
+    Args:
+        cagr_pct: CAGR as percentage.
+        mdd_pct: MDD as positive percentage.
+
+    Returns:
+        Calmar ratio. Returns 0.0 if MDD <= 0.
+    """
+    if mdd_pct <= 0:
+        return 0.0
+    return cagr_pct / mdd_pct
+
+
+def calculate_sortino_ratio(
+    returns: np.ndarray,
+    risk_free_rate: float = RISK_FREE_RATE,
+    annualization_factor: float = ANNUALIZATION_FACTOR,
+) -> float:
+    """Calculate Sortino ratio using downside deviation.
+
+    Args:
+        returns: Array of period returns.
+        risk_free_rate: Risk-free rate (daily).
+        annualization_factor: Annualization factor.
+
+    Returns:
+        Sortino ratio. Returns 0.0 if no downside deviation.
+    """
+    if len(returns) == 0:
+        return 0.0
+    excess_returns = returns - risk_free_rate
+    downside_returns = np.minimum(excess_returns, 0)
+    downside_std = float(np.std(downside_returns))
+    if downside_std <= 0:
+        return 0.0
+    return float(np.mean(excess_returns) / downside_std * np.sqrt(annualization_factor))

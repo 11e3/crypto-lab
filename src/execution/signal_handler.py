@@ -7,7 +7,7 @@ calculation are delegated to specialized classes.
 
 import pandas as pd
 
-from src.exchange import MarketDataService
+from src.exchange import ExchangeError, MarketDataService
 from src.execution.event_bus import EventBus, get_event_bus
 from src.execution.events import EventType, SignalEvent
 from src.execution.signal_data import SignalDataLoader
@@ -114,7 +114,7 @@ class SignalHandler:
                 self.event_bus.publish(event)
 
             return entry_signal
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
             logger.error(f"Error checking entry signal for {ticker}: {e}", exc_info=True)
             return False
 
@@ -153,11 +153,11 @@ class SignalHandler:
                         price=current_price,
                     )
                     self.event_bus.publish(event)
-                except Exception as e:
+                except (ExchangeError, ConnectionError, OSError) as e:
                     logger.error(f"Error getting price for exit signal event: {e}", exc_info=True)
 
             return exit_signal
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
             logger.error(f"Error checking exit signal for {ticker}: {e}", exc_info=True)
             return False
 

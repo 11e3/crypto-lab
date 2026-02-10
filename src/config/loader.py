@@ -1,25 +1,29 @@
 """Configuration loader with environment variable and YAML support."""
 
+import logging
 import os
+import threading
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from src.config.loader_getters import (
+_loader_logger = logging.getLogger(__name__)
+
+from src.config.loader_getters import (  # noqa: E402
     get_bot_config as _get_bot_config,
 )
-from src.config.loader_getters import (
+from src.config.loader_getters import (  # noqa: E402
     get_strategy_config as _get_strategy_config,
 )
-from src.config.loader_getters import (
+from src.config.loader_getters import (  # noqa: E402
     get_telegram_config as _get_telegram_config,
 )
-from src.config.loader_getters import (
+from src.config.loader_getters import (  # noqa: E402
     get_trading_config as _get_trading_config,
 )
-from src.config.loader_parsers import get_yaml_value, parse_env_value
-from src.config.settings import Settings
+from src.config.loader_parsers import get_yaml_value, parse_env_value  # noqa: E402
+from src.config.settings import Settings  # noqa: E402
 
 
 class ConfigLoader:
@@ -65,11 +69,14 @@ class ConfigLoader:
             )
 
         for path in search_paths:
+            _loader_logger.debug(f"Searching for config at: {path}")
             if path.exists():
+                _loader_logger.info(f"Loaded config from: {path}")
                 with path.open(encoding="utf-8") as f:
                     self._yaml_config = yaml.safe_load(f) or {}
                 return
 
+        _loader_logger.debug("No config file found in search paths")
         self._yaml_config = {}
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -183,6 +190,7 @@ class ConfigLoader:
 
 # Global config instance
 _config: ConfigLoader | None = None
+_config_lock = threading.Lock()
 
 
 def get_config(config_path: Path | None = None) -> ConfigLoader:
@@ -197,5 +205,7 @@ def get_config(config_path: Path | None = None) -> ConfigLoader:
     """
     global _config
     if _config is None:
-        _config = ConfigLoader(config_path)
+        with _config_lock:
+            if _config is None:
+                _config = ConfigLoader(config_path)
     return _config

@@ -5,6 +5,7 @@ This module provides type-safe environment variable management following
 Modern Python Development Standards.
 """
 
+import threading
 from typing import Any
 
 from pydantic import Field, field_validator
@@ -194,6 +195,7 @@ class Settings(BaseSettings):
 
 # Global settings instance
 _settings: Settings | None = None
+_settings_lock = threading.Lock()
 
 
 def get_settings() -> Settings:
@@ -205,5 +207,7 @@ def get_settings() -> Settings:
     """
     global _settings
     if _settings is None:
-        _settings = Settings()
+        with _settings_lock:
+            if _settings is None:
+                _settings = Settings()
     return _settings

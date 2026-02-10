@@ -4,10 +4,10 @@ Multi-asset position sizing strategies.
 
 from collections.abc import Mapping
 
-import numpy as np
 import pandas as pd
 
 from src.risk.position_sizing import PositionSizingMethod
+from src.risk.volatility import calculate_return_volatility
 
 __all__ = ["calculate_multi_asset_position_sizes"]
 
@@ -71,17 +71,15 @@ def _inverse_volatility_multi(
     total_weight = 0.0
 
     for ticker in tickers:
-        if ticker not in historical_data or len(historical_data[ticker]) < lookback_period:
+        data = historical_data.get(ticker)
+        volatility = (
+            calculate_return_volatility(data, lookback_period) if data is not None else None
+        )
+
+        if volatility is None:
             weights[ticker] = 1.0
         else:
-            recent_data = historical_data[ticker].tail(lookback_period)
-            returns = recent_data["close"].pct_change().dropna()
-            volatility = returns.std()
-
-            if volatility <= 0 or np.isnan(volatility):
-                weights[ticker] = 1.0
-            else:
-                weights[ticker] = 1.0 / volatility
+            weights[ticker] = 1.0 / volatility
 
         total_weight += weights[ticker]
 
@@ -102,19 +100,16 @@ def _fixed_risk_multi(
     position_values: dict[str, float] = {}
 
     for ticker in tickers:
-        if ticker not in historical_data or len(historical_data[ticker]) < lookback_period:
-            position_values[ticker] = available_cash / len(tickers)
-            continue
-
         if ticker not in current_prices or current_prices[ticker] <= 0:
             position_values[ticker] = 0.0
             continue
 
-        recent_data = historical_data[ticker].tail(lookback_period)
-        returns = recent_data["close"].pct_change().dropna()
-        volatility = returns.std()
+        data = historical_data.get(ticker)
+        volatility = (
+            calculate_return_volatility(data, lookback_period) if data is not None else None
+        )
 
-        if volatility <= 0 or np.isnan(volatility):
+        if volatility is None:
             position_values[ticker] = available_cash / len(tickers)
         else:
             target_risk_amount = available_cash * target_risk_pct

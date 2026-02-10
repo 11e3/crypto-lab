@@ -334,7 +334,7 @@ class TestUpbitDataCollectorCollect:
     ) -> None:
         """Test collect_multiple with exception during collect."""
         # Mock collect to raise an exception
-        with patch.object(collector, "collect", side_effect=Exception("Collection error")):
+        with patch.object(collector, "collect", side_effect=ConnectionError("Collection error")):
             results = collector.collect_multiple(["KRW-BTC"], ["day"])
 
         # collect_multiple catches exceptions and sets -1 for failed items

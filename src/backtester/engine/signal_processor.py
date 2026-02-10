@@ -48,8 +48,9 @@ def add_price_columns(
     else:
         df["entry_price"] = df["close"] * (1 + config.slippage_rate)
 
-    # Exit price: close with slippage
-    df["exit_price"] = df["close"] * (1 - config.slippage_rate)
+    # Exit price: exit_price_base (or close) with slippage
+    exit_base = df.get("exit_price_base", df["close"])
+    df["exit_price"] = exit_base * (1 - config.slippage_rate)
 
     return df
 

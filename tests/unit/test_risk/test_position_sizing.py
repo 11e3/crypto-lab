@@ -37,7 +37,7 @@ def test_equal_sizing() -> None:
     assert _equal_sizing(1000, 2) == 500
     assert _equal_sizing(0, 1) == 0
     assert _equal_sizing(1000, 1) == 1000
-    assert _equal_sizing(1000.0, 0) == float("inf")  # Division by zero
+    assert _equal_sizing(1000.0, 0) == 0.0  # No slots available = no investment
 
 
 def test_volatility_based_sizing(sample_historical_data: pd.DataFrame) -> None:
@@ -212,10 +212,10 @@ class TestCalculatePositionSize:
         """Test inverse volatility position sizing."""
         size = calculate_position_size(
             method="inverse-volatility",
-            available_cash=1000,
+            available_cash=1000.0,
             available_slots=2,
             ticker="TEST",
-            current_price=100,
+            current_price=100.0,
             historical_data=sample_historical_data,
             lookback_period=20,
         )

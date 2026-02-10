@@ -4,7 +4,12 @@ Order manager for handling order execution.
 Focuses on order placement (SRP). Order tracking is delegated to OrderTracker.
 """
 
-from src.exchange import ExchangeOrderError, InsufficientBalanceError, OrderExecutionService
+from src.exchange import (
+    ExchangeError,
+    ExchangeOrderError,
+    InsufficientBalanceError,
+    OrderExecutionService,
+)
 from src.exchange.types import Order
 from src.execution.event_bus import EventBus, get_event_bus
 from src.execution.events import EventType, OrderEvent
@@ -84,7 +89,7 @@ class OrderManager:
         except ExchangeOrderError as e:
             logger.error(f"Failed to place buy order {ticker}: {e}")
             return None
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.error(f"Unexpected error placing buy order {ticker}: {e}", exc_info=True)
             return None
 
@@ -127,7 +132,7 @@ class OrderManager:
         except ExchangeOrderError as e:
             logger.error(f"Failed to place sell order {ticker}: {e}")
             return None
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.error(f"Unexpected error placing sell order {ticker}: {e}", exc_info=True)
             return None
 
@@ -168,7 +173,7 @@ class OrderManager:
                 return None
 
             return self.place_sell_order(ticker, balance.available, min_order_amount)
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError, ValueError) as e:
             logger.error(f"Error selling all for {ticker}: {e}", exc_info=True)
             return None
 
@@ -188,7 +193,7 @@ class OrderManager:
                 self.order_tracker.remove_order(order_id)
                 logger.info(f"Cancelled order: {order_id}")
             return success
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.error(f"Error cancelling order {order_id}: {e}", exc_info=True)
             return False
 

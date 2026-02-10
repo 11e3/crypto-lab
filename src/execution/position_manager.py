@@ -5,7 +5,7 @@ Focuses on position lifecycle management (SRP).
 PnL calculations are delegated to PnLCalculator.
 """
 
-from src.exchange import PriceService
+from src.exchange import ExchangeError, PriceService
 from src.execution.event_bus import EventBus, get_event_bus
 from src.execution.events import EventType, PositionEvent
 from src.execution.pnl_calculator import PnLCalculator
@@ -143,7 +143,7 @@ class PositionManager:
         """Get current market price for a ticker."""
         try:
             return self.exchange.get_current_price(ticker)
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.error(f"Error getting price for {ticker}: {e}", exc_info=True)
             return 0.0
 

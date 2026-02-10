@@ -4,7 +4,7 @@ Order tracking and status management.
 Separates order tracking responsibility from order execution (SRP).
 """
 
-from src.exchange import OrderExecutionService
+from src.exchange import ExchangeError, OrderExecutionService
 from src.exchange.types import Order
 from src.execution.event_bus import EventBus
 from src.execution.events import EventType, OrderEvent
@@ -67,7 +67,7 @@ class OrderTracker:
 
             self._publish_status_change(old_order, order)
             return order
-        except Exception as e:
+        except (ExchangeError, ConnectionError, OSError) as e:
             logger.error(f"Error getting order status for {order_id}: {e}", exc_info=True)
             return None
 

@@ -118,6 +118,8 @@ class EventBus:
         """
         # Notify specific subscribers
         handlers = self._subscribers.get(event.event_type, [])
+        if not handlers and not self._global_subscribers:
+            logger.debug(f"No subscribers for event: {event.event_type}")
         for handler in handlers:
             try:
                 handler(event)
