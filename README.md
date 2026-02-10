@@ -84,8 +84,8 @@ Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
 | Repo | 역할 | LOC | 상태 |
 |------|------|-----|------|
 | **crypto-quant-system** | 백테스트, 대시보드, 데이터 파이프라인 | ~7,500 | Active |
-| **crypto-bot** | Upbit 실매매 봇 (VBO) | ~930 | Active (독립 배포) |
-| **crypto-regime-classifier-ml** | ML 시장 국면 분류기 | ~6,100 | Active (모델 학습) |
+| **[crypto-bot](https://github.com/11e3/crypto-bot)** | Upbit 실매매 봇 (VBO) | ~720 | Active (독립 배포) |
+| **[crypto-regime-classifier-ml](https://github.com/11e3/crypto-regime-classifier-ml)** | ML 시장 국면 분류기 | ~6,100 | Active (모델 학습) |
 | **bt** | 이전 백테스트 프레임워크 | ~17K | Archived (CQS에 흡수) |
 
 ### 왜 분리하는가?
