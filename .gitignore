@@ -118,4 +118,5 @@ docs/*.rst
 # Model artifacts
 models/
 
-*.json
+# GCP service account keys (project-id-hex12.json)
+*-[0-9]*-[0-9a-f]*.json
