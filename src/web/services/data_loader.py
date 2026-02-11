@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from src.config import RAW_DATA_DIR, parquet_filename
+from src.config import BINANCE_DATA_DIR, RAW_DATA_DIR, parquet_filename
 from src.data.collector_fetch import Interval
 from src.utils.logger import get_logger
 
@@ -23,7 +23,22 @@ __all__ = [
     "get_data_files",
     "load_multiple_tickers_parallel",
     "get_data_date_range",
+    "get_data_dir",
 ]
+
+
+def get_data_dir(exchange: str = "upbit") -> Path:
+    """Get the data directory for an exchange.
+
+    Args:
+        exchange: Exchange name ("upbit" or "binance")
+
+    Returns:
+        Path to the data directory
+    """
+    if exchange == "binance":
+        return BINANCE_DATA_DIR
+    return RAW_DATA_DIR
 
 
 @st.cache_data(ttl=3600, show_spinner="Loading data...")
@@ -32,21 +47,23 @@ def load_ticker_data(
     interval: Interval,
     start_date: date | None = None,
     end_date: date | None = None,
+    exchange: str = "upbit",
 ) -> pd.DataFrame | None:
     """Load OHLCV data (1 hour cache).
 
     Args:
-        ticker: Ticker symbol (e.g., KRW-BTC)
+        ticker: Ticker symbol (e.g., KRW-BTC, BTCUSDT)
         interval: Candle interval
         start_date: Start date (optional)
         end_date: End date (optional)
+        exchange: Exchange name ("upbit" or "binance")
 
     Returns:
         OHLCV DataFrame or None (on failure)
     """
     try:
-        # Data file path (files are stored directly in RAW_DATA_DIR)
-        file_path = RAW_DATA_DIR / parquet_filename(ticker, interval)
+        data_dir = get_data_dir(exchange)
+        file_path = data_dir / parquet_filename(ticker, interval)
 
         if not file_path.exists():
             logger.warning(f"Data file not found: {file_path}")
@@ -73,21 +90,23 @@ def load_ticker_data(
 def get_data_files(
     tickers: list[str],
     interval: Interval,
+    exchange: str = "upbit",
 ) -> dict[str, Path]:
     """Create data file path dictionary for ticker list.
 
     Args:
         tickers: Ticker list
         interval: Candle interval
+        exchange: Exchange name ("upbit" or "binance")
 
     Returns:
         {ticker: file_path} dictionary
     """
     data_files: dict[str, Path] = {}
+    data_dir = get_data_dir(exchange)
 
     for ticker in tickers:
-        # Files are stored directly in RAW_DATA_DIR
-        file_path = RAW_DATA_DIR / parquet_filename(ticker, interval)
+        file_path = data_dir / parquet_filename(ticker, interval)
         if file_path.exists():
             data_files[ticker] = file_path
         else:
@@ -99,22 +118,24 @@ def get_data_files(
 def validate_data_availability(
     tickers: list[str],
     interval: Interval,
+    exchange: str = "upbit",
 ) -> tuple[list[str], list[str]]:
     """Validate data availability.
 
     Args:
         tickers: Ticker list
         interval: Candle interval
+        exchange: Exchange name ("upbit" or "binance")
 
     Returns:
         (available_tickers, missing_tickers) tuple
     """
     available: list[str] = []
     missing: list[str] = []
+    data_dir = get_data_dir(exchange)
 
     for ticker in tickers:
-        # Files are stored directly in RAW_DATA_DIR
-        file_path = RAW_DATA_DIR / parquet_filename(ticker, interval)
+        file_path = data_dir / parquet_filename(ticker, interval)
         if file_path.exists():
             available.append(ticker)
         else:
@@ -129,6 +150,7 @@ def load_multiple_tickers_parallel(
     start_date: date | None = None,
     end_date: date | None = None,
     max_workers: int = 4,
+    exchange: str = "upbit",
 ) -> dict[str, pd.DataFrame]:
     """Load multiple ticker data in parallel.
 
@@ -140,6 +162,7 @@ def load_multiple_tickers_parallel(
         start_date: Start date (optional)
         end_date: End date (optional)
         max_workers: Maximum number of workers (default: 4)
+        exchange: Exchange name ("upbit" or "binance")
 
     Returns:
         {ticker: DataFrame} dictionary
@@ -149,7 +172,7 @@ def load_multiple_tickers_parallel(
     def load_single_ticker(ticker: str) -> tuple[str, pd.DataFrame | None]:
         """Load single ticker."""
         try:
-            df = load_ticker_data(ticker, interval, start_date, end_date)
+            df = load_ticker_data(ticker, interval, start_date, end_date, exchange)
             return ticker, df
         except Exception as e:
             logger.warning(f"Failed to load {ticker}: {e}")
@@ -169,7 +192,10 @@ def load_multiple_tickers_parallel(
 
 
 @st.cache_data(ttl=3600)
-def get_data_date_range(interval: Interval = "day") -> tuple[date | None, date | None]:
+def get_data_date_range(
+    interval: Interval = "day",
+    exchange: str = "upbit",
+) -> tuple[date | None, date | None]:
     """Get the date range of available data.
 
     Scans all parquet files for the given interval and returns
@@ -177,6 +203,7 @@ def get_data_date_range(interval: Interval = "day") -> tuple[date | None, date |
 
     Args:
         interval: Candle interval
+        exchange: Exchange name ("upbit" or "binance")
 
     Returns:
         (start_date, end_date) tuple, or (None, None) if no data
@@ -184,9 +211,11 @@ def get_data_date_range(interval: Interval = "day") -> tuple[date | None, date |
     min_date: date | None = None
     max_date: date | None = None
 
+    data_dir = get_data_dir(exchange)
+
     # Find all parquet files for this interval
-    pattern = f"KRW-*_{interval}.parquet"
-    files = list(RAW_DATA_DIR.glob(pattern))
+    pattern = f"*_{interval}.parquet"
+    files = list(data_dir.glob(pattern))
 
     if not files:
         logger.warning(f"No data files found for interval: {interval}")

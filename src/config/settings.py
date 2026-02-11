@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     upbit_access_key: str = Field(default="", description="Upbit API access key")
     upbit_secret_key: str = Field(default="", description="Upbit API secret key")
 
+    # Binance API Configuration
+    binance_api_key: str = Field(default="", description="Binance API key")
+    binance_api_secret: str = Field(default="", description="Binance API secret")
+
     # Telegram Configuration
     telegram_token: str = Field(default="", description="Telegram bot token")
     telegram_chat_id: str = Field(default="", description="Telegram chat ID")
@@ -134,6 +138,24 @@ class Settings(BaseSettings):
                 "or create a .env file with these values."
             )
         return self.upbit_access_key, self.upbit_secret_key
+
+    def get_binance_keys(self) -> tuple[str, str]:
+        """
+        Get Binance API keys.
+
+        Returns:
+            Tuple of (api_key, api_secret)
+
+        Raises:
+            ValueError: If keys are not configured
+        """
+        if not self.binance_api_key or not self.binance_api_secret:
+            raise ValueError(
+                "Binance API keys not configured. "
+                "Set BINANCE_API_KEY and BINANCE_API_SECRET environment variables, "
+                "or create a .env file with these values."
+            )
+        return self.binance_api_key, self.binance_api_secret
 
     def get_telegram_config(self) -> dict[str, Any]:
         """

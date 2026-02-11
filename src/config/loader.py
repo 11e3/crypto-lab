@@ -146,6 +146,32 @@ class ConfigLoader:
 
             return access_key, secret_key
 
+    def get_binance_keys(self) -> tuple[str, str]:
+        """
+        Get Binance API keys.
+
+        Returns:
+            Tuple of (api_key, api_secret)
+
+        Raises:
+            ValueError: If keys are not configured
+        """
+        try:
+            keys: tuple[str, str] = self._settings.get_binance_keys()
+            return keys
+        except ValueError as e:
+            api_key = self._get_yaml_value("binance.api_key") or ""
+            api_secret = self._get_yaml_value("binance.api_secret") or ""
+
+            if not api_key or not api_secret:
+                raise ValueError(
+                    "Binance API keys not configured. "
+                    "Set BINANCE_API_KEY and BINANCE_API_SECRET environment variables, "
+                    "or create a .env file with these values."
+                ) from e
+
+            return api_key, api_secret
+
     def get_exchange_keys(self, exchange_name: str | None = None) -> tuple[str, str]:
         """
         Get API keys for the specified exchange.
@@ -166,9 +192,11 @@ class ConfigLoader:
 
         if exchange_name == "upbit":
             return self.get_upbit_keys()
+        elif exchange_name == "binance":
+            return self.get_binance_keys()
         else:
             raise ValueError(
-                f"Exchange '{exchange_name}' not supported yet. Supported exchanges: upbit"
+                f"Exchange '{exchange_name}' not supported yet. Supported exchanges: upbit, binance"
             )
 
     def get_telegram_config(self) -> dict[str, Any]:

@@ -36,6 +36,7 @@ dependencies = [
     "pydantic-settings>=2.0.0",  # Type-safe environment variable management
     "annotated-types>=0.6.0,<0.7",  # Pin to avoid IndentationError in 0.7.0
     "psutil>=5.9.0",  # Process and system utilities
+    "ccxt>=4.0.0",  # Universal crypto exchange library (Binance, etc.)
     "typing-extensions<4.15.0",  # Pin to avoid annotationlib dependency (Python 3.14+)
     "typing-inspection<0.4",  # Pin for Python 3.12 compatibility (TypeIs not available)
 ]
@@ -178,6 +179,7 @@ module = [
     "plotly.*",
     "yaml.*",
     "requests.*",
+    "ccxt.*",
 ]
 ignore_missing_imports = true
 

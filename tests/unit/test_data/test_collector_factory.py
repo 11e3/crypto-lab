@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.data.binance_collector import BinanceDataCollector
 from src.data.collector import UpbitDataCollector
 from src.data.collector_factory import DataCollectorFactory
 
@@ -14,9 +15,24 @@ class TestCollectorFactory:
         collector = DataCollectorFactory.create("upbit")
         assert isinstance(collector, UpbitDataCollector)
 
+    def test_create_binance(self) -> None:
+        """Test DataCollectorFactory.create with binance."""
+        collector = DataCollectorFactory.create("binance")
+        assert isinstance(collector, BinanceDataCollector)
+
+    def test_create_binance_case_insensitive(self) -> None:
+        """Test DataCollectorFactory.create is case-insensitive for binance."""
+        collector = DataCollectorFactory.create("BINANCE")
+        assert isinstance(collector, BinanceDataCollector)
+
+    def test_create_binance_custom_data_dir(self, tmp_path: pytest.TempPathFactory) -> None:
+        """Test DataCollectorFactory.create with custom data_dir for binance."""
+        collector = DataCollectorFactory.create("binance", data_dir=tmp_path)  # type: ignore[arg-type]
+        assert isinstance(collector, BinanceDataCollector)
+
     def test_create_invalid_type(self) -> None:
         """Test DataCollectorFactory.create with invalid type."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Unsupported exchange"):
             DataCollectorFactory.create("invalid_exchange")
 
     def test_create_default(self) -> None:

@@ -32,6 +32,7 @@ __all__ = [
 
 # Data directory for crypto-lab
 DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "raw"
+BINANCE_DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "raw" / "binance"
 
 # Models directory
 MODELS_DIR = Path(__file__).resolve().parents[3] / "models"
@@ -71,33 +72,51 @@ class VboBacktestResult:
     trades: list[dict[str, Any]]
 
 
-def get_available_symbols(interval: str = "day") -> list[str]:
+def get_available_symbols(interval: str = "day", exchange: str = "upbit") -> list[str]:
     """Get list of symbols available for backtest.
 
     Args:
         interval: Time interval (default: "day")
+        exchange: Exchange name ("upbit" or "binance")
 
     Returns:
-        List of available symbol names (e.g., ["BTC", "ETH", "XRP"])
+        List of available symbol names (e.g., ["BTC", "ETH", "XRP"] for Upbit,
+        ["BTCUSDT", "ETHUSDT"] for Binance)
     """
     symbols = []
-    if DATA_DIR.exists():
-        for file in DATA_DIR.glob(f"KRW-*_{interval}.parquet"):
-            symbol = file.stem.replace(f"_{interval}", "").replace("KRW-", "")
-            symbols.append(symbol)
+    if exchange == "binance":
+        if BINANCE_DATA_DIR.exists():
+            for file in BINANCE_DATA_DIR.glob(f"*_{interval}.parquet"):
+                symbol = file.stem.replace(f"_{interval}", "")
+                symbols.append(symbol)
+    else:
+        if DATA_DIR.exists():
+            for file in DATA_DIR.glob(f"KRW-*_{interval}.parquet"):
+                symbol = file.stem.replace(f"_{interval}", "").replace("KRW-", "")
+                symbols.append(symbol)
     return sorted(symbols)
 
 
-def _get_data_files(symbols: list[str], interval: str = "day") -> dict[str, Path]:
+def _get_data_files(
+    symbols: list[str], interval: str = "day", exchange: str = "upbit"
+) -> dict[str, Path]:
     """Build data file paths for given symbols."""
     data_files: dict[str, Path] = {}
     for symbol in symbols:
-        ticker = f"KRW-{symbol}"
-        file_path = DATA_DIR / parquet_filename(ticker, interval)
-        if file_path.exists():
-            data_files[ticker] = file_path
+        if exchange == "binance":
+            # Binance symbols are used as-is (e.g., BTCUSDT)
+            file_path = BINANCE_DATA_DIR / parquet_filename(symbol, interval)
+            if file_path.exists():
+                data_files[symbol] = file_path
+            else:
+                logger.warning(f"Data not found for {symbol}: {file_path}")
         else:
-            logger.warning(f"Data not found for {symbol}: {file_path}")
+            ticker = f"KRW-{symbol}"
+            file_path = DATA_DIR / parquet_filename(ticker, interval)
+            if file_path.exists():
+                data_files[ticker] = file_path
+            else:
+                logger.warning(f"Data not found for {symbol}: {file_path}")
     return data_files
 
 

@@ -100,7 +100,7 @@ def _collect_missing_data(tickers: list[str], data_dir: Path, interval: str) -> 
 
     for ticker in tickers:
         try:
-            collector.collect(ticker, interval_type, full_refresh=False)
+            collector.collect(ticker, interval_type, full_refresh=False)  # type: ignore[arg-type]
             logger.info(f"Collected data for {ticker}")
         except (OSError, ConnectionError, TimeoutError, ValueError) as e:
             logger.error(f"Failed to collect data for {ticker}: {e}")
