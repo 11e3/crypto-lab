@@ -30,7 +30,7 @@ __all__ = [
     "generate_report",
 ]
 
-plt.style.use("seaborn-v0_8-whitegrid")  # type: ignore[attr-defined]
+plt.style.use("seaborn-v0_8-whitegrid")
 logger = get_logger(__name__)
 
 

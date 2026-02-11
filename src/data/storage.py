@@ -22,7 +22,7 @@ import pandas as pd
 from src.utils.logger import get_logger
 
 if TYPE_CHECKING:
-    from google.cloud.storage import Bucket, Client  # type: ignore[import-untyped]
+    from google.cloud.storage import Bucket, Client
 
 logger = get_logger(__name__)
 
@@ -34,7 +34,7 @@ class GCSStorageError(Exception):
 def _get_gcs_client() -> Client:
     """Get GCS client with lazy import."""
     try:
-        from google.cloud import storage  # type: ignore[import-untyped]
+        from google.cloud import storage
 
         return storage.Client()
     except ImportError as e:

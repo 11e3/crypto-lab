@@ -123,7 +123,8 @@ def _render_account_selector(accounts: list[str]) -> str:
     )
 
     # Map back to actual account name
-    return _ACCOUNT_DISPLAY_MAP.get(selected_display, selected_display)
+    result: str = _ACCOUNT_DISPLAY_MAP.get(selected_display, selected_display)
+    return result
 
 
 def _render_positions_card(positions: dict[str, Any]) -> None:

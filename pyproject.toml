@@ -180,6 +180,9 @@ module = [
     "yaml.*",
     "requests.*",
     "ccxt.*",
+    "prometheus_client.*",
+    "google.cloud.*",
+    "dotenv.*",
 ]
 ignore_missing_imports = true
 
