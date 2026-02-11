@@ -29,12 +29,24 @@ POPULAR_TICKERS = [
 
 
 def get_available_tickers() -> list[str]:
-    """Return list of available tickers.
+    """Return tickers with local data, falling back to popular list.
+
+    Scans RAW_DATA_DIR for parquet files and extracts ticker names.
+    Falls back to POPULAR_TICKERS if no data files are found.
 
     Returns:
         List of ticker strings
     """
-    # TODO: In practice, scan data directory or call Upbit API
+    from src.config import RAW_DATA_DIR
+
+    try:
+        files = sorted(RAW_DATA_DIR.glob("KRW-*_*.parquet"))
+        if files:
+            tickers = sorted({f.stem.rsplit("_", 1)[0] for f in files})
+            return tickers
+    except OSError:
+        pass
+
     return POPULAR_TICKERS
 
 
