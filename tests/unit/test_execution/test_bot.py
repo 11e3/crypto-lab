@@ -32,7 +32,9 @@ class TestTradingBot:
     def test_initialization(self, mock_exchange: MockExchange, test_config_path: Path) -> None:
         """Test TradingBot initialization."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = MagicMock(spec=ConfigLoader)
@@ -92,7 +94,9 @@ class TestTradingBot:
     def test_get_krw_balance(self, mock_exchange: MockExchange, test_config_path: Path) -> None:
         """Test getting KRW balance."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -109,7 +113,9 @@ class TestTradingBot:
     ) -> None:
         """Test getting KRW balance with error."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -124,7 +130,9 @@ class TestTradingBot:
     def test_sell_all(self, mock_exchange: MockExchange, test_config_path: Path) -> None:
         """Test selling all holdings."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -140,7 +148,9 @@ class TestTradingBot:
     def test_sell_all_error(self, mock_exchange: MockExchange, test_config_path: Path) -> None:
         """Test selling all with error."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -157,7 +167,9 @@ class TestTradingBot:
     ) -> None:
         """Test checking exit conditions via signal_handler."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -172,7 +184,9 @@ class TestTradingBot:
     ) -> None:
         """Test checking entry conditions via signal_handler."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -189,7 +203,9 @@ class TestTradingBot:
     ) -> None:
         """Test checking entry conditions when no target info."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -229,7 +245,9 @@ class TestTradingBot:
     def test_initialize_targets(self, mock_exchange: MockExchange, test_config_path: Path) -> None:
         """Test initializing targets."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -269,7 +287,9 @@ class TestTradingBot:
     ) -> None:
         """Test checking existing holdings."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -288,7 +308,9 @@ class TestTradingBot:
     ) -> None:
         """Test checking existing holdings with error."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -305,7 +327,9 @@ class TestTradingBot:
     ) -> None:
         """Test calculating buy amount with insufficient balance."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -322,7 +346,9 @@ class TestTradingBot:
     ) -> None:
         """Test calculating buy amount when max slots reached."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -345,7 +371,9 @@ class TestTradingBot:
     ) -> None:
         """Test processing ticker update."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -362,7 +390,9 @@ class TestTradingBot:
     ) -> None:
         """Test processing ticker update when already holding."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -383,7 +413,9 @@ class TestTradingBot:
     ) -> None:
         """Test processing ticker update when no entry signal."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -401,7 +433,9 @@ class TestTradingBot:
     ) -> None:
         """Test processing ticker update when buy amount is insufficient."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -452,7 +486,9 @@ class TestTradingBot:
     ) -> None:
         """Test calculating buy amount (covers lines 289-312)."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -492,7 +528,9 @@ class TestTradingBot:
         from src.execution.bot.bot_reset import process_exits
 
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -533,7 +571,9 @@ class TestTradingBot:
         from src.execution.bot.bot_reset import recalculate_targets
 
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
         ):
             mock_config = self._create_mock_config()
@@ -563,7 +603,9 @@ class TestTradingBot:
     def test_daily_reset(self, mock_exchange: MockExchange, test_config_path: Path) -> None:
         """Test daily reset using bot_reset module functions."""
         with (
-            patch("src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange),
+            patch(
+                "src.execution.bot.bot_factory.ExchangeFactory.create", return_value=mock_exchange
+            ),
             patch("src.execution.bot.bot_factory.get_config") as mock_get_config,
             patch("src.execution.bot.bot_reset.process_exits") as mock_process_exits,
             patch("src.execution.bot.bot_reset.recalculate_targets") as mock_recalculate_targets,

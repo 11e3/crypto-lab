@@ -762,5 +762,3 @@ def _display_walk_forward_results() -> None:
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
-

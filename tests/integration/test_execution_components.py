@@ -144,7 +144,9 @@ class TestComponentWiring:
     def test_di_strategy_preserved(self, mock_config: MagicMock) -> None:
         """DI-injected strategy should be preserved."""
         exchange = MockExchange()
-        strategy = VanillaVBO(sma_period=3, trend_sma_period=10, short_noise_period=5, long_noise_period=5)
+        strategy = VanillaVBO(
+            sma_period=3, trend_sma_period=10, short_noise_period=5, long_noise_period=5
+        )
         with (
             patch("src.execution.bot.bot_factory.get_config", return_value=mock_config),
             patch("src.execution.bot.bot_factory.get_notifier", return_value=MagicMock()),
@@ -225,21 +227,15 @@ class TestComponentWiring:
 class TestFacadeIntegration:
     """Test TradingBotFacade with real components wired via factory."""
 
-    def test_facade_has_correct_tickers(
-        self, facade_with_mock_exchange: TradingBotFacade
-    ) -> None:
+    def test_facade_has_correct_tickers(self, facade_with_mock_exchange: TradingBotFacade) -> None:
         """Facade should expose configured tickers."""
         assert facade_with_mock_exchange.tickers == ["KRW-BTC", "KRW-ETH"]
 
-    def test_facade_exchange_is_mock(
-        self, facade_with_mock_exchange: TradingBotFacade
-    ) -> None:
+    def test_facade_exchange_is_mock(self, facade_with_mock_exchange: TradingBotFacade) -> None:
         """Facade should use the injected MockExchange."""
         assert isinstance(facade_with_mock_exchange.exchange, MockExchange)
 
-    def test_get_krw_balance_success(
-        self, facade_with_mock_exchange: TradingBotFacade
-    ) -> None:
+    def test_get_krw_balance_success(self, facade_with_mock_exchange: TradingBotFacade) -> None:
         """get_krw_balance should return correct balance from MockExchange."""
         balance = facade_with_mock_exchange.get_krw_balance()
         assert balance == 10_000_000.0
@@ -266,9 +262,7 @@ class TestFacadeIntegration:
 
         assert facade.get_krw_balance() == 0.0
 
-    def test_calculate_buy_amount_normal(
-        self, facade_with_mock_exchange: TradingBotFacade
-    ) -> None:
+    def test_calculate_buy_amount_normal(self, facade_with_mock_exchange: TradingBotFacade) -> None:
         """_calculate_buy_amount should divide balance by available slots."""
         bot = facade_with_mock_exchange
         # 10M KRW, 3 max slots, 0 positions -> 10M/3 * (1-0.0005)
@@ -348,27 +342,21 @@ class TestErrorRecovery:
         bot.exchange.get_balance = original_get_balance  # type: ignore[method-assign]
         assert bot.get_krw_balance() == 10_000_000.0
 
-    def test_all_slots_full_prevents_buy(
-        self, facade_with_mock_exchange: TradingBotFacade
-    ) -> None:
+    def test_all_slots_full_prevents_buy(self, facade_with_mock_exchange: TradingBotFacade) -> None:
         """No buy should happen when all slots are full."""
         bot = facade_with_mock_exchange
         for i, ticker in enumerate(["KRW-BTC", "KRW-ETH", "KRW-XRP"]):
             bot.position_manager.add_position(ticker, 50_000_000.0, 0.001 * (i + 1))
         assert bot._calculate_buy_amount() == 0.0
 
-    def test_duplicate_position_raises(
-        self, facade_with_mock_exchange: TradingBotFacade
-    ) -> None:
+    def test_duplicate_position_raises(self, facade_with_mock_exchange: TradingBotFacade) -> None:
         """Adding duplicate position should raise ValueError."""
         bot = facade_with_mock_exchange
         bot.position_manager.add_position("KRW-BTC", 50_000_000.0, 0.1)
         with pytest.raises(ValueError, match="Position already exists"):
             bot.position_manager.add_position("KRW-BTC", 51_000_000.0, 0.2)
 
-    def test_facade_components_not_none(
-        self, facade_with_mock_exchange: TradingBotFacade
-    ) -> None:
+    def test_facade_components_not_none(self, facade_with_mock_exchange: TradingBotFacade) -> None:
         """All facade components should be initialized (not None)."""
         bot = facade_with_mock_exchange
         assert bot.exchange is not None

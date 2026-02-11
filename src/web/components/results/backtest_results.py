@@ -49,20 +49,24 @@ class UnifiedBacktestResult:
         )
         trade_returns = [t.pnl_pct / 100 for t in result.trades if t.pnl_pct is not None]
 
-        trades_df = pd.DataFrame(
-            [
-                {
-                    "Ticker": t.ticker,
-                    "Entry Date": str(t.entry_date),
-                    "Entry Price": f"{t.entry_price:,.0f}",
-                    "Exit Date": str(t.exit_date) if t.exit_date else "-",
-                    "Exit Price": f"{t.exit_price:,.0f}" if t.exit_price else "-",
-                    "P&L": f"{t.pnl:,.0f}",
-                    "P&L %": f"{t.pnl_pct:.2f}%",
-                }
-                for t in result.trades
-            ]
-        ) if result.trades else pd.DataFrame()
+        trades_df = (
+            pd.DataFrame(
+                [
+                    {
+                        "Ticker": t.ticker,
+                        "Entry Date": str(t.entry_date),
+                        "Entry Price": f"{t.entry_price:,.0f}",
+                        "Exit Date": str(t.exit_date) if t.exit_date else "-",
+                        "Exit Price": f"{t.exit_price:,.0f}" if t.exit_price else "-",
+                        "P&L": f"{t.pnl:,.0f}",
+                        "P&L %": f"{t.pnl_pct:.2f}%",
+                    }
+                    for t in result.trades
+                ]
+            )
+            if result.trades
+            else pd.DataFrame()
+        )
 
         return cls(
             equity=equity,

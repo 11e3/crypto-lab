@@ -71,9 +71,7 @@ class CombinatorialPurgedCV:
         self.purge_pct = purge_pct
         self.embargo_pct = embargo_pct
 
-    def create_splits(
-        self, n_samples: int
-    ) -> list[tuple[np.ndarray, np.ndarray]]:
+    def create_splits(self, n_samples: int) -> list[tuple[np.ndarray, np.ndarray]]:
         """Create train/test splits with purging and embargo.
 
         Args:
@@ -89,9 +87,7 @@ class CombinatorialPurgedCV:
         splits: list[tuple[np.ndarray, np.ndarray]] = []
 
         # Create equally spaced test sets
-        test_starts = np.linspace(
-            0, n_samples - test_samples, self.num_splits, dtype=int
-        )
+        test_starts = np.linspace(0, n_samples - test_samples, self.num_splits, dtype=int)
 
         for test_start in test_starts:
             test_end = test_start + test_samples
@@ -104,9 +100,7 @@ class CombinatorialPurgedCV:
                 train_indices_list.extend(range(0, test_start - purge_samples))
 
             if test_end + embargo_samples < n_samples:
-                train_indices_list.extend(
-                    range(test_end + embargo_samples, n_samples)
-                )
+                train_indices_list.extend(range(test_end + embargo_samples, n_samples))
 
             train_indices = np.array(train_indices_list)
 
@@ -134,19 +128,13 @@ class CombinatorialPurgedCV:
         n_samples = len(data[first_symbol])
         splits = self.create_splits(n_samples)
 
-        logger.info(
-            f"Starting CPCV: {len(splits)} folds, "
-            f"{len(data)} symbols, {n_samples} samples"
-        )
+        logger.info(f"Starting CPCV: {len(splits)} folds, {len(data)} symbols, {n_samples} samples")
 
         all_results: list[dict[str, Any]] = []
 
         for i, (train_indices, test_indices) in enumerate(splits):
             # Split data for all symbols
-            test_data = {
-                symbol: df.iloc[test_indices].copy()
-                for symbol, df in data.items()
-            }
+            test_data = {symbol: df.iloc[test_indices].copy() for symbol, df in data.items()}
 
             # Run backtest on test set
             test_results = backtest_func(test_data, {})
@@ -173,9 +161,7 @@ class CombinatorialPurgedCV:
 
         return CPCVResult(fold_results=all_results, summary=summary)
 
-    def _summarize(
-        self, all_results: list[dict[str, Any]]
-    ) -> CPCVSummary:
+    def _summarize(self, all_results: list[dict[str, Any]]) -> CPCVSummary:
         """Aggregate results across all folds."""
         cagrs = [r["results"].get("cagr", 0) for r in all_results]
         mdds = [r["results"].get("mdd", 0) for r in all_results]
@@ -191,8 +177,6 @@ class CombinatorialPurgedCV:
             worst_mdd=float(np.min(mdds)),
             avg_win_rate=float(np.mean(win_rates)),
             avg_sortino=float(np.mean(sortinos)),
-            consistency=float(
-                len([c for c in cagrs if c > 0]) / len(cagrs) * 100
-            ),
+            consistency=float(len([c for c in cagrs if c > 0]) / len(cagrs) * 100),
             num_folds=len(all_results),
         )

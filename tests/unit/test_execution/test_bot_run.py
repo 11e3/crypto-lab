@@ -223,5 +223,3 @@ class TestRunTradingLoop:
         mock_bot_facade.initialize_targets.assert_called_once()
         mock_bot_facade.check_existing_holdings.assert_called_once()
         mock_main_loop.assert_called_once()
-
-

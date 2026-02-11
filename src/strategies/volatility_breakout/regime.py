@@ -56,8 +56,7 @@ class RegimeModelLoader:
             import joblib  # type: ignore[import-untyped]
         except ImportError as e:
             raise ImportError(
-                "ML dependencies not installed. Install with: "
-                "pip install joblib scikit-learn"
+                "ML dependencies not installed. Install with: pip install joblib scikit-learn"
             ) from e
 
         path = Path(model_path)
@@ -156,9 +155,7 @@ def predict_regime(clf_data: dict[str, Any], ohlcv_df: pd.DataFrame) -> pd.Serie
     return pd.Series(predictions, index=features.index, name="regime")
 
 
-def predict_regime_proba(
-    clf_data: dict[str, Any], ohlcv_df: pd.DataFrame
-) -> pd.DataFrame:
+def predict_regime_proba(clf_data: dict[str, Any], ohlcv_df: pd.DataFrame) -> pd.DataFrame:
     """Predict regime probabilities from OHLCV data.
 
     Args:

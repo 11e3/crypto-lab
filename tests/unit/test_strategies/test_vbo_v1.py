@@ -221,8 +221,8 @@ class TestVBOV1ExitSignal:
             if pd.notna(df["sma"].iloc[i - 1]):
                 expected = df["close"].iloc[i - 1] < df["sma"].iloc[i - 1]
                 assert df["exit_signal"].iloc[i] == expected, (
-                    f"Day {i}: close[{i-1}]={df['close'].iloc[i-1]}, "
-                    f"sma[{i-1}]={df['sma'].iloc[i-1]}, "
+                    f"Day {i}: close[{i - 1}]={df['close'].iloc[i - 1]}, "
+                    f"sma[{i - 1}]={df['sma'].iloc[i - 1]}, "
                     f"expected={expected}, got={df['exit_signal'].iloc[i]}"
                 )
 
@@ -239,9 +239,7 @@ class TestVBOV1ExitPriceBase:
         df = strategy.generate_signals(df)
 
         assert "exit_price_base" in df.columns
-        pd.testing.assert_series_equal(
-            df["exit_price_base"], df["open"], check_names=False
-        )
+        pd.testing.assert_series_equal(df["exit_price_base"], df["open"], check_names=False)
 
     def test_signal_processor_uses_exit_price_base(self) -> None:
         """signal_processor.add_price_columns should use exit_price_base."""
@@ -268,9 +266,7 @@ class TestVBOV1ExitPriceBase:
 
         # exit_price should be exit_price_base * (1 - slippage), not close
         expected_exit = df["exit_price_base"] * (1 - 0.001)
-        pd.testing.assert_series_equal(
-            result["exit_price"], expected_exit, check_names=False
-        )
+        pd.testing.assert_series_equal(result["exit_price"], expected_exit, check_names=False)
 
     def test_signal_processor_without_exit_price_base(self) -> None:
         """Without exit_price_base, signal_processor uses close (backward compat)."""
@@ -296,9 +292,7 @@ class TestVBOV1ExitPriceBase:
 
         # Without exit_price_base, exit_price = close * (1 - slippage)
         expected_exit = df["close"] * (1 - 0.001)
-        pd.testing.assert_series_equal(
-            result["exit_price"], expected_exit, check_names=False
-        )
+        pd.testing.assert_series_equal(result["exit_price"], expected_exit, check_names=False)
 
 
 class TestVBOV1BtcFilter:
@@ -317,9 +311,7 @@ class TestVBOV1BtcFilter:
             assert valid.dtype == bool or set(valid.unique()).issubset({True, False})
 
     @patch("src.strategies.volatility_breakout.vbo_v1._load_btc_data")
-    def test_without_btc_data(
-        self, mock_load: MagicMock, target_ohlcv: pd.DataFrame
-    ) -> None:
+    def test_without_btc_data(self, mock_load: MagicMock, target_ohlcv: pd.DataFrame) -> None:
         """Without BTC data, btc_above_ma=True (no filter)."""
         mock_load.return_value = None
         strategy = VBOV1(btc_data=None, ma_short=5, btc_ma=10)
@@ -331,9 +323,7 @@ class TestVBOV1BtcFilter:
 class TestVBOV1Signals:
     """Test full signal pipeline."""
 
-    def test_signals_are_boolean(
-        self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame
-    ) -> None:
+    def test_signals_are_boolean(self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame) -> None:
         strategy = VBOV1(btc_data=btc_data, ma_short=5, btc_ma=10)
         df = strategy.calculate_indicators(target_ohlcv)
         df = strategy.generate_signals(df)
@@ -341,9 +331,7 @@ class TestVBOV1Signals:
         assert df["entry_signal"].dtype == bool
         assert df["exit_signal"].dtype == bool
 
-    def test_no_data_corruption(
-        self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame
-    ) -> None:
+    def test_no_data_corruption(self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame) -> None:
         """Original DataFrame should not be modified."""
         original = target_ohlcv.copy()
         strategy = VBOV1(btc_data=btc_data, ma_short=5, btc_ma=10)

@@ -77,6 +77,14 @@ class SignalMetricsCalculator:
                 "sma": float(latest["sma"]),
                 "sma_trend": float(latest["sma_trend"]),
             }
-        except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
+        except (
+            ExchangeError,
+            ConnectionError,
+            OSError,
+            KeyError,
+            IndexError,
+            ValueError,
+            TypeError,
+        ) as e:
             logger.error(f"Error calculating metrics for {ticker}: {e}", exc_info=True)
             return None

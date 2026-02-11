@@ -165,10 +165,12 @@ class TestCalculateTradeMetrics:
 
     def test_all_winning_trades(self) -> None:
         """All winning trades should not crash profit_factor calculation."""
-        df = pd.DataFrame({
-            "pnl": [100.0, 200.0, 50.0],
-            "pnl_pct": [5.0, 10.0, 2.5],
-        })
+        df = pd.DataFrame(
+            {
+                "pnl": [100.0, 200.0, 50.0],
+                "pnl_pct": [5.0, 10.0, 2.5],
+            }
+        )
 
         result = calculate_trade_metrics(df)
 
@@ -181,10 +183,12 @@ class TestCalculateTradeMetrics:
 
     def test_all_losing_trades(self) -> None:
         """All losing trades."""
-        df = pd.DataFrame({
-            "pnl": [-100.0, -200.0, -50.0],
-            "pnl_pct": [-5.0, -10.0, -2.5],
-        })
+        df = pd.DataFrame(
+            {
+                "pnl": [-100.0, -200.0, -50.0],
+                "pnl_pct": [-5.0, -10.0, -2.5],
+            }
+        )
 
         result = calculate_trade_metrics(df)
 
@@ -195,10 +199,12 @@ class TestCalculateTradeMetrics:
 
     def test_mixed_trades(self) -> None:
         """Mixed winning and losing trades."""
-        df = pd.DataFrame({
-            "pnl": [100.0, -50.0, 200.0, -30.0],
-            "pnl_pct": [5.0, -2.5, 10.0, -1.5],
-        })
+        df = pd.DataFrame(
+            {
+                "pnl": [100.0, -50.0, 200.0, -30.0],
+                "pnl_pct": [5.0, -2.5, 10.0, -1.5],
+            }
+        )
 
         result = calculate_trade_metrics(df)
 
@@ -209,10 +215,12 @@ class TestCalculateTradeMetrics:
 
     def test_zero_pnl_trades_counted_correctly(self) -> None:
         """Zero PnL trades are neither winning nor losing."""
-        df = pd.DataFrame({
-            "pnl": [0.0, 100.0, -50.0],
-            "pnl_pct": [0.0, 5.0, -2.5],
-        })
+        df = pd.DataFrame(
+            {
+                "pnl": [0.0, 100.0, -50.0],
+                "pnl_pct": [0.0, 5.0, -2.5],
+            }
+        )
 
         result = calculate_trade_metrics(df)
 
@@ -335,8 +343,20 @@ class TestTradeStatsEdgeCases:
     def test_mixed_trades_profit_factor(self) -> None:
         """Mixed trades calculate correct profit factor."""
         trades = [
-            Trade(ticker="BTC", entry_date=date(2024, 1, 1), entry_price=50000.0, pnl=300.0, pnl_pct=2.0),
-            Trade(ticker="ETH", entry_date=date(2024, 1, 1), entry_price=3000.0, pnl=-100.0, pnl_pct=-1.0),
+            Trade(
+                ticker="BTC",
+                entry_date=date(2024, 1, 1),
+                entry_price=50000.0,
+                pnl=300.0,
+                pnl_pct=2.0,
+            ),
+            Trade(
+                ticker="ETH",
+                entry_date=date(2024, 1, 1),
+                entry_price=3000.0,
+                pnl=-100.0,
+                pnl_pct=-1.0,
+            ),
         ]
 
         result = calculate_trade_stats(trades)

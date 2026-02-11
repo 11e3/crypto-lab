@@ -21,7 +21,14 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Common exception types for Upbit API calls
-_UPBIT_ERRORS = (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError)
+_UPBIT_ERRORS = (
+    requests.RequestException,
+    ConnectionError,
+    OSError,
+    ValueError,
+    KeyError,
+    TypeError,
+)
 
 
 class UpbitExchange(Exchange):

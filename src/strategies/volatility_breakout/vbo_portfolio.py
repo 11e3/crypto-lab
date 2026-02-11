@@ -196,12 +196,10 @@ class VBOPortfolioLite(VBOPortfolio):
         super().__init__(name=name, **kwargs)
         # Override conditions: remove SMA from entry, remove BTC exit
         self.entry_conditions.conditions = [
-            c for c in self.entry_conditions.conditions
-            if not isinstance(c, SMABreakoutCondition)
+            c for c in self.entry_conditions.conditions if not isinstance(c, SMABreakoutCondition)
         ]
         self.exit_conditions.conditions = [
-            c for c in self.exit_conditions.conditions
-            if not isinstance(c, BtcMarketExitCondition)
+            c for c in self.exit_conditions.conditions if not isinstance(c, BtcMarketExitCondition)
         ]
 
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:

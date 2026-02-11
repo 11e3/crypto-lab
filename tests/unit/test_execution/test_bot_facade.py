@@ -73,7 +73,9 @@ def bot(mock_config: MagicMock, mock_components: dict[str, MagicMock]) -> Tradin
     """Create a TradingBotFacade instance with mocked dependencies."""
     with (
         patch("src.execution.bot.bot_factory.get_config", return_value=mock_config),
-        patch("src.execution.bot.bot_factory.get_notifier", return_value=mock_components["telegram"]),
+        patch(
+            "src.execution.bot.bot_factory.get_notifier", return_value=mock_components["telegram"]
+        ),
         patch("src.execution.bot.bot_factory.get_event_bus"),
         patch("src.execution.bot.bot_factory.TradeHandler"),
         patch("src.execution.bot.bot_factory.NotificationHandler"),

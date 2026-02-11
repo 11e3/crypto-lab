@@ -26,9 +26,7 @@ class TestCombinatorialPurgedCVInit:
         assert cpcv.embargo_pct == 0.01
 
     def test_custom_parameters(self) -> None:
-        cpcv = CombinatorialPurgedCV(
-            num_splits=3, test_size=0.3, purge_pct=0.05, embargo_pct=0.02
-        )
+        cpcv = CombinatorialPurgedCV(num_splits=3, test_size=0.3, purge_pct=0.05, embargo_pct=0.02)
         assert cpcv.num_splits == 3
         assert cpcv.test_size == 0.3
         assert cpcv.purge_pct == 0.05
@@ -54,9 +52,7 @@ class TestCreateSplits:
 
     def test_purge_gap_between_train_and_test(self) -> None:
         """Purge zone must separate train (before) from test."""
-        cpcv = CombinatorialPurgedCV(
-            num_splits=3, purge_pct=0.05, embargo_pct=0.0
-        )
+        cpcv = CombinatorialPurgedCV(num_splits=3, purge_pct=0.05, embargo_pct=0.0)
         splits = cpcv.create_splits(n_samples=200)
 
         purge_samples = int(200 * 0.05)  # 10
@@ -70,9 +66,7 @@ class TestCreateSplits:
 
     def test_embargo_gap_after_test(self) -> None:
         """Embargo zone must separate test from train (after)."""
-        cpcv = CombinatorialPurgedCV(
-            num_splits=3, purge_pct=0.0, embargo_pct=0.05
-        )
+        cpcv = CombinatorialPurgedCV(num_splits=3, purge_pct=0.0, embargo_pct=0.05)
         splits = cpcv.create_splits(n_samples=200)
 
         embargo_samples = int(200 * 0.05)  # 10
@@ -95,9 +89,7 @@ class TestCreateSplits:
 
     def test_small_sample(self) -> None:
         """Should work with small sample sizes."""
-        cpcv = CombinatorialPurgedCV(
-            num_splits=2, test_size=0.3, purge_pct=0.01, embargo_pct=0.01
-        )
+        cpcv = CombinatorialPurgedCV(num_splits=2, test_size=0.3, purge_pct=0.01, embargo_pct=0.01)
         splits = cpcv.create_splits(n_samples=50)
         assert len(splits) >= 1
 
@@ -133,9 +125,7 @@ class TestCPCVRun:
         return data
 
     @staticmethod
-    def _dummy_backtest(
-        data: dict[str, pd.DataFrame], config: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _dummy_backtest(data: dict[str, pd.DataFrame], config: dict[str, Any]) -> dict[str, Any]:
         """Dummy backtest function for testing."""
         first_df = next(iter(data.values()))
         returns = first_df["close"].pct_change().dropna()
@@ -156,9 +146,7 @@ class TestCPCVRun:
         assert isinstance(result.summary, CPCVSummary)
         assert len(result.fold_results) == 3
 
-    def test_fold_results_have_required_keys(
-        self, sample_data: dict[str, pd.DataFrame]
-    ) -> None:
+    def test_fold_results_have_required_keys(self, sample_data: dict[str, pd.DataFrame]) -> None:
         cpcv = CombinatorialPurgedCV(num_splits=2)
         result = cpcv.run(sample_data, self._dummy_backtest)
 

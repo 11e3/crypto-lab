@@ -91,11 +91,13 @@ class TestCashConservation:
         cash = cfg.initial_capital
 
         # Entry
-        row_entry = pd.Series({
-            "close": scenario.entry_close,
-            "entry_signal": True,
-            "exit_signal": False,
-        })
+        row_entry = pd.Series(
+            {
+                "close": scenario.entry_close,
+                "entry_signal": True,
+                "exit_signal": False,
+            }
+        )
         position, cost = execute_entry(
             ticker="KRW-BTC",
             row=row_entry,
@@ -108,10 +110,12 @@ class TestCashConservation:
         cash -= cost
 
         # Exit
-        row_exit = pd.Series({
-            "close": scenario.exit_close,
-            "exit_signal": True,
-        })
+        row_exit = pd.Series(
+            {
+                "close": scenario.exit_close,
+                "exit_signal": True,
+            }
+        )
         trade, revenue = execute_exit(
             position=position,
             row=row_exit,
@@ -198,9 +202,7 @@ class TestCashConservation:
 class TestEquityIdentity:
     """Verify equity = cash + position market value at all times."""
 
-    def test_event_driven_equity_equals_cash_plus_positions(
-        self, scenario: SimpleScenario
-    ) -> None:
+    def test_event_driven_equity_equals_cash_plus_positions(self, scenario: SimpleScenario) -> None:
         """Event-driven equity should be cash + sum(amount * close) daily."""
         cfg = scenario.config
         cash = cfg.initial_capital
@@ -208,11 +210,13 @@ class TestEquityIdentity:
         # Day 1: No position
         positions: dict[str, Position] = {}
         current_data: dict[str, pd.Series] = {
-            "KRW-BTC": pd.Series({
-                "close": scenario.entry_close,
-                "entry_signal": True,
-                "exit_signal": False,
-            })
+            "KRW-BTC": pd.Series(
+                {
+                    "close": scenario.entry_close,
+                    "entry_signal": True,
+                    "exit_signal": False,
+                }
+            )
         }
         equity = calculate_portfolio_equity(positions, current_data, cash)
         assert equity == pytest.approx(cash, abs=0.01)
@@ -233,9 +237,7 @@ class TestEquityIdentity:
         expected = cash + position.amount * scenario.exit_close
         assert equity == pytest.approx(expected, abs=0.01)
 
-    def test_vectorized_equity_equals_cash_plus_positions(
-        self, scenario: SimpleScenario
-    ) -> None:
+    def test_vectorized_equity_equals_cash_plus_positions(self, scenario: SimpleScenario) -> None:
         """Vectorized equity[d] == cash + sum(amounts * closes[d])."""
         cfg = scenario.config
         tickers = ["KRW-BTC"]
@@ -275,22 +277,20 @@ class TestPnLConsistency:
         cash = cfg.initial_capital
 
         # Entry
-        row_entry = pd.Series({
-            "close": scenario.entry_close,
-            "entry_signal": True,
-            "exit_signal": False,
-        })
-        position, cost = execute_entry(
-            "KRW-BTC", row_entry, date(2024, 1, 1), cash, 1, cfg
+        row_entry = pd.Series(
+            {
+                "close": scenario.entry_close,
+                "entry_signal": True,
+                "exit_signal": False,
+            }
         )
+        position, cost = execute_entry("KRW-BTC", row_entry, date(2024, 1, 1), cash, 1, cfg)
         assert position is not None
         cash -= cost
 
         # Exit
         row_exit = pd.Series({"close": scenario.exit_close, "exit_signal": True})
-        trade, revenue = execute_exit(
-            position, row_exit, date(2024, 1, 2), "signal", cfg
-        )
+        trade, revenue = execute_exit(position, row_exit, date(2024, 1, 2), "signal", cfg)
         cash += revenue
 
         total_pnl = trade.pnl
@@ -306,21 +306,19 @@ class TestPnLConsistency:
         cash = cfg.initial_capital
         same_price = 100.0
 
-        row_entry = pd.Series({
-            "close": same_price,
-            "entry_signal": True,
-            "exit_signal": False,
-        })
-        position, cost = execute_entry(
-            "KRW-BTC", row_entry, date(2024, 1, 1), cash, 1, cfg
+        row_entry = pd.Series(
+            {
+                "close": same_price,
+                "entry_signal": True,
+                "exit_signal": False,
+            }
         )
+        position, cost = execute_entry("KRW-BTC", row_entry, date(2024, 1, 1), cash, 1, cfg)
         assert position is not None
         cash -= cost
 
         row_exit = pd.Series({"close": same_price, "exit_signal": True})
-        trade, revenue = execute_exit(
-            position, row_exit, date(2024, 1, 2), "signal", cfg
-        )
+        trade, revenue = execute_exit(position, row_exit, date(2024, 1, 2), "signal", cfg)
         cash += revenue
 
         # Must lose money due to fees + slippage
@@ -361,9 +359,18 @@ class TestSlippageConsistency:
         order_manager = AdvancedOrderManager()
 
         vec_execute_exit(
-            state_a, cfg, 0, 1, date(2024, 1, 2),
-            sorted_dates, tickers, exit_prices,
-            order_manager, False, False, "signal",
+            state_a,
+            cfg,
+            0,
+            1,
+            date(2024, 1, 2),
+            sorted_dates,
+            tickers,
+            exit_prices,
+            order_manager,
+            False,
+            False,
+            "signal",
         )
         mid_exit_revenue = state_a.trades_list[0]["pnl"]
 
@@ -414,9 +421,7 @@ class TestSlippageConsistency:
 class TestBehaviorDocumentation:
     """Document design choices as passing tests."""
 
-    def test_event_driven_close_remaining_cash_unchanged(
-        self, scenario: SimpleScenario
-    ) -> None:
+    def test_event_driven_close_remaining_cash_unchanged(self, scenario: SimpleScenario) -> None:
         """close_remaining_positions adds trades but does NOT update cash.
 
         This is by design: equity curve is already final, and the trades
@@ -426,30 +431,30 @@ class TestBehaviorDocumentation:
         cash = cfg.initial_capital
 
         # Create a position
-        row_entry = pd.Series({
-            "close": scenario.entry_close,
-            "entry_signal": True,
-            "exit_signal": False,
-        })
-        position, cost = execute_entry(
-            "KRW-BTC", row_entry, date(2024, 1, 1), cash, 1, cfg
+        row_entry = pd.Series(
+            {
+                "close": scenario.entry_close,
+                "entry_signal": True,
+                "exit_signal": False,
+            }
         )
+        position, cost = execute_entry("KRW-BTC", row_entry, date(2024, 1, 1), cash, 1, cfg)
         assert position is not None
         cash -= cost
 
         # Build ticker_data for close_remaining_positions
         positions = {"KRW-BTC": position}
         ticker_data = {
-            "KRW-BTC": pd.DataFrame({
-                "index_date": [date(2024, 1, 1), date(2024, 1, 2)],
-                "close": [scenario.entry_close, scenario.exit_close],
-            })
+            "KRW-BTC": pd.DataFrame(
+                {
+                    "index_date": [date(2024, 1, 1), date(2024, 1, 2)],
+                    "close": [scenario.entry_close, scenario.exit_close],
+                }
+            )
         }
 
         cash_before = cash
-        trades = close_remaining_positions(
-            positions, ticker_data, date(2024, 1, 2), cfg
-        )
+        trades = close_remaining_positions(positions, ticker_data, date(2024, 1, 2), cfg)
 
         # cash is NOT updated by close_remaining_positions
         assert cash == cash_before, "close_remaining_positions should not modify cash"
@@ -465,20 +470,18 @@ class TestBehaviorDocumentation:
         cfg = scenario.config
         cash = cfg.initial_capital
 
-        row_entry = pd.Series({
-            "close": scenario.entry_close,
-            "entry_signal": True,
-            "exit_signal": False,
-        })
-        position, cost = execute_entry(
-            "KRW-BTC", row_entry, date(2024, 1, 1), cash, 1, cfg
+        row_entry = pd.Series(
+            {
+                "close": scenario.entry_close,
+                "entry_signal": True,
+                "exit_signal": False,
+            }
         )
+        position, cost = execute_entry("KRW-BTC", row_entry, date(2024, 1, 1), cash, 1, cfg)
         assert position is not None
 
         row_exit = pd.Series({"close": scenario.exit_close, "exit_signal": True})
-        trade, _ = execute_exit(
-            position, row_exit, date(2024, 1, 2), "signal", cfg
-        )
+        trade, _ = execute_exit(position, row_exit, date(2024, 1, 2), "signal", cfg)
 
         # pnl_pct should be gross return based on entry/exit prices
         expected_pnl_pct = (scenario.exit_price / position.entry_price - 1) * 100
@@ -491,9 +494,7 @@ class TestBehaviorDocumentation:
         net_return_pct = (net_revenue / net_cost - 1) * 100
         assert trade.pnl_pct != pytest.approx(net_return_pct, abs=0.01)
 
-    def test_equity_uses_raw_close_not_liquidation_value(
-        self, scenario: SimpleScenario
-    ) -> None:
+    def test_equity_uses_raw_close_not_liquidation_value(self, scenario: SimpleScenario) -> None:
         """Equity values positions at raw close, not liquidation value.
 
         Liquidation value would be close * (1 - slippage) * (1 - fee_rate).
@@ -518,7 +519,5 @@ class TestBehaviorDocumentation:
         assert state.equity_curve[1] == pytest.approx(raw_equity, abs=0.01)
 
         # Liquidation value would be lower
-        liquidation_value = (
-            state.cash + amount * scenario.exit_close * (1 - SLIPPAGE) * (1 - FEE)
-        )
+        liquidation_value = state.cash + amount * scenario.exit_close * (1 - SLIPPAGE) * (1 - FEE)
         assert state.equity_curve[1] > liquidation_value

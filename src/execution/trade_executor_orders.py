@@ -117,7 +117,15 @@ def check_advanced_orders(
                     advanced_order_manager,
                     trading_config,
                 )
-    except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
+    except (
+        ExchangeError,
+        ConnectionError,
+        OSError,
+        KeyError,
+        IndexError,
+        ValueError,
+        TypeError,
+    ) as e:
         logger.warning(f"Error checking advanced orders for {ticker}: {e}")
     return False
 

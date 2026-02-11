@@ -105,5 +105,3 @@ class BollingerUpperBandCondition(Condition):
 
         # Price touches or rises above upper band
         return current.high >= upper_band
-
-

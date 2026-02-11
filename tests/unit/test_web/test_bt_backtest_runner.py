@@ -136,9 +136,7 @@ class TestConvertResult:
 
         mock_result = MagicMock()
         mock_result.equity_curve = [10_000_000.0, 10_050_000.0]
-        mock_result.dates = np.array(
-            ["2023-01-01", "2023-01-05"], dtype="datetime64[D]"
-        )
+        mock_result.dates = np.array(["2023-01-01", "2023-01-05"], dtype="datetime64[D]")
         mock_result.trades = [mock_trade]
         mock_result.total_return = 0.5
         mock_result.cagr = 1.0

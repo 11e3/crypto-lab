@@ -116,18 +116,14 @@ class TestVBOPortfolioIndicators:
         if len(valid) > 0:
             assert valid.dtype == bool or set(valid.unique()).issubset({True, False})
 
-    def test_sma_calculation(
-        self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame
-    ) -> None:
+    def test_sma_calculation(self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame) -> None:
         strategy = VBOPortfolio(btc_data=btc_data, ma_short=5, btc_ma=10)
         df = strategy.calculate_indicators(target_ohlcv.copy())
 
         # SMA should have values after warmup
         assert df["sma"].notna().sum() > 0
 
-    def test_no_data_corruption(
-        self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame
-    ) -> None:
+    def test_no_data_corruption(self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame) -> None:
         """Original DataFrame should not be modified."""
         original = target_ohlcv.copy()
         strategy = VBOPortfolio(btc_data=btc_data, ma_short=5, btc_ma=10)
@@ -136,9 +132,7 @@ class TestVBOPortfolioIndicators:
         pd.testing.assert_frame_equal(target_ohlcv, original)
 
     @patch("src.strategies.volatility_breakout.vbo_portfolio._load_btc_data")
-    def test_without_btc_data(
-        self, mock_load: MagicMock, target_ohlcv: pd.DataFrame
-    ) -> None:
+    def test_without_btc_data(self, mock_load: MagicMock, target_ohlcv: pd.DataFrame) -> None:
         """Without BTC data, btc_above_ma defaults to True (no filter)."""
         mock_load.return_value = None
         strategy = VBOPortfolio(btc_data=None, ma_short=5, btc_ma=10)
@@ -176,9 +170,7 @@ class TestVBOPortfolioSignals:
             # All entry signals must have btc_above_ma=True
             assert entry_rows["btc_above_ma"].all()
 
-    def test_signals_are_boolean(
-        self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame
-    ) -> None:
+    def test_signals_are_boolean(self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame) -> None:
         strategy = VBOPortfolio(btc_data=btc_data, ma_short=5, btc_ma=10)
         df = strategy.calculate_indicators(target_ohlcv.copy())
         df = strategy.generate_signals(df)
@@ -196,9 +188,7 @@ class TestVBOSingleCoin:
         assert strategy.name == "VBOSingleCoin"
 
     def test_custom_parameters(self) -> None:
-        strategy = VBOSingleCoin(
-            ma_short=10, btc_ma=30, btc_data=pd.DataFrame()
-        )
+        strategy = VBOSingleCoin(ma_short=10, btc_ma=30, btc_data=pd.DataFrame())
         assert strategy.ma_short == 10
         assert strategy.btc_ma == 30
 
@@ -325,6 +315,4 @@ class TestVBOPortfolioLite:
 
         # Exit signal should be purely close < sma
         expected_exit = df["close"] < df["sma"]
-        pd.testing.assert_series_equal(
-            df["exit_signal"], expected_exit, check_names=False
-        )
+        pd.testing.assert_series_equal(df["exit_signal"], expected_exit, check_names=False)

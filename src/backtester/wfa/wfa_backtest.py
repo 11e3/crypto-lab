@@ -128,7 +128,6 @@ def _calculate_metrics(
     return result
 
 
-
 def _calculate_win_rate(trades: list[float]) -> tuple[int, float]:
     """승률 계산."""
     if not trades:

@@ -114,7 +114,15 @@ class SignalHandler:
                 self.event_bus.publish(event)
 
             return entry_signal
-        except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
+        except (
+            ExchangeError,
+            ConnectionError,
+            OSError,
+            KeyError,
+            IndexError,
+            ValueError,
+            TypeError,
+        ) as e:
             logger.error(f"Error checking entry signal for {ticker}: {e}", exc_info=True)
             return False
 
@@ -157,7 +165,15 @@ class SignalHandler:
                     logger.error(f"Error getting price for exit signal event: {e}", exc_info=True)
 
             return exit_signal
-        except (ExchangeError, ConnectionError, OSError, KeyError, IndexError, ValueError, TypeError) as e:
+        except (
+            ExchangeError,
+            ConnectionError,
+            OSError,
+            KeyError,
+            IndexError,
+            ValueError,
+            TypeError,
+        ) as e:
             logger.error(f"Error checking exit signal for {ticker}: {e}", exc_info=True)
             return False
 

@@ -305,9 +305,7 @@ class TestVBOHybridAmbiguous:
 class TestVBOHybridNoModelFallback:
     """Without ML model, should degrade to pure MA20 behavior."""
 
-    def test_no_model_fallback(
-        self, ohlcv_data: pd.DataFrame, btc_bull_data: pd.DataFrame
-    ) -> None:
+    def test_no_model_fallback(self, ohlcv_data: pd.DataFrame, btc_bull_data: pd.DataFrame) -> None:
         """Without model, ambiguous zone should default to bull."""
         strategy = VBOHybrid(btc_data=btc_bull_data, model_path=None)
         df = strategy.calculate_indicators(ohlcv_data.copy())
@@ -316,9 +314,7 @@ class TestVBOHybridNoModelFallback:
         assert "hybrid_bear" in df.columns
 
     @patch("src.strategies.volatility_breakout.vbo_hybrid._load_btc_data")
-    def test_no_btc_data_allows_all(
-        self, mock_load: MagicMock, ohlcv_data: pd.DataFrame
-    ) -> None:
+    def test_no_btc_data_allows_all(self, mock_load: MagicMock, ohlcv_data: pd.DataFrame) -> None:
         """Without BTC data, should allow all entries."""
         mock_load.return_value = None
         strategy = VBOHybrid(btc_data=None, model_path=None)
@@ -376,6 +372,4 @@ class TestVBOHybridSignals:
         bear_exit = df["hybrid_bear"].fillna(False)
         expected_exit = sma_exit | bear_exit
 
-        pd.testing.assert_series_equal(
-            df["exit_signal"], expected_exit, check_names=False
-        )
+        pd.testing.assert_series_equal(df["exit_signal"], expected_exit, check_names=False)

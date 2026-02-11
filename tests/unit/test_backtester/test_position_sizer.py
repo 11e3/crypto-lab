@@ -152,7 +152,9 @@ class TestCalculateFallbackSizes:
         ticker_historical_data = {"BTC": hist_df}
         entry_prices = np.array([[100.0, 101.0]])
 
-        with patch("src.backtester.engine.position_sizer.calculate_multi_asset_position_sizes") as mock_calc:
+        with patch(
+            "src.backtester.engine.position_sizer.calculate_multi_asset_position_sizes"
+        ) as mock_calc:
             mock_calc.return_value = {"BTC": 5_000_000.0}
             _calculate_fallback_sizes(
                 state,

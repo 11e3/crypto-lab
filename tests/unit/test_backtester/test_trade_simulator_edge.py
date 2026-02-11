@@ -22,7 +22,9 @@ class TestGetCurrentPrice:
         closes = np.array([[50000.0, 51000.0]])
         valid_data = np.array([True])
 
-        price = _get_current_price(MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data)
+        price = _get_current_price(
+            MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data
+        )
 
         assert price == 51000.0
 
@@ -35,7 +37,9 @@ class TestGetCurrentPrice:
         closes = np.array([[50000.0, np.nan]])
         valid_data = np.array([True])
 
-        price = _get_current_price(MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data)
+        price = _get_current_price(
+            MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data
+        )
 
         assert price == 50000.0
 
@@ -48,7 +52,9 @@ class TestGetCurrentPrice:
         closes = np.array([[np.nan, np.nan]])
         valid_data = np.array([True])
 
-        price = _get_current_price(MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data)
+        price = _get_current_price(
+            MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data
+        )
 
         assert price == 48000.0
 
@@ -61,7 +67,9 @@ class TestGetCurrentPrice:
         closes = np.array([[50000.0, 51000.0]])
         valid_data = np.array([False])
 
-        price = _get_current_price(MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data)
+        price = _get_current_price(
+            MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data
+        )
 
         # valid_data=False skips current bar, but previous close (50000) is used
         assert price == 50000.0
@@ -75,7 +83,9 @@ class TestGetCurrentPrice:
         closes = np.array([[np.nan, np.nan]])
         valid_data = np.array([False])
 
-        price = _get_current_price(MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data)
+        price = _get_current_price(
+            MockState(), t_idx=0, d_idx=1, closes=closes, valid_data=valid_data
+        )
 
         assert price == 45000.0
 
@@ -88,7 +98,9 @@ class TestGetCurrentPrice:
         closes = np.array([[np.nan]])
         valid_data = np.array([True])
 
-        price = _get_current_price(MockState(), t_idx=0, d_idx=0, closes=closes, valid_data=valid_data)
+        price = _get_current_price(
+            MockState(), t_idx=0, d_idx=0, closes=closes, valid_data=valid_data
+        )
 
         assert price == 42000.0
 

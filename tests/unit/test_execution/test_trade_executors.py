@@ -5,7 +5,7 @@ Tests exchange error handling in buy/sell executors.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from src.exchange import ExchangeError
 from src.execution.trade_executors import BuyExecutor, SellExecutor

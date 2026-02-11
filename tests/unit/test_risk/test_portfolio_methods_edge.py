@@ -21,10 +21,12 @@ class TestOptimizeMptEdgeCases:
 
     def test_zero_volatility_assets(self) -> None:
         """All-zero returns (flat prices) should not crash."""
-        returns_df = pd.DataFrame({
-            "BTC": [0.0] * 30,
-            "ETH": [0.0] * 30,
-        })
+        returns_df = pd.DataFrame(
+            {
+                "BTC": [0.0] * 30,
+                "ETH": [0.0] * 30,
+            }
+        )
 
         result = optimize_mpt(returns_df, risk_free_rate=0.0)
 
@@ -35,10 +37,12 @@ class TestOptimizeMptEdgeCases:
     def test_perfectly_correlated_assets(self) -> None:
         """Perfectly correlated assets (ill-conditioned cov matrix)."""
         base = np.random.normal(0.001, 0.02, 50)
-        returns_df = pd.DataFrame({
-            "BTC": base,
-            "ETH": base,  # Perfect correlation
-        })
+        returns_df = pd.DataFrame(
+            {
+                "BTC": base,
+                "ETH": base,  # Perfect correlation
+            }
+        )
 
         result = optimize_mpt(returns_df, risk_free_rate=0.0)
 
@@ -48,9 +52,11 @@ class TestOptimizeMptEdgeCases:
 
     def test_single_asset_returns_full_weight(self) -> None:
         """Single asset should get 100% weight."""
-        returns_df = pd.DataFrame({
-            "BTC": np.random.normal(0.001, 0.02, 30),
-        })
+        returns_df = pd.DataFrame(
+            {
+                "BTC": np.random.normal(0.001, 0.02, 30),
+            }
+        )
 
         result = optimize_mpt(returns_df, risk_free_rate=0.0)
 
@@ -63,9 +69,7 @@ class TestCalculateKellyCriterionEdgeCases:
 
     def test_zero_avg_win_returns_zero(self) -> None:
         """Zero average win returns 0 allocation."""
-        result = calculate_kelly_criterion(
-            win_rate=0.6, avg_win=0.0, avg_loss=0.05, max_kelly=0.25
-        )
+        result = calculate_kelly_criterion(win_rate=0.6, avg_win=0.0, avg_loss=0.05, max_kelly=0.25)
         assert result == 0.0
 
     def test_negative_kelly_returns_zero(self) -> None:
@@ -100,10 +104,12 @@ class TestOptimizeKellyPortfolioEdgeCases:
 
     def test_all_winning_trades_skipped(self) -> None:
         """Tickers with all wins (no losses) are skipped."""
-        df = pd.DataFrame({
-            "ticker": ["BTC"] * 5,
-            "pnl_pct": [5.0, 3.0, 7.0, 2.0, 4.0],  # All positive
-        })
+        df = pd.DataFrame(
+            {
+                "ticker": ["BTC"] * 5,
+                "pnl_pct": [5.0, 3.0, 7.0, 2.0, 4.0],  # All positive
+            }
+        )
 
         result = optimize_kelly_portfolio(df, available_cash=10_000_000.0)
 
@@ -112,10 +118,12 @@ class TestOptimizeKellyPortfolioEdgeCases:
 
     def test_single_trade_per_ticker_skipped(self) -> None:
         """Tickers with fewer than 2 trades are skipped."""
-        df = pd.DataFrame({
-            "ticker": ["BTC"],
-            "pnl_pct": [5.0],
-        })
+        df = pd.DataFrame(
+            {
+                "ticker": ["BTC"],
+                "pnl_pct": [5.0],
+            }
+        )
 
         result = optimize_kelly_portfolio(df, available_cash=10_000_000.0)
 
@@ -124,13 +132,26 @@ class TestOptimizeKellyPortfolioEdgeCases:
     def test_over_allocation_scaled_down(self) -> None:
         """When Kelly allocations exceed available cash, scale down proportionally."""
         # Create trades where Kelly formula gives aggressive allocation
-        btc_returns = [10.0, 10.0, -2.0, 10.0, 10.0, -2.0, 10.0, 10.0, -2.0, 10.0]  # ~70% win, high payoff
+        btc_returns = [
+            10.0,
+            10.0,
+            -2.0,
+            10.0,
+            10.0,
+            -2.0,
+            10.0,
+            10.0,
+            -2.0,
+            10.0,
+        ]  # ~70% win, high payoff
         eth_returns = [8.0, 8.0, -3.0, 8.0, 8.0, -3.0, 8.0, 8.0, -3.0, 8.0]
 
-        df = pd.DataFrame({
-            "ticker": ["BTC"] * len(btc_returns) + ["ETH"] * len(eth_returns),
-            "pnl_pct": btc_returns + eth_returns,
-        })
+        df = pd.DataFrame(
+            {
+                "ticker": ["BTC"] * len(btc_returns) + ["ETH"] * len(eth_returns),
+                "pnl_pct": btc_returns + eth_returns,
+            }
+        )
 
         result = optimize_kelly_portfolio(df, available_cash=1_000_000.0)
 

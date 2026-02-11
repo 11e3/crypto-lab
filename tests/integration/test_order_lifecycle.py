@@ -162,9 +162,7 @@ class TestBuyOrderLifecycle:
 class TestSellOrderLifecycle:
     """Test sell order lifecycle with position removal."""
 
-    def test_sell_order_fills(
-        self, order_manager: OrderManager, exchange: MockExchange
-    ) -> None:
+    def test_sell_order_fills(self, order_manager: OrderManager, exchange: MockExchange) -> None:
         """Market sell order should fill and update balances."""
         exchange.set_balance("BTC", 0.1)
 
@@ -186,9 +184,7 @@ class TestSellOrderLifecycle:
         remaining_btc = exchange.get_balance("BTC").balance
         assert remaining_btc < 0.001
 
-    def test_sell_all_adds_krw(
-        self, order_manager: OrderManager, exchange: MockExchange
-    ) -> None:
+    def test_sell_all_adds_krw(self, order_manager: OrderManager, exchange: MockExchange) -> None:
         """sell_all should increase KRW balance."""
         exchange.set_balance("BTC", 0.1)
         initial_krw = exchange.get_balance("KRW").balance
@@ -339,9 +335,7 @@ class TestAdvancedOrderTrigger:
 
         assert len(triggered) >= 1
 
-    def test_no_trigger_within_range(
-        self, advanced_order_manager: AdvancedOrderManager
-    ) -> None:
+    def test_no_trigger_within_range(self, advanced_order_manager: AdvancedOrderManager) -> None:
         """No trigger when price is within stop loss and take profit range."""
         advanced_order_manager.create_stop_loss(
             ticker="KRW-BTC",
@@ -479,9 +473,7 @@ class TestPositionTracking:
         position_manager.clear_all()
         assert position_manager.get_position_count() == 0
 
-    def test_position_publishes_opened_event(
-        self, position_manager: PositionManager
-    ) -> None:
+    def test_position_publishes_opened_event(self, position_manager: PositionManager) -> None:
         """Adding position should publish POSITION_OPENED event."""
         bus = get_event_bus()
         events: list = []
@@ -492,9 +484,7 @@ class TestPositionTracking:
         assert len(events) == 1
         assert events[0].ticker == "KRW-BTC"
 
-    def test_position_publishes_closed_event(
-        self, position_manager: PositionManager
-    ) -> None:
+    def test_position_publishes_closed_event(self, position_manager: PositionManager) -> None:
         """Removing position should publish POSITION_CLOSED event."""
         bus = get_event_bus()
         events: list = []

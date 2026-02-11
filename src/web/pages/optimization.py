@@ -28,7 +28,6 @@ logger = get_logger(__name__)
 __all__ = ["render_optimization_page"]
 
 
-
 class BtOptimizationResult:
     """Result of bt strategy optimization (compatible with display function)."""
 
@@ -92,7 +91,6 @@ def render_optimization_page() -> None:
 
             if selected_strategy and selected_strategy.description:
                 st.caption(f"ℹ️ {selected_strategy.description}")
-
 
         with col2:
             st.subheader("⚙️ Optimization Method")

@@ -115,7 +115,11 @@ class TestPredictRegime:
     """Test regime prediction with mocked model."""
 
     _FEATURE_NAMES = [
-        "return_20d", "volatility", "rsi", "ma_alignment", "volume_ratio_20",
+        "return_20d",
+        "volatility",
+        "rsi",
+        "ma_alignment",
+        "volume_ratio_20",
     ]
 
     def _make_clf_data(self, n_valid: int, regime: str = "BULL_TREND") -> dict:
@@ -126,9 +130,7 @@ class TestPredictRegime:
 
         mock_scaler.transform.return_value = np.zeros((n_valid, 5))
         mock_model.predict.return_value = np.zeros(n_valid, dtype=int)
-        mock_label_encoder.inverse_transform.return_value = np.array(
-            [regime] * n_valid
-        )
+        mock_label_encoder.inverse_transform.return_value = np.array([regime] * n_valid)
 
         return {
             "model": mock_model,
@@ -168,7 +170,11 @@ class TestPredictRegimeProba:
     """Test probability-based regime prediction."""
 
     _FEATURE_NAMES = [
-        "return_20d", "volatility", "rsi", "ma_alignment", "volume_ratio_20",
+        "return_20d",
+        "volatility",
+        "rsi",
+        "ma_alignment",
+        "volume_ratio_20",
     ]
 
     def test_returns_dataframe(self, ohlcv_data: pd.DataFrame) -> None:
@@ -181,10 +187,12 @@ class TestPredictRegimeProba:
         mock_label_encoder = MagicMock()
 
         mock_scaler.transform.return_value = np.zeros((n_valid, 5))
-        mock_model.predict_proba.return_value = np.column_stack([
-            np.full(n_valid, 0.7),
-            np.full(n_valid, 0.3),
-        ])
+        mock_model.predict_proba.return_value = np.column_stack(
+            [
+                np.full(n_valid, 0.7),
+                np.full(n_valid, 0.3),
+            ]
+        )
         mock_label_encoder.classes_ = ["BULL_TREND", "NOT_BULL"]
 
         clf_data = {
@@ -210,10 +218,12 @@ class TestPredictRegimeProba:
         mock_label_encoder = MagicMock()
 
         mock_scaler.transform.return_value = np.zeros((n_valid, 5))
-        mock_model.predict_proba.return_value = np.column_stack([
-            np.full(n_valid, 0.6),
-            np.full(n_valid, 0.4),
-        ])
+        mock_model.predict_proba.return_value = np.column_stack(
+            [
+                np.full(n_valid, 0.6),
+                np.full(n_valid, 0.4),
+            ]
+        )
         mock_label_encoder.classes_ = ["BULL_TREND", "NOT_BULL"]
 
         clf_data = {
@@ -237,10 +247,12 @@ class TestPredictRegimeProba:
         mock_label_encoder = MagicMock()
 
         mock_scaler.transform.return_value = np.zeros((n_valid, 5))
-        mock_model.predict_proba.return_value = np.column_stack([
-            np.full(n_valid, 0.5),
-            np.full(n_valid, 0.5),
-        ])
+        mock_model.predict_proba.return_value = np.column_stack(
+            [
+                np.full(n_valid, 0.5),
+                np.full(n_valid, 0.5),
+            ]
+        )
 
         clf_data = {
             "model": mock_model,
@@ -393,9 +405,7 @@ class TestVBORegimeWithMockedModel:
         # Mock predict_regime to return half BULL, half NOT_BULL
         n = len(ohlcv_data)
         regimes = ["BULL_TREND"] * (n // 2) + ["NOT_BULL"] * (n - n // 2)
-        mock_predict.return_value = pd.Series(
-            regimes, index=ohlcv_data.index, name="regime"
-        )
+        mock_predict.return_value = pd.Series(regimes, index=ohlcv_data.index, name="regime")
 
         strategy = VBORegime(
             btc_data=ohlcv_data,  # Provide BTC data so it won't try to load from disk

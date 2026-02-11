@@ -275,18 +275,30 @@ class StrategyRegistry:
         """
         # Shared parameter specs reused across strategies
         _ma_short = ParameterSpec(
-            name="ma_short", type="int", default=5,
-            min_value=2, max_value=20, step=1,
+            name="ma_short",
+            type="int",
+            default=5,
+            min_value=2,
+            max_value=20,
+            step=1,
             description="Short-term MA period",
         )
         _btc_ma = ParameterSpec(
-            name="btc_ma", type="int", default=20,
-            min_value=5, max_value=60, step=5,
+            name="btc_ma",
+            type="int",
+            default=20,
+            min_value=5,
+            max_value=60,
+            step=5,
             description="BTC MA period for market filter",
         )
         _noise_ratio = ParameterSpec(
-            name="noise_ratio", type="float", default=0.5,
-            min_value=0.1, max_value=1.0, step=0.1,
+            name="noise_ratio",
+            type="float",
+            default=0.5,
+            min_value=0.1,
+            max_value=1.0,
+            step=0.1,
             description="Volatility breakout multiplier (k factor)",
         )
 
@@ -297,13 +309,21 @@ class StrategyRegistry:
                 "description": "[bt] Volatility Breakout Strategy (BTC MA20 filter)",
                 "parameters": {
                     "lookback": ParameterSpec(
-                        name="lookback", type="int", default=5,
-                        min_value=2, max_value=20, step=1,
+                        name="lookback",
+                        type="int",
+                        default=5,
+                        min_value=2,
+                        max_value=20,
+                        step=1,
                         description="Short-term MA period (lookback period)",
                     ),
                     "multiplier": ParameterSpec(
-                        name="multiplier", type="int", default=2,
-                        min_value=1, max_value=5, step=1,
+                        name="multiplier",
+                        type="int",
+                        default=2,
+                        min_value=1,
+                        max_value=5,
+                        step=1,
                         description="Multiplier for long-term MA (Long MA = lookback * multiplier)",
                     ),
                 },
@@ -320,8 +340,12 @@ class StrategyRegistry:
                 "description": "[bt] Pure Momentum Strategy (equal-weight allocation)",
                 "parameters": {
                     "lookback": ParameterSpec(
-                        name="lookback", type="int", default=20,
-                        min_value=5, max_value=60, step=5,
+                        name="lookback",
+                        type="int",
+                        default=20,
+                        min_value=5,
+                        max_value=60,
+                        step=5,
                         description="Momentum lookback period",
                     ),
                 },
@@ -336,13 +360,21 @@ class StrategyRegistry:
                 "name": "bt_VBO_SingleCoin",
                 "module_path": "bt.strategies.vbo_single_coin",
                 "description": "[bt] Single-asset VBO Strategy (BTC MA filter, all-in allocation)",
-                "parameters": {"ma_short": _ma_short, "btc_ma": _btc_ma, "noise_ratio": _noise_ratio},
+                "parameters": {
+                    "ma_short": _ma_short,
+                    "btc_ma": _btc_ma,
+                    "noise_ratio": _noise_ratio,
+                },
             },
             {
                 "name": "bt_VBO_Portfolio",
                 "module_path": "bt.strategies.vbo_portfolio",
                 "description": "[bt] Multi-asset VBO Strategy (BTC MA filter, 1/N allocation)",
-                "parameters": {"ma_short": _ma_short, "btc_ma": _btc_ma, "noise_ratio": _noise_ratio},
+                "parameters": {
+                    "ma_short": _ma_short,
+                    "btc_ma": _btc_ma,
+                    "noise_ratio": _noise_ratio,
+                },
             },
         ]
 

@@ -93,9 +93,7 @@ def get_available_bt_symbols(interval: str = "day") -> list[str]:
     return sorted(symbols)
 
 
-def _get_data_files(
-    symbols: list[str], interval: str = "day"
-) -> dict[str, Path]:
+def _get_data_files(symbols: list[str], interval: str = "day") -> dict[str, Path]:
     """Build data file paths for given symbols."""
     data_files: dict[str, Path] = {}
     for symbol in symbols:
@@ -141,9 +139,7 @@ def _convert_result(result: BacktestResult) -> BtBacktestResult:
                 "exit_date": _to_datetime(trade.exit_date),
                 "entry_price": trade.entry_price,
                 "exit_price": trade.exit_price or 0.0,
-                "quantity": (
-                    trade.amount / trade.entry_price if trade.entry_price > 0 else 0.0
-                ),
+                "quantity": (trade.amount / trade.entry_price if trade.entry_price > 0 else 0.0),
                 "pnl": trade.pnl,
                 "return_pct": return_pct,
             }
@@ -173,9 +169,7 @@ def _convert_result(result: BacktestResult) -> BtBacktestResult:
         dt_index = pd.DatetimeIndex(df_equity.index)
         for year, group in df_equity.groupby(dt_index.year):
             if len(group) >= 2:
-                year_return = (
-                    group["equity"].iloc[-1] / group["equity"].iloc[0] - 1
-                ) * 100
+                year_return = (group["equity"].iloc[-1] / group["equity"].iloc[0] - 1) * 100
                 yearly_returns[int(str(year))] = float(year_return)
 
     return BtBacktestResult(

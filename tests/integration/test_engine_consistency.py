@@ -143,7 +143,6 @@ class TestEngineConsistency:
             )
 
 
-
 class TestEngineEdgeCases:
     """Test both engines handle edge cases consistently."""
 

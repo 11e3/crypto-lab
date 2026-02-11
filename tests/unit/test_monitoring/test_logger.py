@@ -34,8 +34,13 @@ class TestJSONFormatter:
 
     def test_basic_fields(self) -> None:
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0,
-            msg="hello", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="hello",
+            args=(),
+            exc_info=None,
         )
         formatter = JSONFormatter()
         output = json.loads(formatter.format(record))
@@ -47,8 +52,13 @@ class TestJSONFormatter:
 
     def test_disable_timestamp(self) -> None:
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0,
-            msg="msg", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="msg",
+            args=(),
+            exc_info=None,
         )
         formatter = JSONFormatter(include_timestamp=False)
         output = json.loads(formatter.format(record))
@@ -57,8 +67,13 @@ class TestJSONFormatter:
 
     def test_disable_level_and_logger(self) -> None:
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0,
-            msg="msg", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="msg",
+            args=(),
+            exc_info=None,
         )
         formatter = JSONFormatter(include_level=False, include_logger=False)
         output = json.loads(formatter.format(record))
@@ -68,8 +83,13 @@ class TestJSONFormatter:
 
     def test_include_pathname(self) -> None:
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="/foo/bar.py", lineno=42,
-            msg="msg", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="/foo/bar.py",
+            lineno=42,
+            msg="msg",
+            args=(),
+            exc_info=None,
         )
         record.funcName = "my_func"
         formatter = JSONFormatter(include_pathname=True)
@@ -84,11 +104,17 @@ class TestJSONFormatter:
             raise ValueError("test error")
         except ValueError:
             import sys
+
             exc_info = sys.exc_info()
 
         record = logging.LogRecord(
-            name="test", level=logging.ERROR, pathname="", lineno=0,
-            msg="failed", args=(), exc_info=exc_info,
+            name="test",
+            level=logging.ERROR,
+            pathname="",
+            lineno=0,
+            msg="failed",
+            args=(),
+            exc_info=exc_info,
         )
         formatter = JSONFormatter()
         output = json.loads(formatter.format(record))
@@ -100,8 +126,13 @@ class TestJSONFormatter:
 
     def test_extra_fields(self) -> None:
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0,
-            msg="msg", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="msg",
+            args=(),
+            exc_info=None,
         )
         formatter = JSONFormatter(extra_fields={"env": "prod", "version": "1.0"})
         output = json.loads(formatter.format(record))
@@ -111,8 +142,13 @@ class TestJSONFormatter:
 
     def test_record_extra_fields(self) -> None:
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0,
-            msg="msg", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="msg",
+            args=(),
+            exc_info=None,
         )
         record.custom_field = "custom_value"  # type: ignore[attr-defined]
         formatter = JSONFormatter()
@@ -156,7 +192,8 @@ class TestStructuredLogger:
         with patch.object(logger._logger, "log") as mock_log:
             logger.info("order placed", symbol="BTC", amount=1000)
             mock_log.assert_called_with(
-                logging.INFO, "order placed",
+                logging.INFO,
+                "order placed",
                 extra={"symbol": "BTC", "amount": 1000},
             )
 
@@ -172,7 +209,8 @@ class TestStructuredLogger:
             with logger.context(request_id="abc"):
                 logger.info("inside")
                 mock_log.assert_called_with(
-                    logging.INFO, "inside",
+                    logging.INFO,
+                    "inside",
                     extra={"request_id": "abc"},
                 )
 

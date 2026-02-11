@@ -17,14 +17,17 @@ logger = get_logger(__name__)
 
 
 def _validate_covariance(
-    cov_matrix: pd.DataFrame, tickers: list[str], method: str,
+    cov_matrix: pd.DataFrame,
+    tickers: list[str],
+    method: str,
 ) -> PortfolioWeights | None:
     """Check covariance matrix condition; return equal-weight fallback if ill-conditioned."""
     cond = np.linalg.cond(cov_matrix.values)
     if cond > 1e12 or np.isnan(cond):
         logger.warning(f"Covariance matrix ill-conditioned (cond={cond:.2e}), using equal weights")
         return PortfolioWeights(
-            weights=dict.fromkeys(tickers, 1.0 / len(tickers)), method=method,
+            weights=dict.fromkeys(tickers, 1.0 / len(tickers)),
+            method=method,
         )
     return None
 
