@@ -146,7 +146,3 @@ class EventDrivenBacktestEngine:
         logger.info(f"Total trades completed: {len(trades_list)}")
 
         return equity_curve, dates_list, trades_list
-
-
-# Backward compatibility alias
-SimpleBacktestEngine = EventDrivenBacktestEngine

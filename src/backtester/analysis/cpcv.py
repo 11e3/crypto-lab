@@ -3,7 +3,7 @@
 Advanced cross-validation for time-series backtesting that prevents
 information leakage through purging and embargo.
 
-Ported from bt framework and adapted to use CQS conventions.
+Ported from bt framework and adapted to crypto-lab conventions.
 """
 
 from __future__ import annotations

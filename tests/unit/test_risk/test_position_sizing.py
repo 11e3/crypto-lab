@@ -9,7 +9,6 @@ import pytest
 from src.risk.position_sizing import (
     _equal_sizing,
     _fixed_risk_sizing,
-    _inverse_volatility_sizing,
     _volatility_based_sizing,
     calculate_multi_asset_position_sizes,
     calculate_position_size,
@@ -134,32 +133,32 @@ def test_fixed_risk_sizing(sample_historical_data: pd.DataFrame) -> None:
     assert size_zero_price == _equal_sizing(available_cash, available_slots)
 
 
-def test_inverse_volatility_sizing(sample_historical_data: pd.DataFrame) -> None:
-    """Test _inverse_volatility_sizing function."""
-    available_cash = 10000
+def test_inverse_volatility_uses_volatility_based(sample_historical_data: pd.DataFrame) -> None:
+    """Test that inverse-volatility method delegates to volatility-based sizing."""
+    available_cash = 10000.0
     available_slots = 2
     lookback_period = 20
 
-    # Sufficient data
-    size = _inverse_volatility_sizing(
-        available_cash, available_slots, sample_historical_data, lookback_period
+    # inverse-volatility should produce same result as volatility
+    vol_size = calculate_position_size(
+        method="volatility",
+        available_cash=available_cash,
+        available_slots=available_slots,
+        ticker="TEST",
+        current_price=100.0,
+        historical_data=sample_historical_data,
+        lookback_period=lookback_period,
     )
-    assert isinstance(size, float)
-    assert size > 0
-
-    # Insufficient data
-    insufficient_data = sample_historical_data.head(5)
-    size_insufficient = _inverse_volatility_sizing(
-        available_cash, available_slots, insufficient_data, lookback_period
+    inv_vol_size = calculate_position_size(
+        method="inverse-volatility",
+        available_cash=available_cash,
+        available_slots=available_slots,
+        ticker="TEST",
+        current_price=100.0,
+        historical_data=sample_historical_data,
+        lookback_period=lookback_period,
     )
-    assert size_insufficient == _equal_sizing(available_cash, available_slots)
-
-    # Zero volatility
-    zero_vol_data = pd.DataFrame({"close": [100] * 100}, index=sample_historical_data.index)
-    size_zero_vol = _inverse_volatility_sizing(
-        available_cash, available_slots, zero_vol_data, lookback_period
-    )
-    assert size_zero_vol == _equal_sizing(available_cash, available_slots)
+    assert vol_size == inv_vol_size
 
 
 class TestCalculatePositionSize:

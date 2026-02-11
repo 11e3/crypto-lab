@@ -1,7 +1,7 @@
 """Backtest execution service for bt-family strategies.
 
 Runs VBO Portfolio, VBO Regime, Momentum, and Buy-and-Hold strategies
-using the native CQS vectorized engine. Previously delegated to the
+using the native crypto-lab vectorized engine. Previously delegated to the
 external bt library; now fully integrated.
 """
 

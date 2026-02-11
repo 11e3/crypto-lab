@@ -6,7 +6,7 @@ composable conditions and filters.
 
 This module re-exports all base components for backward compatibility:
 - SignalType, Signal, Position, OHLCV from base_models
-- Condition, Filter, CompositeCondition from base_conditions
+- Condition, CompositeCondition from base_conditions
 - Strategy ABC (defined here)
 """
 
@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 
 # Re-export models for backward compatibility
-from src.strategies.base_conditions import CompositeCondition, Condition, Filter
+from src.strategies.base_conditions import CompositeCondition, Condition
 from src.strategies.base_models import OHLCV, Position, Signal, SignalType
 
 __all__ = [
@@ -26,7 +26,6 @@ __all__ = [
     "OHLCV",
     # Conditions
     "Condition",
-    "Filter",
     "CompositeCondition",
     # Strategy
     "Strategy",

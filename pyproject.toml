@@ -276,15 +276,10 @@ omit = [
     "*/tests/*",
     "*/test_*.py",
     "*/__init__.py",
-    # Experimental/advanced analysis modules without tests
-    "src/backtester/bootstrap_analysis.py",
-    "src/backtester/permutation_test.py",
-    "src/backtester/robustness_analysis.py",
-    "src/backtester/slippage_model_v2.py",
-    "src/backtester/walk_forward_auto.py",
-    "src/strategies/volatility_breakout/vbo_v2.py",
-    "src/utils/indicators_v2.py",
-    "src/monitoring/alerts.py",
+    # Advanced analysis modules (statistical tests, not core logic)
+    "src/backtester/analysis/bootstrap_analysis.py",
+    "src/backtester/analysis/permutation_test.py",
+    "src/backtester/analysis/robustness_analysis.py",
     # Web UI modules (tested via integration tests)
     "src/web/*",
 ]

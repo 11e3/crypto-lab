@@ -5,7 +5,7 @@ market regime indicator. When BTC is above its MA, the broader
 crypto market is considered bullish.
 
 Ported from bt framework's VBOPortfolioBuyCondition/SellCondition
-and adapted to CQS vectorized paradigm.
+and adapted to crypto-lab vectorized paradigm.
 """
 
 from __future__ import annotations

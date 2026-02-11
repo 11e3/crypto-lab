@@ -3,14 +3,11 @@
 Advanced analysis (Monte Carlo, Walk-Forward) page.
 """
 
-from typing import Any, cast
+from typing import cast
 
 import streamlit as st
 
-from src.backtester import BacktestConfig, run_backtest, run_walk_forward_analysis
-from src.backtester.analysis.monte_carlo import run_monte_carlo
 from src.data.collector_fetch import Interval
-from src.strategies.volatility_breakout import create_vbo_strategy
 from src.utils.logger import get_logger
 from src.web.components.sidebar.strategy_selector import get_cached_registry
 from src.web.config.constants import (
@@ -18,11 +15,9 @@ from src.web.config.constants import (
     INTERVAL_DISPLAY_MAP,
     OPTIMIZATION_METRICS,
 )
+from src.web.services.analysis_service import execute_monte_carlo, execute_walk_forward
 from src.web.services.data_loader import validate_data_availability
-from src.web.services.strategy_registry import (
-    create_analysis_strategy,
-    map_strategy_to_internal_type,
-)
+from src.web.services.strategy_registry import map_strategy_to_internal_type
 
 logger = get_logger(__name__)
 
@@ -235,43 +230,23 @@ def _run_monte_carlo(
 ) -> None:
     """Run Monte Carlo simulation."""
     progress = st.empty()
-    progress.info("Running backtest...")
+    progress.info("Running simulation...")
 
     try:
-        # Create strategy
-        strategy = create_analysis_strategy(strategy_type)
-
-        # Configuration
-        config = BacktestConfig(
-            initial_capital=initial_capital,
-            fee_rate=fee_rate,
-            slippage_rate=fee_rate,
-            max_slots=max_slots,
-            use_cache=True,
-        )
-
-        # Run backtest
-        result = run_backtest(
-            strategy=strategy,
+        mc_result, result = execute_monte_carlo(
+            strategy_type=strategy_type,
             tickers=tickers,
             interval=interval,
-            config=config,
-        )
-
-        progress.info(f"Running Monte Carlo simulation ({n_simulations:,} iterations)...")
-
-        # Run Monte Carlo
-        mc_result = run_monte_carlo(
-            result=result,
             n_simulations=n_simulations,
             method=method,
-            random_seed=seed,
+            seed=seed,
+            initial_capital=initial_capital,
+            fee_rate=fee_rate,
+            max_slots=max_slots,
         )
 
-        # Save results
         st.session_state.monte_carlo_result = mc_result
         st.session_state.backtest_result_for_mc = result
-
         progress.success("✅ Simulation completed!")
 
     except Exception as e:
@@ -588,49 +563,22 @@ def _run_walk_forward(
     progress.info("Running Walk-Forward analysis... (this may take a while)")
 
     try:
-        # Strategy factory - takes params dict as argument
-        def create_strategy(params: dict[str, Any]) -> Any:
-            if strategy_type == "vanilla":
-                return create_vbo_strategy(
-                    name="VanillaVBO",
-                    use_trend_filter=False,
-                    use_noise_filter=False,
-                    **params,
-                )
-            else:
-                return create_vbo_strategy(
-                    name="LegacyVBO",
-                    use_trend_filter=True,
-                    use_noise_filter=True,
-                    **params,
-                )
-
-        # Configuration
-        config = BacktestConfig(
-            initial_capital=initial_capital,
-            fee_rate=fee_rate,
-            slippage_rate=fee_rate,
-            max_slots=max_slots,
-            use_cache=True,
-        )
-
-        # Run Walk-Forward
-        result = run_walk_forward_analysis(
-            strategy_factory=create_strategy,
+        result = execute_walk_forward(
+            strategy_type=strategy_type,
             param_grid=param_grid,
             tickers=tickers,
             interval=interval,
-            config=config,
             optimization_days=optimization_days,
             test_days=test_days,
             step_days=step_days,
             metric=metric,
-            n_workers=workers,
+            initial_capital=initial_capital,
+            fee_rate=fee_rate,
+            max_slots=max_slots,
+            workers=workers,
         )
 
-        # Save results
         st.session_state.walk_forward_result = result
-
         progress.success("✅ Walk-Forward analysis completed!")
 
     except Exception as e:

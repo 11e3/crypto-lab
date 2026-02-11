@@ -11,7 +11,6 @@ __all__ = [
     "PerformanceMetrics",
     "Trade",
     "VectorizedBacktestEngine",
-    "SimpleBacktestEngine",
     "EventDrivenBacktestEngine",
     "generate_report",
     "run_backtest",
@@ -73,10 +72,6 @@ def __getattr__(name: str) -> Any:
         from src.backtester.engine import EventDrivenBacktestEngine
 
         return EventDrivenBacktestEngine
-    elif name == "SimpleBacktestEngine":
-        from src.backtester.engine import SimpleBacktestEngine
-
-        return SimpleBacktestEngine
     elif name == "VectorizedBacktestEngine":
         from src.backtester.engine import VectorizedBacktestEngine
 

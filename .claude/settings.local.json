@@ -9,7 +9,7 @@
       "Bash(where:*)",
       "Bash(uv pip install:*)",
       "Bash(tasklist:*)",
-      "Read(//c/Users/moons/dev/crypto-quant-system/**)",
+      "Read(//c/Users/moons/dev/crypto-lab/**)",
       "Bash(xargs:*)",
       "Bash(uv run streamlit:*)",
       "Bash(python -m pytest:*)",

@@ -3,45 +3,27 @@
 Strategy parameter optimization page.
 """
 
-from itertools import product
 from typing import Any, cast
 
 import streamlit as st
 
-from src.backtester import BacktestConfig, optimize_strategy_parameters
 from src.data.collector_fetch import Interval
 from src.utils.logger import get_logger
 from src.web.components.sidebar.strategy_selector import get_cached_registry
 from src.web.config.constants import DEFAULT_TICKERS, INTERVAL_DISPLAY_MAP, OPTIMIZATION_METRICS
-from src.web.services.bt_backtest_runner import (
-    BtBacktestResult,
-    get_available_bt_symbols,
-    get_default_model_path,
-    run_bt_backtest_regime_service,
-    run_bt_backtest_service,
-)
+from src.web.services.bt_backtest_runner import get_available_bt_symbols
 from src.web.services.data_loader import validate_data_availability
+from src.web.services.optimization_service import (
+    execute_bt_optimization,
+    execute_native_optimization,
+    get_default_param_range,
+    parse_dynamic_param_grid,
+)
 from src.web.services.strategy_registry import is_bt_strategy
 
 logger = get_logger(__name__)
 
 __all__ = ["render_optimization_page"]
-
-
-class BtOptimizationResult:
-    """Result of bt strategy optimization (compatible with display function)."""
-
-    def __init__(
-        self,
-        best_params: dict[str, Any],
-        best_score: float,
-        all_params: list[dict[str, Any]],
-        all_scores: list[float],
-    ) -> None:
-        self.best_params = best_params
-        self.best_score = best_score
-        self.all_params = all_params
-        self.all_scores = all_scores
 
 
 def render_optimization_page() -> None:
@@ -164,7 +146,7 @@ def render_optimization_page() -> None:
                     target_col = col1 if i % 2 == 0 else col2
                     with target_col:
                         label = param_name.replace("_", " ").title()
-                        default_values = _get_default_param_range(spec)
+                        default_values = get_default_param_range(spec)
                         param_ranges[param_name] = st.text_input(
                             label,
                             value=default_values,
@@ -253,7 +235,7 @@ def render_optimization_page() -> None:
 
     # Parse parameter ranges (dynamic based on strategy parameters)
     try:
-        param_grid = _parse_dynamic_param_grid(param_ranges, selected_strategy.parameters)
+        param_grid = parse_dynamic_param_grid(param_ranges, selected_strategy.parameters)
     except ValueError as e:
         st.error(f"❌ Parameter range error: {e}")
         return
@@ -297,106 +279,6 @@ def render_optimization_page() -> None:
     # Display previous results
     if "optimization_result" in st.session_state:
         _display_optimization_results()
-
-
-def _get_default_param_range(spec: Any) -> str:
-    """Generate default parameter range based on spec.
-
-    Args:
-        spec: ParameterSpec object
-
-    Returns:
-        Comma-separated default values string
-    """
-    default = spec.default
-    param_type = spec.type
-
-    if param_type == "int":
-        # Generate range around default value
-        min_int = int(spec.min_value or 1)
-        max_int = int(spec.max_value or 100)
-        step_int = int(spec.step or 1)
-
-        # Create range centered on default
-        int_values: list[int] = []
-        for v in range(min_int, max_int + 1, step_int):
-            if abs(v - default) <= step_int * 3:  # 7 values around default
-                int_values.append(v)
-
-        if not int_values:
-            int_values = [int(default)]
-
-        return ",".join(str(v) for v in int_values)
-
-    elif param_type == "float":
-        # For float, generate 3-5 values
-        min_float = float(spec.min_value or 0.0)
-        max_float = float(spec.max_value or 1.0)
-        step_float = float(spec.step or 0.1)
-
-        float_values: list[float] = []
-        current_float: float = min_float
-        while current_float <= max_float and len(float_values) < 5:
-            float_values.append(round(current_float, 4))
-            current_float += step_float
-
-        return ",".join(str(fv) for fv in float_values)
-
-    elif param_type == "bool":
-        return "True,False"
-
-    return str(default)
-
-
-def _parse_dynamic_param_grid(
-    param_ranges: dict[str, str],
-    param_specs: dict[str, Any],
-) -> dict[str, list[Any]]:
-    """Parse dynamic parameter ranges.
-
-    Args:
-        param_ranges: Parameter name to range string mapping
-        param_specs: Parameter specifications from strategy
-
-    Returns:
-        Parameter grid dictionary
-
-    Raises:
-        ValueError: If parsing error occurs
-    """
-    param_grid: dict[str, list[Any]] = {}
-
-    for param_name, range_str in param_ranges.items():
-        if not range_str.strip():
-            raise ValueError(f"Please enter values for {param_name}")
-
-        spec = param_specs.get(param_name)
-        param_type = spec.type if spec else "int"
-
-        values: list[Any] = []
-        for val_str in range_str.split(","):
-            val_str = val_str.strip()
-            if not val_str:
-                continue
-
-            try:
-                if param_type == "int":
-                    values.append(int(val_str))
-                elif param_type == "float":
-                    values.append(float(val_str))
-                elif param_type == "bool":
-                    values.append(val_str.lower() in ("true", "1", "yes"))
-                else:
-                    values.append(val_str)
-            except ValueError as e:
-                raise ValueError(f"Invalid value '{val_str}' for {param_name}") from e
-
-        if not values:
-            raise ValueError(f"No valid values for {param_name}")
-
-        param_grid[param_name] = values
-
-    return param_grid
 
 
 def _show_config_summary(
@@ -479,51 +361,32 @@ def _run_optimization(
     max_slots: int,
     workers: int,
 ) -> None:
-    """Run optimization."""
+    """Run native strategy optimization."""
     st.subheader("🔄 Optimization in Progress...")
-
-    # Progress indicator
     progress_placeholder = st.empty()
-    progress_placeholder.info("Starting optimization...")
+    progress_placeholder.info("Running backtests... (this may take a while)")
 
     if strategy_class is None:
         progress_placeholder.error("❌ Strategy class not found")
         return
 
     try:
-        # Create strategy factory (receives dict parameter from grid_search)
-        def create_strategy(params: dict[str, Any]) -> Any:
-            return strategy_class(**params)
-
-        # Create configuration
-        config = BacktestConfig(
-            initial_capital=initial_capital,
-            fee_rate=fee_rate,
-            slippage_rate=fee_rate,
-            max_slots=max_slots,
-            use_cache=True,
-        )
-
-        progress_placeholder.info("Running backtests... (this may take a while)")
-
-        # Run optimization
-        result = optimize_strategy_parameters(
-            strategy_factory=create_strategy,
+        result = execute_native_optimization(
+            strategy_class=strategy_class,
             param_grid=param_grid,
             tickers=tickers,
             interval=interval,
-            config=config,
             metric=metric,
-            maximize=True,
             method=method,
             n_iter=n_iter,
-            n_workers=workers,
+            initial_capital=initial_capital,
+            fee_rate=fee_rate,
+            max_slots=max_slots,
+            workers=workers,
         )
 
-        # Save results
         st.session_state.optimization_result = result
         st.session_state.optimization_metric = metric
-
         progress_placeholder.success("✅ Optimization completed!")
 
     except Exception as e:
@@ -541,149 +404,41 @@ def _run_bt_optimization(
     initial_capital: int,
     fee_rate: float,
 ) -> None:
-    """Run bt strategy optimization.
-
-    Args:
-        strategy_name: bt strategy name (bt_VBO or bt_VBO_Regime)
-        param_grid: Parameter grid for optimization
-        symbols: List of symbols (without KRW- prefix)
-        metric: Optimization metric
-        method: Search method (grid or random)
-        n_iter: Number of iterations for random search
-        initial_capital: Initial capital in KRW
-        fee_rate: Fee rate
-    """
-    import random
-
+    """Run bt strategy optimization."""
     st.subheader("🔄 bt Optimization in Progress...")
-
     progress_placeholder = st.empty()
     progress_bar = st.progress(0)
     progress_placeholder.info("Starting bt optimization...")
 
-    # Generate parameter combinations
-    param_names = list(param_grid.keys())
-    param_values = list(param_grid.values())
+    def on_progress(current: int, total: int) -> None:
+        progress_bar.progress(current / total)
+        progress_placeholder.info(f"Running backtests... ({current}/{total})")
 
-    if method == "grid":
-        combinations = list(product(*param_values))
-    else:
-        # Random search
-        all_combinations = list(product(*param_values))
-        n_iter = min(n_iter, len(all_combinations))
-        combinations = random.sample(all_combinations, n_iter)
+    try:
+        result_obj = execute_bt_optimization(
+            strategy_name=strategy_name,
+            param_grid=param_grid,
+            symbols=symbols,
+            metric=metric,
+            method=method,
+            n_iter=n_iter,
+            initial_capital=initial_capital,
+            fee_rate=fee_rate,
+            on_progress=on_progress,
+        )
 
-    total = len(combinations)
-    logger.info(f"bt optimization: {total} parameter combinations")
-    progress_placeholder.info(f"Running {total} backtests...")
+        st.session_state.optimization_result = result_obj
+        st.session_state.optimization_metric = metric
+        progress_bar.progress(1.0)
+        progress_placeholder.success(
+            f"✅ bt Optimization completed! Best {metric}: {result_obj.best_score:.4f}"
+        )
 
-    # Determine which bt strategy to use
-    is_regime = "Regime" in strategy_name
-
-    # Get model path for regime strategy
-    model_path = str(get_default_model_path()) if is_regime else None
-
-    # Run backtests for each combination
-    all_results: list[tuple[dict[str, Any], BtBacktestResult | None, float]] = []
-
-    for i, combo in enumerate(combinations):
-        params = dict(zip(param_names, combo, strict=False))
-
-        try:
-            if is_regime:
-                # VBO Regime strategy
-                result = run_bt_backtest_regime_service(
-                    symbols=tuple(symbols),
-                    interval="day",
-                    initial_cash=initial_capital,
-                    fee=fee_rate,
-                    slippage=fee_rate,
-                    ma_short=params.get("ma_short", 5),
-                    noise_ratio=params.get("noise_ratio", 0.5),
-                    model_path=model_path,
-                )
-            else:
-                # VBO strategy
-                result = run_bt_backtest_service(
-                    symbols=tuple(symbols),
-                    interval="day",
-                    initial_cash=initial_capital,
-                    fee=fee_rate,
-                    slippage=fee_rate,
-                    multiplier=params.get("multiplier", 2),
-                    lookback=params.get("lookback", 5),
-                )
-
-            if result:
-                score = _extract_bt_metric(result, metric)
-                all_results.append((params, result, score))
-            else:
-                all_results.append((params, None, float("-inf")))
-
-        except Exception as e:
-            logger.warning(f"bt backtest failed for {params}: {e}")
-            all_results.append((params, None, float("-inf")))
-
-        # Update progress
-        progress = (i + 1) / total
-        progress_bar.progress(progress)
-        progress_placeholder.info(f"Running backtests... ({i + 1}/{total})")
-
-    # Sort by score (descending)
-    all_results.sort(key=lambda x: x[2], reverse=True)
-
-    if not all_results or all_results[0][1] is None:
-        progress_placeholder.error("❌ All backtests failed")
-        return
-
-    # Create result object compatible with display function
-    best_params, best_result, best_score = all_results[0]
-
-    result_obj = BtOptimizationResult(
-        best_params=best_params,
-        best_score=best_score,
-        all_params=[r[0] for r in all_results if r[1] is not None],
-        all_scores=[r[2] for r in all_results if r[1] is not None],
-    )
-
-    # Save results
-    st.session_state.optimization_result = result_obj
-    st.session_state.optimization_metric = metric
-
-    progress_bar.progress(1.0)
-    progress_placeholder.success(f"✅ bt Optimization completed! Best {metric}: {best_score:.4f}")
-
-
-def _extract_bt_metric(result: BtBacktestResult, metric: str) -> float:
-    """Extract metric value from bt backtest result.
-
-    Args:
-        result: BtBacktestResult object
-        metric: Metric name
-
-    Returns:
-        Metric value
-    """
-    metric_map = {
-        "sharpe_ratio": "sharpe_ratio",
-        "cagr": "cagr",
-        "total_return": "total_return",
-        "calmar_ratio": None,  # Calculate from cagr/mdd
-        "win_rate": "win_rate",
-        "profit_factor": "profit_factor",
-        "sortino_ratio": "sortino_ratio",
-    }
-
-    if metric == "calmar_ratio":
-        # Calmar = CAGR / |MDD|
-        mdd = abs(result.mdd) if result.mdd != 0 else 1.0
-        return result.cagr / mdd
-
-    attr = metric_map.get(metric, "sharpe_ratio")
-    if attr is None:
-        return result.sharpe_ratio
-
-    return getattr(result, attr, 0.0)
+    except RuntimeError as e:
+        progress_placeholder.error(f"❌ {e}")
+    except Exception as e:
+        logger.error(f"bt Optimization error: {e}", exc_info=True)
+        progress_placeholder.error(f"❌ Optimization failed: {e}")
 
 
 def _display_optimization_results() -> None:

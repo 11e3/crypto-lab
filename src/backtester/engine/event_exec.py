@@ -86,6 +86,7 @@ def execute_exit(
     Returns:
         Tuple of (Trade, revenue)
     """
+    # Event-driven path: apply slippage here (not pre-computed like vectorized path)
     exit_price = float(row.get("exit_price", row["close"]))
     exit_price = exit_price * (1 - config.slippage_rate)
 
@@ -143,6 +144,7 @@ def execute_entry(
     Returns:
         Tuple of (Position or None, cost)
     """
+    # Event-driven path: apply slippage here (not pre-computed like vectorized path)
     entry_price = float(row.get("entry_price", row.get("target", row["close"])))
     entry_price = entry_price * (1 + config.slippage_rate)
 

@@ -5,7 +5,7 @@ Provides various position sizing methods:
 - Equal: Equal allocation (default)
 - Volatility-based: Inverse volatility weighting
 - Fixed-risk: Fixed risk per position
-- Inverse-volatility: Inverse volatility weighting
+- Inverse-volatility: Alias for volatility-based (same formula)
 """
 
 from typing import Literal
@@ -73,7 +73,8 @@ def calculate_position_size(
             lookback_period,
         )
     elif method == "inverse-volatility":
-        size = _inverse_volatility_sizing(
+        # Same formula as volatility-based: allocate more to less volatile assets
+        size = _volatility_based_sizing(
             available_cash, available_slots, historical_data, lookback_period
         )
     else:
@@ -143,32 +144,6 @@ def _fixed_risk_sizing(
     position_value = min(position_value, max_per_slot)
 
     return float(position_value)
-
-
-def _inverse_volatility_sizing(
-    available_cash: float,
-    available_slots: int,
-    historical_data: pd.DataFrame,
-    lookback_period: int,
-) -> float:
-    """
-    Inverse volatility position sizing.
-
-    Allocates more to less volatile assets.
-    Similar to volatility-based but with different normalization.
-    """
-    volatility = calculate_return_volatility(historical_data, lookback_period)
-    if volatility is None:
-        return _equal_sizing(available_cash, available_slots)
-
-    # Inverse volatility: lower volatility gets more capital
-    # For single asset, scale by inverse volatility
-    base_size: float = float(available_cash / available_slots)
-    # Normalize by average volatility (assume 0.02 = 2% daily volatility as baseline)
-    baseline_volatility = 0.02
-    weight: float = float(baseline_volatility / volatility)
-
-    return base_size * weight
 
 
 # Re-export from position_sizing_multi for backward compatibility

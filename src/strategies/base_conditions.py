@@ -3,7 +3,6 @@ Base condition classes for strategy abstraction.
 
 Contains condition abstractions for composable entry/exit logic:
 - Condition: ABC for atomic conditions
-- Filter: Alias for Condition (backward compatibility)
 - CompositeCondition: Combines conditions with AND/OR logic
 """
 
@@ -56,11 +55,6 @@ class Condition(ABC):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name!r})"
-
-
-# Alias for backward compatibility
-# Filters are now treated as Conditions in the unified architecture
-Filter = Condition
 
 
 class CompositeCondition(Condition):

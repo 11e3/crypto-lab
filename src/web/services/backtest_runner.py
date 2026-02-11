@@ -95,32 +95,28 @@ class BacktestService:
             return None
 
 
-@st.cache_data(show_spinner="Running backtest...")
-def run_backtest_service(
+def execute_backtest(
     strategy_name: str,
     strategy_params: dict[str, Any],
-    data_files_dict: dict[str, str],  # {ticker: file_path_str}
+    data_files_dict: dict[str, str],
     config_dict: dict[str, Any],
     start_date_str: str | None,
     end_date_str: str | None,
 ) -> BacktestResult | None:
-    """Cacheable backtest execution wrapper.
-
-    Convert all parameters to serializable types for Streamlit caching.
+    """Execute a backtest from serializable parameters (no Streamlit dependency).
 
     Args:
         strategy_name: Strategy name
         strategy_params: Strategy parameters
-        data_files_dict: Data file path dictionary
+        data_files_dict: Data file path dictionary {ticker: file_path_str}
         config_dict: Backtest configuration dictionary
-        start_date_str: Start date string
-        end_date_str: End date string
+        start_date_str: Start date ISO string
+        end_date_str: End date ISO string
 
     Returns:
         BacktestResult or None
     """
     try:
-        # Create Strategy instance
         from src.web.components.sidebar.strategy_selector import (
             create_strategy_instance,
         )
@@ -130,22 +126,34 @@ def run_backtest_service(
             logger.error("Failed to create strategy instance")
             return None
 
-        # Restore Path objects
         data_files = {ticker: Path(path) for ticker, path in data_files_dict.items()}
-
-        # Restore dates
         start_date = date.fromisoformat(start_date_str) if start_date_str else None
         end_date = date.fromisoformat(end_date_str) if end_date_str else None
-
-        # Create BacktestConfig
         config = BacktestConfig(**config_dict)
 
-        # Execute backtest
         service = BacktestService(config)
-        result = service.run(strategy, data_files, start_date, end_date)
-
-        return result
+        return service.run(strategy, data_files, start_date, end_date)
 
     except Exception as e:
         logger.exception(f"Backtest service failed: {e}")
         return None
+
+
+@st.cache_data(show_spinner="Running backtest...")
+def run_backtest_service(
+    strategy_name: str,
+    strategy_params: dict[str, Any],
+    data_files_dict: dict[str, str],
+    config_dict: dict[str, Any],
+    start_date_str: str | None,
+    end_date_str: str | None,
+) -> BacktestResult | None:
+    """Streamlit-cached wrapper around execute_backtest."""
+    return execute_backtest(
+        strategy_name,
+        strategy_params,
+        data_files_dict,
+        config_dict,
+        start_date_str,
+        end_date_str,
+    )

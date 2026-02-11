@@ -4,7 +4,7 @@ Multi-asset VBO strategy that uses BTC's MA20 as a market regime
 filter. Only enters positions when BTC is in an uptrend.
 
 Ported from bt framework's VBOPortfolioStrategy and adapted to
-CQS vectorized paradigm.
+crypto-lab vectorized paradigm.
 """
 
 from __future__ import annotations

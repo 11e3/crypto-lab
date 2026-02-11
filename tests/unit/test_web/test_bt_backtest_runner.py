@@ -1,4 +1,4 @@
-"""Tests for bt_backtest_runner service (native CQS engine)."""
+"""Tests for bt_backtest_runner service (native crypto-lab engine)."""
 
 from __future__ import annotations
 

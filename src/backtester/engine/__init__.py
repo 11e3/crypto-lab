@@ -17,9 +17,6 @@ from src.backtester.models import BacktestConfig, BacktestResult, Trade
 # Type alias for engine protocol (use for type hints)
 BacktestEngine = BacktestEngineProtocol
 
-# Backward compatibility alias (deprecated)
-SimpleBacktestEngine = EventDrivenBacktestEngine
-
 __all__ = [
     # Protocol
     "BacktestEngineProtocol",
@@ -27,7 +24,6 @@ __all__ = [
     # Implementations
     "EventDrivenBacktestEngine",
     "VectorizedBacktestEngine",
-    "SimpleBacktestEngine",  # Deprecated alias
     # Utilities
     "run_backtest",
     # Models

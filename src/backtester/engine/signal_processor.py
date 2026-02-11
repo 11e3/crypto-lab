@@ -2,6 +2,15 @@
 Signal processing utilities for vectorized backtesting.
 
 Handles entry/exit price calculations and whipsaw detection.
+
+Slippage Architecture (dual-path):
+    Vectorized engine: slippage is pre-computed here into entry_price/exit_price
+    columns. The engine reads these adjusted prices directly from arrays.
+
+    Event-driven engine: slippage is applied independently in event_exec.py
+    (execute_entry/execute_exit). It does NOT use these pre-computed columns.
+
+    Both paths apply slippage exactly once — there is no double-application.
 """
 
 import pandas as pd
