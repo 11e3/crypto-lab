@@ -1,613 +1,148 @@
-# Claude Code Guide for Crypto Quant System
+# Crypto Quant System — Claude Code Guide
 
-**FOR CLAUDE CODE USE ONLY** - This guide provides essential context for AI-assisted development.
+## Project Overview
 
-## Project Quick Reference
+Crypto trading platform for Upbit exchange (KRW pairs). Backtesting, live trading, portfolio optimization, Streamlit dashboard.
 
-**Crypto Quant System** - Production-grade cryptocurrency trading platform with backtesting, live trading, and portfolio optimization.
+**Stack**: Python 3.13 | uv | Ruff | MyPy (strict) | Pytest | Streamlit | pandas/numpy/scipy
 
-**Tech Stack**: Python 3.14+ | MyPy (97.8% pass) | Pytest (80%+ coverage) | Ruff | uv
+## Module Map
 
-## Core Modules
+| Module | LOC | Purpose |
+|--------|-----|---------|
+| `src/backtester/` | 8.6K | Dual engines: VectorizedBacktestEngine + EventDrivenBacktestEngine |
+| `src/web/` | 6.2K | Streamlit multi-page app (backtest, optimization, analysis, monitor, data_collect) |
+| `src/strategies/` | 4.3K | VBO (main), MeanReversion, Momentum, ORB — composable Condition pattern |
+| `src/execution/` | 3.3K | Live bot, trade executors, event bus, position management |
+| `src/data/` | 2.3K | Upbit data collection, caching, indicators |
+| `src/risk/` | 1.1K | Portfolio optimization (MPT, risk parity), position sizing, VaR/CVaR |
+| `src/exchange/` | 0.8K | Upbit API wrapper (REST), order management |
+| `src/config/` | 0.7K | YAML config loader, pydantic settings |
 
-| Module | Path | Purpose |
-|--------|------|---------|
-| Backtesting | [src/backtester/engine/](src/backtester/engine/) | Event-driven & vectorized engines |
-| Strategies | [src/strategies/](src/strategies/) | VBO, Mean Reversion, Momentum, ORB |
-| Live Bot | [src/execution/bot/](src/execution/bot/) | Production trading bot |
-| Risk | [src/risk/](src/risk/) | Portfolio optimization, VaR/CVaR |
-| Data | [src/data/](src/data/) | Upbit data collection & caching |
-| Web UI | [src/web/](src/web/) | Streamlit multi-page app |
-| Exchange | [src/exchange/](src/exchange/) | Exchange abstraction (Upbit) |
+## Windows/Environment Gotchas
 
-## Critical Development Workflow
+- **`uv run` broken**: Fails with "canonicalize script path" — use `python -m pytest` directly
+- **PowerShell**: No `&&` support — use `;` or use git bash
+- **Test runner**: `python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80`
+- **Ruff/MyPy**: Run directly (`ruff check src/`, `mypy src/`), not through uv
 
-### Test-Driven Development (TDD) - MANDATORY
+## Quality Standards
 
-**ALWAYS follow TDD for new features:**
-
-1. **Write Tests First** (Red Phase)
-   ```bash
-   # Create test file first
-   tests/unit/test_strategies/test_my_strategy.py
-
-   # Write failing tests
-   uv run pytest tests/unit/test_strategies/test_my_strategy.py -v
-   # Expected: Tests fail (RED)
-   ```
-
-2. **Implement Feature** (Green Phase)
-   ```python
-   # Implement minimum code to pass tests
-   src/strategies/my_strategy.py
-
-   # Run tests again
-   uv run pytest tests/unit/test_strategies/test_my_strategy.py -v
-   # Expected: Tests pass (GREEN)
-   ```
-
-3. **Refactor** (Refactor Phase)
-   ```bash
-   # Improve code while keeping tests green
-   # Run tests continuously
-   uv run pytest tests/unit/test_strategies/test_my_strategy.py -v
-   ```
-
-### Quality Gate - Run After EVERY Code Change
-
-**CRITICAL**: Run these checks after every unit of work (single feature/fix):
-
-```bash
-# 1. Format code (auto-fix)
-uv run ruff format src/ tests/
-
-# 2. Lint code (auto-fix when possible)
-uv run ruff check --fix src/ tests/
-
-# 3. Type check (no auto-fix - must resolve manually)
-uv run mypy src/
-
-# 4. Run tests with coverage
-uv run pytest --cov=src --cov-report=term-missing
-
-# 5. Check coverage threshold (80%+ required)
-uv run pytest --cov=src --cov-report=html --cov-fail-under=80
-```
-
-**All checks MUST pass before committing.**
-
-### Git Workflow - Commit & Push Pattern
-
-After passing quality gates:
-
-```bash
-# 1. Check git status
-git status
-
-# 2. Stage changes
-git add .
-
-# 3. Commit with conventional commit message
-git commit -m "feat: Add RSI strategy with TDD"
-# or
-git commit -m "fix: Resolve type error in metrics calculator"
-# or
-git commit -m "test: Add integration tests for walk-forward analysis"
-# or
-git commit -m "refactor: Extract position sizer from engine"
-
-# 4. Push to remote
-git push origin <branch-name>
-
-# Common branch patterns:
-# - feature/rsi-strategy
-# - fix/metrics-calculation-bug
-# - refactor/split-large-module
-```
-
-**Conventional Commit Prefixes**:
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `test:` - Test additions/changes
-- `refactor:` - Code restructuring (no behavior change)
-- `docs:` - Documentation updates
-- `style:` - Code style changes (formatting)
-- `perf:` - Performance improvements
-- `chore:` - Build/tooling changes
-
-### Complete Development Cycle Example
-
-```bash
-# === RED PHASE ===
-# 1. Write test first
-cat > tests/unit/test_strategies/test_rsi_strategy.py << 'EOF'
-import pytest
-from src.strategies.rsi_strategy import RSIStrategy
-
-def test_rsi_strategy_initialization():
-    """Test RSI strategy initializes correctly."""
-    strategy = RSIStrategy(period=14, overbought=70, oversold=30)
-    assert strategy.period == 14
-    assert strategy.overbought == 70
-    assert strategy.oversold == 30
-
-def test_rsi_strategy_generates_signals():
-    """Test RSI strategy generates buy/sell signals."""
-    # Test implementation
-    ...
-EOF
-
-# 2. Run test (should FAIL)
-uv run pytest tests/unit/test_strategies/test_rsi_strategy.py -v
-# ❌ FAILED - Module not found
-
-# === GREEN PHASE ===
-# 3. Implement strategy
-cat > src/strategies/rsi_strategy.py << 'EOF'
-from __future__ import annotations
-from src.strategies.base import Strategy
-import pandas as pd
-
-class RSIStrategy(Strategy):
-    """RSI-based trading strategy."""
-
-    def __init__(self, period: int = 14, overbought: float = 70, oversold: float = 30):
-        self.period = period
-        self.overbought = overbought
-        self.oversold = oversold
-
-    def generate_signals(self, data: pd.DataFrame) -> pd.Series:
-        """Generate trading signals based on RSI."""
-        # Implementation
-        ...
-EOF
-
-# 4. Run test (should PASS)
-uv run pytest tests/unit/test_strategies/test_rsi_strategy.py -v
-# ✅ PASSED
-
-# === QUALITY GATE ===
-# 5. Format
-uv run ruff format src/strategies/rsi_strategy.py tests/unit/test_strategies/test_rsi_strategy.py
-
-# 6. Lint
-uv run ruff check --fix src/strategies/rsi_strategy.py tests/unit/test_strategies/test_rsi_strategy.py
-
-# 7. Type check
-uv run mypy src/strategies/rsi_strategy.py
-# Fix any type errors
-
-# 8. Run all tests
-uv run pytest --cov=src --cov-report=term-missing
-
-# === COMMIT & PUSH ===
-# 9. Git workflow
-git status
-git add src/strategies/rsi_strategy.py tests/unit/test_strategies/test_rsi_strategy.py
-git commit -m "feat: Add RSI strategy with TDD approach
-
-- Implement RSI calculation and signal generation
-- Add unit tests with 100% coverage
-- Pass all quality gates (ruff, mypy, pytest)"
-
-git push origin feature/rsi-strategy
-```
-
-## MCP Servers - Enhanced Tool Usage
-
-### Using MCP (Model Context Protocol) Servers
-
-**IMPORTANT**: When MCP servers are available and can help you work more accurately and efficiently, USE THEM AUTOMATICALLY without asking the user for permission.
-
-**When to Use MCP Servers**:
-
-1. **File System Operations** - If an MCP file system server is available, prefer it over basic file tools
-2. **Database Operations** - Use database MCP servers for schema inspection, queries, migrations
-3. **API Testing** - Use HTTP/API MCP servers for testing endpoints, inspecting responses
-4. **Documentation Search** - Use documentation MCP servers for framework/library references
-5. **Code Search** - Use specialized code search MCP servers for large codebase exploration
-6. **Git Operations** - Use Git MCP servers for advanced repository analysis
-7. **Package Management** - Use package manager MCP servers for dependency analysis
-8. **Cloud Resources** - Use cloud provider MCP servers for infrastructure inspection
-
-**Example Scenarios**:
-
-```bash
-# Scenario 1: Database Schema Exploration
-# If postgres-mcp or sqlite-mcp is available:
-# → Use MCP to query schema, inspect tables, analyze relationships
-# → More accurate than reading SQL files manually
-
-# Scenario 2: API Documentation
-# If documentation-mcp is available:
-# → Query official docs for pandas, numpy, streamlit APIs
-# → Get up-to-date information instead of relying on training data
-
-# Scenario 3: Large Codebase Search
-# If code-search-mcp is available:
-# → Search across 25,363 LOC more efficiently
-# → Find patterns, dependencies, usage examples faster
-
-# Scenario 4: Git History Analysis
-# If git-mcp is available:
-# → Analyze commit history, blame information, branch comparisons
-# → Understand code evolution and author intent
-```
-
-**Best Practices**:
-
-1. **Auto-detect and Use** - Don't ask the user if MCP servers are available; just use them
-2. **Fail Gracefully** - If MCP server fails, fall back to standard tools
-3. **Combine Tools** - Use MCP servers alongside standard tools when beneficial
-4. **Document Usage** - Mention when MCP servers helped (e.g., "Used postgres-mcp to verify schema")
-5. **Trust MCP Data** - MCP server results are often more accurate than manual exploration
-
-**Example Workflow with MCP**:
-
-```bash
-# Task: Add new database migration for user preferences
-
-# === WITHOUT MCP ===
-# 1. Manually read migration files
-# 2. Guess at schema structure
-# 3. Write migration
-# 4. Test manually
-
-# === WITH database-mcp ===
-# 1. Query current schema via MCP
-# 2. Verify table relationships via MCP
-# 3. Check constraints and indexes via MCP
-# 4. Write accurate migration based on MCP data
-# 5. Test using MCP query tools
-
-# Result: More accurate, faster, fewer errors
-```
-
-**Integration with Quality Gate**:
-
-MCP servers can enhance the quality gate process:
-
-```bash
-# Enhanced quality checks with MCP
-# 1. Use code-search-mcp to find similar patterns in codebase
-# 2. Use documentation-mcp to verify API usage is correct
-# 3. Use database-mcp to validate schema changes
-# 4. Run standard quality gates (ruff, mypy, pytest)
-# 5. Use git-mcp to verify no unintended files are being committed
-```
-
-**Remember**: MCP servers are PRODUCTIVITY ENHANCERS. Use them automatically when available to work faster and more accurately.
-
-## Code Standards
-
-### Type Hints (NON-NEGOTIABLE)
-
-```python
-from __future__ import annotations  # ALWAYS include
-
-def calculate_sharpe_ratio(
-    returns: pd.Series,
-    risk_free_rate: float = 0.0
-) -> float:
-    """Calculate Sharpe ratio."""
-    ...
-```
-
-### Docstrings (Google Style)
-
-```python
-def run_backtest(
-    strategy: Strategy,
-    data_files: list[str],
-    config: BacktestConfig,
-) -> BacktestResult:
-    """Run a backtest with the given strategy and data.
-
-    Args:
-        strategy: Trading strategy to backtest
-        data_files: List of paths to OHLCV data files (Parquet format)
-        config: Backtest configuration (capital, fees, slippage, etc.)
-
-    Returns:
-        BacktestResult containing performance metrics and trades
-
-    Raises:
-        DataLoadError: If data files cannot be loaded
-        ValidationError: If configuration is invalid
-    """
-    ...
-```
-
-### Import Order (Enforced by isort)
-
-```python
-from __future__ import annotations  # 1. Future imports
-
-import logging                       # 2. Standard library
-from pathlib import Path
-from typing import Protocol
-
-import pandas as pd                  # 3. Third-party
-import numpy as np
-
-from src.backtester.models import BacktestConfig  # 4. Local
-from src.strategies.base import Strategy
-```
-
-### Naming Conventions
-
-| Type | Convention | Example |
-|------|------------|---------|
-| Classes | PascalCase | `EventDrivenBacktestEngine` |
-| Functions | snake_case | `calculate_metrics` |
-| Constants | UPPER_SNAKE_CASE | `DEFAULT_FEE_RATE` |
-| Private | _leading_underscore | `_internal_method` |
-| Type Variables | TPascalCase | `TStrategy` |
+- **Coverage**: 80% minimum (currently ~89.88%, 1665 tests)
+- **MyPy**: 14 known pre-existing errors in web/monitoring/storage (`dict` annotations) — only flag NEW errors
+- **Ruff**: 0 violations required
+- **Conventional commits**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `perf:`
 
 ## Architecture Patterns
 
-### 1. Strategy Pattern (Composable Conditions)
+### Strategy Composition
+Strategies use composable `Condition` objects (ABC). Shared conditions live in `src/strategies/common_conditions.py`. Each strategy module re-exports what it needs for backward compatibility.
 
-```python
-from src.strategies.base import Strategy
-from src.strategies.base_conditions import Condition
-
-class MyStrategy(Strategy):
-    def __init__(self, param1: float):
-        self.entry_condition = MyEntryCondition(param1)
-        self.exit_condition = MyExitCondition()
+```
+Strategy → [EntryCondition, ExitCondition] → evaluate(current, history, indicators) → bool
 ```
 
-### 2. Protocol Interfaces (Dependency Injection)
+### Dual Backtest Engines
+- **Vectorized**: Fast parameter sweeps, portfolio-level signals
+- **Event-driven**: Realistic order simulation, slippage/fees
+- They produce different results by design (whipsaw counting, equity curve lengths)
 
-```python
-from typing import Protocol
+### Key Constants
+- `ANNUALIZATION_FACTOR = 365` (crypto, not 252)
+- `RISK_FREE_RATE` from config
+- Fee model: Upbit 0.05% per trade
 
-class BacktestEngineProtocol(Protocol):
-    def run(self, strategy: Strategy, data: pd.DataFrame) -> BacktestResult: ...
-```
+### Data Format
+- `data_loader` expects flat `{ticker}_{interval}.parquet` in `RAW_DATA_DIR`
+- `exit_price_base` column convention for strategies with non-close exit prices (e.g., VBOV1 exits at open)
 
-### 3. Factory Pattern (Extensibility)
+## Common Pitfalls
 
-```python
-from src.exchange import ExchangeFactory
-exchange = ExchangeFactory.create("upbit", api_key, secret_key)
-```
+### Patch Targets in Tests
+- Bot components: patch `bot_factory` not `bot_init` (ExchangeFactory, get_config, get_notifier)
+- Signal handler: logger patches go to `signal_data` / `signal_metrics` (after SRP split)
 
-### 4. Event Bus Pattern (Decoupling)
+### Exception Handling
+- Exchange modules use `_UPBIT_ERRORS` tuple constant — add new types there, not inline
+- 11 intentional broad `except Exception` remain (event_bus, notification_handler, bot main loop)
 
-```python
-from src.execution.event_bus import EventBus, OrderFilledEvent
-event_bus = EventBus()
-event_bus.subscribe(OrderFilledEvent, handler)
-event_bus.publish(OrderFilledEvent(...))
-```
+### Streamlit Specifics
+- Render `col3` (asset_selector) before `col1` (trading_config) so `session_state` is populated
+- Dynamic widget keys (`key=f"max_slots_{count}"`) to force re-render on state change
+- `@st.cache_resource` for registry — import `get_cached_registry` from `strategy_selector`
 
-## Common Tasks
+### Position Sizing
+- `_volatility_based_sizing()` uses baseline normalization (0.02) — was a no-op before 2026-02-11 fix
+- `_inverse_volatility_sizing()` is the portfolio-level equivalent
 
-### Adding a New Strategy (TDD Approach)
+## Workflow Rules
 
+### After Every Code Change
+Run `/quality-gate` or manually:
 ```bash
-# 1. Write test first (RED)
-cat > tests/unit/test_strategies/test_my_strategy.py
-uv run pytest tests/unit/test_strategies/test_my_strategy.py -v  # FAIL
-
-# 2. Implement strategy (GREEN)
-cat > src/strategies/my_strategy.py
-uv run pytest tests/unit/test_strategies/test_my_strategy.py -v  # PASS
-
-# 3. Quality gate
-uv run ruff format src/strategies/my_strategy.py tests/unit/test_strategies/test_my_strategy.py
-uv run ruff check --fix src/strategies/my_strategy.py tests/unit/test_strategies/test_my_strategy.py
-uv run mypy src/strategies/my_strategy.py
-uv run pytest --cov=src --cov-report=term-missing
-
-# 4. Commit & push
-git add src/strategies/my_strategy.py tests/unit/test_strategies/test_my_strategy.py
-git commit -m "feat: Add My Strategy with TDD"
-git push origin feature/my-strategy
+ruff format src/ tests/
+ruff check --fix src/ tests/
+mypy src/
+python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 ```
 
-Strategy auto-registers in web UI via `StrategyRegistry`.
+### Before Committing
+- Verify all 4 quality checks pass
+- Stage specific files (not `git add .`) to avoid committing .env or data files
+- Use conventional commit messages
 
-### Adding a New Metric (TDD Approach)
+### For New Features
+1. Use `/feature-dev` for architecture guidance
+2. Write tests first (TDD)
+3. Implement, then `/quality-gate`
+4. `/code-review` for self-review before push
 
-```bash
-# 1. Write test first
-cat > tests/unit/test_backtester/test_new_metric.py
+### Periodic Maintenance
+- `/weekly-review` — code simplification, dead code, coverage gaps
+- `/claude-md-improver` — keep this file current
+- Code Simplifier plugin — deep analysis after major changes
 
-# 2. Update PerformanceMetrics dataclass
-# src/backtester/models.py
+## File Protection
 
-# 3. Add calculation
-# src/backtester/engine/metrics_calculator.py
+- `.env` — contains Upbit API keys, NEVER read or edit
+- `src/_monkeypatch.py` — has `if patched_content != content:` guards, don't remove them
+- Lock files, `*.parquet` data — don't commit
 
-# 4. Add display logic
-# src/web/components/metrics/
-
-# 5. Quality gate + commit
-```
-
-### Fixing a Bug (TDD Approach)
-
-```bash
-# 1. Write failing test that reproduces bug (RED)
-cat > tests/unit/test_bug_reproduction.py
-uv run pytest tests/unit/test_bug_reproduction.py -v  # FAIL
-
-# 2. Fix the bug (GREEN)
-# Edit relevant source file
-uv run pytest tests/unit/test_bug_reproduction.py -v  # PASS
-
-# 3. Quality gate
-uv run ruff format src/ tests/
-uv run ruff check --fix src/ tests/
-uv run mypy src/
-uv run pytest --cov=src
-
-# 4. Commit
-git add <fixed_files> tests/unit/test_bug_reproduction.py
-git commit -m "fix: Resolve calculation error in Sharpe ratio
-
-- Add regression test for negative returns case
-- Fix division by zero when std is 0
-- All tests pass with 80%+ coverage"
-git push origin fix/sharpe-ratio-bug
-```
-
-## Testing Guidelines
-
-### Test Structure
+## Test Structure
 
 ```
 tests/
-├── unit/              # Fast, isolated tests
-├── integration/       # Slower, multiple components
-└── fixtures/          # Reusable test data
+├── unit/           # Fast, isolated (mock external dependencies)
+│   ├── test_backtester/
+│   ├── test_strategies/
+│   ├── test_execution/
+│   ├── test_exchange/
+│   ├── test_risk/
+│   ├── test_web/
+│   └── ...
+├── integration/    # Multi-component (9 test files)
+└── fixtures/       # Shared test data
 ```
 
-### Writing Tests (Pytest)
-
-```python
-import pytest
-from src.backtester import EventDrivenBacktestEngine
-
-def test_engine_initialization():
-    """Test engine initializes with correct config."""
-    config = BacktestConfig(initial_capital=1_000_000)
-    engine = EventDrivenBacktestEngine(config)
-    assert engine.config.initial_capital == 1_000_000
-
-@pytest.mark.slow
-def test_full_backtest_integration():
-    """Integration test for full workflow."""
-    # Marked as slow - runs separately
-    ...
-```
-
-### Coverage Requirements
-
-- **80%+ branch coverage** (enforced)
-- Focus on business logic
-- Use `pytest --cov=src --cov-report=html` to view coverage
-
-## Performance Considerations
-
-1. **Vectorize operations** - Use NumPy/Pandas, avoid Python loops
-2. **Cache expensive computations** - Indicators, metrics
-3. **Lazy load data** - Don't load everything at once
-4. **Profile slow code** - `cProfile`, `py-spy`
-5. **Use VectorizedBacktestEngine** - For parameter sweeps
-
-## Security Best Practices
-
-1. **Never commit API keys** - Use `.env` + `.gitignore`
-2. **Validate all inputs** - Especially web UI
-3. **Use read-only API keys** - For backtesting
-4. **Audit bot before deployment** - Live trading is risky
-5. **Monitor in real-time** - Set up alerts
-
-## Troubleshooting
-
-### MyPy Type Errors
+## Quick Reference
 
 ```bash
-# Check specific file
-uv run mypy src/backtester/engine/event_driven.py
+# Run tests
+python -m pytest -q                                    # fast run
+python -m pytest --cov=src --cov-fail-under=80 -q      # with coverage
+python -m pytest tests/unit/test_strategies/ -v         # specific module
 
-# Common fix: Third-party library without stubs
-import pyupbit  # type: ignore
-```
+# Lint & format
+ruff format src/ tests/
+ruff check --fix src/ tests/
+mypy src/
 
-### Import Errors
-
-```bash
-uv sync --all-extras
-uv run pip install -e .
-```
-
-### Test Failures
-
-```bash
-# Run specific test
-uv run pytest tests/unit/test_backtester/test_engine.py::test_engine_initialization -v
-
-# Run with verbose output
-uv run pytest -vv
-
-# Run with print statements visible
-uv run pytest -s
-```
-
-## Key Principles for Claude Code
-
-1. **TDD First** - Write tests before implementation
-2. **Quality Gate Always** - ruff → mypy → pytest after every change
-3. **Commit Frequently** - Small, atomic commits with conventional messages
-4. **Type Safety** - 100% type coverage, no `Any` types
-5. **Test Coverage** - 80%+ minimum, aim for 90%+
-6. **SOLID Principles** - Recent refactoring focused on SRP, OCP, DIP
-7. **Clean Architecture** - Service layer, protocols, dependency injection
-8. **Documentation** - Self-documenting code with type hints + docstrings
-9. **Performance** - Vectorized operations, caching, lazy loading
-10. **Security** - No secrets in code, input validation, audit trails
-11. **Use MCP Servers** - Automatically use available MCP servers for enhanced accuracy and efficiency
-
-## Quick Commands Reference
-
-```bash
-# Setup
-uv sync --all-extras
-pre-commit install
-
-# TDD Cycle
-uv run pytest <test_file> -v           # Run specific test
-uv run pytest -k <test_name> -v        # Run by name pattern
-
-# Quality Gate (run ALL after every change)
-uv run ruff format src/ tests/         # Format
-uv run ruff check --fix src/ tests/    # Lint
-uv run mypy src/                       # Type check
-uv run pytest --cov=src --cov-fail-under=80  # Test + coverage
+# Run dashboard
+streamlit run src/web/app.py
 
 # Git
-git status
-git add .
-git commit -m "feat: <message>"
-git push origin <branch>
-
-# Run app
-uv run streamlit run src/web/app.py --server.runOnSave true
-uv run python scripts/collect_30min_data.py
+git status -u
+git add <specific files>
+git commit -m "feat: description"
+git push
 ```
-
-## Environment Setup
-
-```bash
-# Clone repo
-git clone <repo-url>
-cd crypto-quant-system
-
-# Install dependencies
-uv sync --all-extras
-
-# Setup pre-commit hooks
-pre-commit install
-
-# Create .env file
-cat > .env << 'EOF'
-UPBIT_ACCESS_KEY=your_key
-UPBIT_SECRET_KEY=your_secret
-WEB_SERVER_PORT=8501
-LOG_LEVEL=INFO
-EOF
-
-# Verify installation
-uv run python -c "from src.backtester import EventDrivenBacktestEngine; print('✓ Setup complete')"
-```
-
----
-
-**Last updated**: 2026-01-16
-
-**Remember**: TDD → Quality Gate → Commit → Push. Every. Single. Time.
