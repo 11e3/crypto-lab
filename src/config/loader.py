@@ -45,6 +45,11 @@ class ConfigLoader:
         self._settings = Settings()
         self.load()
 
+    @property
+    def settings(self) -> Settings:
+        """Return the underlying Settings instance (read-only)."""
+        return self._settings
+
     def load(self) -> None:
         """
         Load configuration from YAML file.

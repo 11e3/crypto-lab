@@ -16,7 +16,7 @@ def get_telegram_config(loader: "ConfigLoader") -> dict[str, Any]:
     Returns:
         Dictionary with telegram config
     """
-    telegram_config: dict[str, Any] = loader._settings.get_telegram_config()
+    telegram_config: dict[str, Any] = loader.settings.get_telegram_config()
     yaml_enabled = loader.get("telegram.enabled")
     if yaml_enabled is not None:
         telegram_config["enabled"] = yaml_enabled
@@ -33,7 +33,7 @@ def get_trading_config(loader: "ConfigLoader") -> dict[str, Any]:
     Returns:
         Dictionary with trading config
     """
-    trading_config: dict[str, Any] = loader._settings.get_trading_config()
+    trading_config: dict[str, Any] = loader.settings.get_trading_config()
 
     yaml_overrides: list[tuple[str, str]] = [
         ("tickers", "trading.tickers"),
@@ -63,7 +63,7 @@ def get_strategy_config(loader: "ConfigLoader") -> dict[str, Any]:
     Returns:
         Dictionary with strategy config
     """
-    strategy_config: dict[str, Any] = loader._settings.get_strategy_config()
+    strategy_config: dict[str, Any] = loader.settings.get_strategy_config()
 
     strategy_keys = [
         "name",
@@ -91,7 +91,7 @@ def get_bot_config(loader: "ConfigLoader") -> dict[str, Any]:
     Returns:
         Dictionary with bot config
     """
-    bot_config: dict[str, Any] = loader._settings.get_bot_config()
+    bot_config: dict[str, Any] = loader.settings.get_bot_config()
 
     bot_keys = [
         "daily_reset_hour",
