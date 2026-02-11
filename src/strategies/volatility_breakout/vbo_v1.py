@@ -12,7 +12,7 @@ from typing import Any
 import pandas as pd
 
 from src.strategies.base import Strategy
-from src.strategies.volatility_breakout.vbo_portfolio import _load_btc_data
+from src.strategies.volatility_breakout.btc_data_loader import _load_btc_data
 
 
 class VBOV1(Strategy):
@@ -25,8 +25,8 @@ class VBOV1(Strategy):
     Exit condition:
     - prev_close < prev_SMA(ma_short) -> sell at today's open
 
-    Key differences from VBOPortfolioLite:
-    - Fixed K value (noise_ratio=0.5) instead of adaptive noise
+    Key characteristics:
+    - Fixed K value (noise_ratio=0.5)
     - SMA includes current bar (no shift)
     - Exit at open price (exit_price_base), not close
     - Exit signal uses previous day's condition (shift(1))
@@ -90,7 +90,7 @@ class VBOV1(Strategy):
         # Target with fixed K value — matches v1
         df["target"] = df["open"] + df["prev_range"] * self.noise_ratio
 
-        # BTC market filter (reused from VBOPortfolio pattern)
+        # BTC market filter
         btc_df = self._get_btc_data()
         if btc_df is not None and not btc_df.empty:
             btc_close = btc_df["close"].reindex(df.index, method="ffill")

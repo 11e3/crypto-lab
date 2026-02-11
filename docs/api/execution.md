@@ -24,7 +24,7 @@ TradingBotFacade(
     position_manager: PositionManager | None = None,
     order_manager: OrderManager | None = None,
     signal_handler: SignalHandler | None = None,
-    strategy: VanillaVBO | None = None,
+    strategy: VBOV1 | None = None,
     config_path: Path | None = None
 )
 ```
@@ -295,13 +295,13 @@ from src.execution.order_manager import OrderManager
 from src.execution.position_manager import PositionManager
 from src.execution.signal_handler import SignalHandler
 from src.exchange import UpbitExchange
-from src.strategies.volatility_breakout import VanillaVBO
+from src.strategies.volatility_breakout import VBOV1
 
 # 컴포넌트 생성
 exchange = UpbitExchange(access_key="...", secret_key="...")
 position_manager = PositionManager(exchange, max_slots=4)
 order_manager = OrderManager(exchange, position_manager)
-strategy = VanillaVBO()
+strategy = VBOV1()
 signal_handler = SignalHandler(strategy, position_manager, order_manager, exchange)
 
 # Facade 생성

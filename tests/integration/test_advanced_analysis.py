@@ -14,7 +14,7 @@ from src.backtester.analysis.monte_carlo import MonteCarloSimulator
 from src.backtester.engine.vectorized import VectorizedBacktestEngine
 from src.backtester.models import BacktestConfig, BacktestResult
 from src.backtester.wfa.walk_forward import WalkForwardAnalyzer
-from src.strategies.volatility_breakout import VanillaVBO
+from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
 
 class TestMonteCarloAnalysis:
@@ -66,8 +66,8 @@ class TestWalkForwardAnalysis:
     ) -> None:
         """Test basic Walk-Forward Analysis with strategy factory."""
 
-        def strategy_factory(params: dict[str, Any]) -> VanillaVBO:
-            return VanillaVBO(**params)
+        def strategy_factory(params: dict[str, Any]) -> VBOV1:
+            return VBOV1(**params)
 
         wfa = WalkForwardAnalyzer(
             strategy_factory=strategy_factory,
@@ -76,7 +76,7 @@ class TestWalkForwardAnalysis:
             config=default_backtest_config,
         )
 
-        param_grid = {"sma_period": [3, 4, 5], "trend_sma_period": [6, 8]}
+        param_grid = {"ma_short": [3, 4, 5], "btc_ma": [10, 20]}
 
         try:
             result = wfa.analyze(
@@ -96,8 +96,8 @@ class TestWalkForwardAnalysis:
     ) -> None:
         """Test WFA initialization with different configs."""
 
-        def strategy_factory(params: dict[str, Any]) -> VanillaVBO:
-            return VanillaVBO(**params)
+        def strategy_factory(params: dict[str, Any]) -> VBOV1:
+            return VBOV1(**params)
 
         # Test different window sizes
         window_configs = [
@@ -131,7 +131,7 @@ class TestReportGeneration:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         sample_ohlcv_data.to_parquet(filepath)
 
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
         result = engine.run(strategy, {"KRW-BTC": filepath})
 
@@ -140,7 +140,7 @@ class TestReportGeneration:
             equity_curve=result.equity_curve,
             dates=result.dates,
             trades=result.trades,
-            strategy_name=result.strategy_name or "VanillaVBO",
+            strategy_name=result.strategy_name or "VBOV1",
             initial_capital=default_backtest_config.initial_capital,
         )
 
@@ -160,7 +160,7 @@ class TestReportGeneration:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         sample_ohlcv_data.to_parquet(filepath)
 
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
         result = engine.run(strategy, {"KRW-BTC": filepath})
 
@@ -168,7 +168,7 @@ class TestReportGeneration:
             equity_curve=result.equity_curve,
             dates=result.dates,
             trades=result.trades,
-            strategy_name="VanillaVBO",
+            strategy_name="VBOV1",
             initial_capital=default_backtest_config.initial_capital,
         )
 
@@ -188,8 +188,8 @@ class TestOptimizationPipeline:
         """Test ParameterOptimizer initialization."""
         from src.backtester.optimization import ParameterOptimizer
 
-        def strategy_factory(params: dict[str, Any]) -> VanillaVBO:
-            return VanillaVBO(**params)
+        def strategy_factory(params: dict[str, Any]) -> VBOV1:
+            return VBOV1(**params)
 
         optimizer = ParameterOptimizer(
             strategy_factory=strategy_factory,
@@ -212,12 +212,12 @@ class TestOptimizationPipeline:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         sample_ohlcv_data.to_parquet(filepath)
 
-        def strategy_factory(params: dict[str, Any]) -> VanillaVBO:
-            return VanillaVBO(**params)
+        def strategy_factory(params: dict[str, Any]) -> VBOV1:
+            return VBOV1(**params)
 
         param_grid = {
-            "sma_period": [3, 4],
-            "trend_sma_period": [6, 8],
+            "ma_short": [3, 4],
+            "btc_ma": [10, 20],
         }
 
         optimizer = ParameterOptimizer(
@@ -255,7 +255,7 @@ class TestPortfolioAnalysis:
             df.to_parquet(filepath)
             files[ticker] = filepath
 
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
 
         result = engine.run(strategy, files)
@@ -316,7 +316,7 @@ class TestEndToEndScenarios:
         large_ohlcv_data.to_parquet(filepath)
 
         # Step 2: Run backtest
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
         backtest_result = engine.run(strategy, {"KRW-BTC": filepath})
 
@@ -333,7 +333,7 @@ class TestEndToEndScenarios:
             equity_curve=backtest_result.equity_curve,
             dates=backtest_result.dates,
             trades=backtest_result.trades,
-            strategy_name="VanillaVBO",
+            strategy_name="VBOV1",
             initial_capital=default_backtest_config.initial_capital,
         )
 

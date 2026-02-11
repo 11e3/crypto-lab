@@ -216,18 +216,18 @@ class TestExecuteWalkForward:
         # Get the strategy_factory and test it with valid VBO param
         call_kwargs = mock_wfa.call_args.kwargs
         factory = call_kwargs["strategy_factory"]
-        strategy = factory({"sma_period": 5})
+        strategy = factory({"ma_short": 5})
         assert strategy is not None
-        assert strategy.name == "VanillaVBO"
+        assert strategy.name == "VBOV1"
 
     @patch("src.web.services.analysis_service.run_walk_forward_analysis")
-    def test_legacy_strategy_factory(self, mock_wfa: MagicMock) -> None:
-        """Test that legacy strategy type creates correct strategy."""
+    def test_different_type_still_creates_vbov1(self, mock_wfa: MagicMock) -> None:
+        """Test that any strategy type creates VBOV1."""
         mock_wfa.return_value = MagicMock()
 
         execute_walk_forward(
             strategy_type="legacy",
-            param_grid={"sma_period": [3, 5]},
+            param_grid={"ma_short": [3, 5]},
             tickers=["KRW-BTC"],
             interval="day",
             optimization_days=180,
@@ -242,9 +242,9 @@ class TestExecuteWalkForward:
 
         call_kwargs = mock_wfa.call_args.kwargs
         factory = call_kwargs["strategy_factory"]
-        strategy = factory({"sma_period": 5})
+        strategy = factory({"ma_short": 5})
         assert strategy is not None
-        assert strategy.name == "LegacyVBO"
+        assert strategy.name == "VBOV1"
 
     @patch("src.web.services.analysis_service.run_walk_forward_analysis")
     def test_wfa_failure_propagates(self, mock_wfa: MagicMock) -> None:

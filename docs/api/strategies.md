@@ -174,15 +174,15 @@ CompositeCondition(
 
 조건을 제거하고 체이닝을 위해 자기 자신을 반환합니다.
 
-### `VanillaVBO`
+### `VBOV1`
 
 변동성 돌파 전략의 기본 구현입니다.
 
 #### 생성자
 
 ```python
-VanillaVBO(
-    name: str = "VanillaVBO",
+VBOV1(
+    name: str = "VBOV1",
     sma_period: int = 4,
     trend_sma_period: int = 8,
     short_noise_period: int = 4,

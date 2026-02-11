@@ -33,7 +33,7 @@ class TestSettings:
         assert settings.telegram_enabled is True
         assert settings.trading_fee_rate == 0.0005
         assert settings.trading_max_slots == 4
-        assert settings.strategy_name == "VanillaVBO"
+        assert settings.strategy_name == "VBOV1"
 
     @patch.dict(os.environ, {}, clear=True)
     def test_validate_positive_float_negative_value(self) -> None:

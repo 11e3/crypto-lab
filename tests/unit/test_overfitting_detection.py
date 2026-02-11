@@ -61,7 +61,7 @@ class PermutationTester:
     ```python
     tester = PermutationTester(
         data=ohlcv_df,
-        strategy_factory=lambda: VanillaVBO()
+        strategy_factory=lambda: VBOV1()
     )
 
     result = tester.run(

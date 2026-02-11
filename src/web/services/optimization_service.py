@@ -12,19 +12,17 @@ from typing import Any
 
 from src.backtester import BacktestConfig, optimize_strategy_parameters
 from src.utils.logger import get_logger
-from src.web.services.bt_backtest_runner import (
-    BtBacktestResult,
-    get_default_model_path,
-    run_bt_backtest_regime_service,
-    run_bt_backtest_service,
+from src.web.services.vbo_backtest_runner import (
+    VboBacktestResult,
+    run_vbo_backtest_service,
 )
 
 logger = get_logger(__name__)
 
 
 @dataclass
-class BtOptimizationResult:
-    """Result of bt strategy optimization."""
+class VboOptimizationResult:
+    """Result of VBO strategy optimization."""
 
     best_params: dict[str, Any]
     best_score: float
@@ -129,11 +127,11 @@ def parse_dynamic_param_grid(
     return param_grid
 
 
-def extract_bt_metric(result: BtBacktestResult, metric: str) -> float:
-    """Extract metric value from bt backtest result.
+def extract_vbo_metric(result: VboBacktestResult, metric: str) -> float:
+    """Extract metric value from VBO backtest result.
 
     Args:
-        result: BtBacktestResult object
+        result: VboBacktestResult object
         metric: Metric name
 
     Returns:
@@ -216,7 +214,7 @@ def execute_native_optimization(
     )
 
 
-def execute_bt_optimization(
+def execute_vbo_optimization(
     strategy_name: str,
     param_grid: dict[str, list[Any]],
     symbols: list[str],
@@ -226,11 +224,11 @@ def execute_bt_optimization(
     initial_capital: int,
     fee_rate: float,
     on_progress: Any | None = None,
-) -> BtOptimizationResult:
-    """Run bt strategy optimization (no Streamlit dependency).
+) -> VboOptimizationResult:
+    """Run VBO strategy optimization (no Streamlit dependency).
 
     Args:
-        strategy_name: bt strategy name
+        strategy_name: VBO strategy name
         param_grid: Parameter grid
         symbols: List of symbols (without KRW- prefix)
         metric: Optimization metric
@@ -241,7 +239,7 @@ def execute_bt_optimization(
         on_progress: Optional callback(current, total) for progress updates
 
     Returns:
-        BtOptimizationResult
+        VboOptimizationResult
 
     Raises:
         RuntimeError: If all backtests fail
@@ -257,45 +255,31 @@ def execute_bt_optimization(
         combinations = random.sample(all_combinations, n_iter)
 
     total = len(combinations)
-    is_regime = "Regime" in strategy_name
-    model_path = str(get_default_model_path()) if is_regime else None
 
-    all_results: list[tuple[dict[str, Any], BtBacktestResult | None, float]] = []
+    all_results: list[tuple[dict[str, Any], VboBacktestResult | None, float]] = []
 
     for i, combo in enumerate(combinations):
         params = dict(zip(param_names, combo, strict=False))
 
         try:
-            if is_regime:
-                result = run_bt_backtest_regime_service(
-                    symbols=tuple(symbols),
-                    interval="day",
-                    initial_cash=initial_capital,
-                    fee=fee_rate,
-                    slippage=fee_rate,
-                    ma_short=params.get("ma_short", 5),
-                    noise_ratio=params.get("noise_ratio", 0.5),
-                    model_path=model_path,
-                )
-            else:
-                result = run_bt_backtest_service(
-                    symbols=tuple(symbols),
-                    interval="day",
-                    initial_cash=initial_capital,
-                    fee=fee_rate,
-                    slippage=fee_rate,
-                    multiplier=params.get("multiplier", 2),
-                    lookback=params.get("lookback", 5),
-                )
+            result = run_vbo_backtest_service(
+                symbols=tuple(symbols),
+                interval="day",
+                initial_cash=initial_capital,
+                fee=fee_rate,
+                slippage=fee_rate,
+                multiplier=params.get("multiplier", 2),
+                lookback=params.get("lookback", 5),
+            )
 
             if result:
-                score = extract_bt_metric(result, metric)
+                score = extract_vbo_metric(result, metric)
                 all_results.append((params, result, score))
             else:
                 all_results.append((params, None, float("-inf")))
 
         except Exception as e:
-            logger.warning(f"bt backtest failed for {params}: {e}")
+            logger.warning(f"VBO backtest failed for {params}: {e}")
             all_results.append((params, None, float("-inf")))
 
         if on_progress:
@@ -308,7 +292,7 @@ def execute_bt_optimization(
 
     best_params, _, best_score = all_results[0]
 
-    return BtOptimizationResult(
+    return VboOptimizationResult(
         best_params=best_params,
         best_score=best_score,
         all_params=[r[0] for r in all_results if r[1] is not None],

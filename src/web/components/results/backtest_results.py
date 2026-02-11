@@ -1,6 +1,6 @@
 """Unified backtest results display component.
 
-Normalizes BacktestResult and BtBacktestResult into a common format
+Normalizes BacktestResult and VboBacktestResult into a common format
 and renders metrics, charts, and trade history.
 """
 
@@ -22,14 +22,14 @@ from src.web.services.metrics_calculator import calculate_extended_metrics
 
 if TYPE_CHECKING:
     from src.backtester.models import BacktestResult
-    from src.web.services.bt_backtest_runner import BtBacktestResult
+    from src.web.services.vbo_backtest_runner import VboBacktestResult
 
 __all__ = ["UnifiedBacktestResult", "render_backtest_results"]
 
 
 @dataclass
 class UnifiedBacktestResult:
-    """Adapter that normalizes BacktestResult and BtBacktestResult."""
+    """Adapter that normalizes BacktestResult and VboBacktestResult."""
 
     equity: np.ndarray
     dates: np.ndarray
@@ -78,10 +78,10 @@ class UnifiedBacktestResult:
         )
 
     @classmethod
-    def from_bt(
-        cls, result: BtBacktestResult, strategy_name: str = "bt_VBO"
+    def from_vbo(
+        cls, result: VboBacktestResult, strategy_name: str = "VBO"
     ) -> UnifiedBacktestResult:
-        """Create from bt library BtBacktestResult."""
+        """Create from VboBacktestResult."""
         equity = np.array(result.equity_curve)
         dates = (
             np.array(result.dates)
@@ -114,7 +114,7 @@ class UnifiedBacktestResult:
         else:
             trades_df = pd.DataFrame()
 
-        display_name = "bt VBO Regime" if strategy_name == "bt_VBO_Regime" else "bt VBO"
+        display_name = strategy_name or "VBO"
 
         return cls(
             equity=equity,
@@ -135,7 +135,7 @@ def render_backtest_results(result: UnifiedBacktestResult) -> None:
 
     # Limit cached metrics to prevent unbounded memory growth
     metrics_keys = [
-        k for k in st.session_state if k.startswith("metrics_") or k.startswith("bt_metrics_")
+        k for k in st.session_state if k.startswith("metrics_") or k.startswith("vbo_metrics_")
     ]
     if len(metrics_keys) > 20:
         del st.session_state[metrics_keys[0]]

@@ -9,18 +9,7 @@ from src.strategies.base import (
     SignalType,
     Strategy,
 )
-from src.strategies.mean_reversion import (
-    MeanReversionStrategy,
-    SimpleMeanReversionStrategy,
-)
-from src.strategies.momentum import MomentumStrategy, SimpleMomentumStrategy
-from src.strategies.volatility_breakout import (
-    MinimalVBO,
-    StrictVBO,
-    VanillaVBO,
-    create_vbo_strategy,
-    quick_vbo,
-)
+from src.strategies.volatility_breakout import VBOV1
 
 __all__ = [
     "Condition",
@@ -30,16 +19,5 @@ __all__ = [
     "Signal",
     "SignalType",
     "Strategy",
-    # Mean Reversion strategies
-    "MeanReversionStrategy",
-    "SimpleMeanReversionStrategy",
-    # Momentum strategies
-    "MomentumStrategy",
-    "SimpleMomentumStrategy",
-    # VBO strategies
-    "VanillaVBO",
-    "MinimalVBO",
-    "StrictVBO",
-    "create_vbo_strategy",
-    "quick_vbo",
+    "VBOV1",
 ]

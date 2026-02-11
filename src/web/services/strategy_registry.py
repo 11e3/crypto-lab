@@ -1,7 +1,7 @@
 """Strategy registry service.
 
 Discover automatically registered strategies and provide metadata.
-Includes bt library strategies integration.
+Includes VBO strategy variants.
 """
 
 import inspect
@@ -16,31 +16,26 @@ logger = get_logger(__name__)
 
 __all__ = [
     "StrategyRegistry",
-    "is_bt_strategy",
-    "get_bt_strategy_type",
+    "is_vbo_strategy",
+    "get_vbo_strategy_type",
     "map_strategy_to_internal_type",
     "create_analysis_strategy",
 ]
 
-# bt strategy name → (engine_type, display_name)
-BT_STRATEGY_MAPPING: dict[str, tuple[str, str]] = {
-    "bt_VBO": ("vbo", "bt VBO"),
-    "bt_VBO_Regime": ("vbo_regime", "bt VBO Regime"),
-    "bt_Momentum": ("momentum", "bt Momentum"),
-    "bt_BuyAndHold": ("buy_and_hold", "bt Buy & Hold"),
-    "bt_VBO_SingleCoin": ("vbo_single_coin", "bt VBO Single Coin"),
-    "bt_VBO_Portfolio": ("vbo_portfolio", "bt VBO Portfolio"),
+# VBO strategy name → (engine_type, display_name)
+VBO_STRATEGY_MAPPING: dict[str, tuple[str, str]] = {
+    "VBO": ("vbo", "VBO"),
 }
 
 
-def is_bt_strategy(name: str) -> bool:
-    """Check if strategy is from bt library."""
-    return name.startswith("bt_")
+def is_vbo_strategy(name: str) -> bool:
+    """Check if strategy is a VBO variant (uses vectorized engine)."""
+    return name in VBO_STRATEGY_MAPPING
 
 
-def get_bt_strategy_type(name: str) -> tuple[str, str]:
-    """Return (bt_engine_type, display_name) for a bt strategy."""
-    return BT_STRATEGY_MAPPING.get(name, ("vbo", "bt VBO"))
+def get_vbo_strategy_type(name: str) -> tuple[str, str]:
+    """Return (engine_type, display_name) for a VBO strategy."""
+    return VBO_STRATEGY_MAPPING.get(name, ("vbo", "VBO"))
 
 
 def map_strategy_to_internal_type(strategy_name: str) -> str:
@@ -48,44 +43,14 @@ def map_strategy_to_internal_type(strategy_name: str) -> str:
 
     Used by analysis page for Monte Carlo / Walk-Forward.
     """
-    name_lower = strategy_name.lower()
-
-    if "vanilla" in name_lower or "vbo" in name_lower:
-        if "legacy" in name_lower:
-            return "legacy"
-        elif "minimal" in name_lower:
-            return "minimal"
-        return "vanilla"
-    elif "momentum" in name_lower:
-        return "momentum"
-    elif "mean" in name_lower and "reversion" in name_lower:
-        return "mean-reversion"
-    return "vanilla"
+    return "vbov1"
 
 
 def create_analysis_strategy(strategy_type: str) -> Any:
     """Create strategy instance for Monte Carlo / Walk-Forward analysis."""
-    from src.strategies.mean_reversion import MeanReversionStrategy
-    from src.strategies.momentum import MomentumStrategy
-    from src.strategies.volatility_breakout import create_vbo_strategy
+    from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
-    if strategy_type in ("vanilla", "minimal"):
-        return create_vbo_strategy(
-            name="VanillaVBO",
-            use_trend_filter=False,
-            use_noise_filter=False,
-        )
-    elif strategy_type == "legacy":
-        return create_vbo_strategy(
-            name="LegacyVBO",
-            use_trend_filter=True,
-            use_noise_filter=True,
-        )
-    elif strategy_type == "momentum":
-        return MomentumStrategy(name="Momentum")
-    elif strategy_type == "mean-reversion":
-        return MeanReversionStrategy(name="MeanReversion")
-    return create_vbo_strategy(name="DefaultVBO")
+    return VBOV1(name="VBOV1")
 
 
 class StrategyRegistry:
@@ -100,22 +65,19 @@ class StrategyRegistry:
         >>> for info in strategies:
         ...     print(f"{info.name}: {info.description}")
         >>>
-        >>> params = registry.get_parameters("VanillaVBO")
-        >>> strategy_class = registry.get_strategy_class("VanillaVBO")
+        >>> params = registry.get_parameters("VBOV1")
+        >>> strategy_class = registry.get_strategy_class("VBOV1")
     """
 
     STRATEGY_MODULES = [
         "src.strategies.volatility_breakout",
-        "src.strategies.momentum",
-        "src.strategies.mean_reversion",
-        "src.strategies.opening_range_breakout",
     ]
 
     def __init__(self) -> None:
         """Initialize registry and discover strategies."""
         self._strategies: dict[str, StrategyInfo] = {}
         self._discover_strategies()
-        self._register_bt_strategies()
+        self._register_vbo_strategies()
 
     def _discover_strategies(self) -> None:
         """Discover Strategy subclasses from all strategy modules."""
@@ -266,47 +228,16 @@ class StrategyRegistry:
         """Check if strategy is registered."""
         return name in self._strategies
 
-    def _register_bt_strategies(self) -> None:
-        """Register bt library strategies.
+    def _register_vbo_strategies(self) -> None:
+        """Register VBO strategy variants.
 
-        Note: We always register bt strategies without checking availability.
-        The actual availability check happens when running a backtest.
-        This avoids slow bt library import during app startup.
+        These use predefined parameter sets rather than auto-discovery.
         """
-        # Shared parameter specs reused across strategies
-        _ma_short = ParameterSpec(
-            name="ma_short",
-            type="int",
-            default=5,
-            min_value=2,
-            max_value=20,
-            step=1,
-            description="Short-term MA period",
-        )
-        _btc_ma = ParameterSpec(
-            name="btc_ma",
-            type="int",
-            default=20,
-            min_value=5,
-            max_value=60,
-            step=5,
-            description="BTC MA period for market filter",
-        )
-        _noise_ratio = ParameterSpec(
-            name="noise_ratio",
-            type="float",
-            default=0.5,
-            min_value=0.1,
-            max_value=1.0,
-            step=0.1,
-            description="Volatility breakout multiplier (k factor)",
-        )
-
-        bt_strategy_defs: list[dict[str, Any]] = [
+        vbo_strategy_defs: list[dict[str, Any]] = [
             {
-                "name": "bt_VBO",
-                "module_path": "bt.strategies.vbo",
-                "description": "[bt] Volatility Breakout Strategy (BTC MA20 filter)",
+                "name": "VBO",
+                "module_path": "src.strategies.volatility_breakout",
+                "description": "Volatility Breakout Strategy (BTC MA20 filter)",
                 "parameters": {
                     "lookback": ParameterSpec(
                         name="lookback",
@@ -328,58 +259,10 @@ class StrategyRegistry:
                     ),
                 },
             },
-            {
-                "name": "bt_VBO_Regime",
-                "module_path": "bt.strategies.vbo_regime",
-                "description": "[bt] Volatility Breakout Strategy (ML Regime filter)",
-                "parameters": {"ma_short": _ma_short, "noise_ratio": _noise_ratio},
-            },
-            {
-                "name": "bt_Momentum",
-                "module_path": "bt.strategies.momentum",
-                "description": "[bt] Pure Momentum Strategy (equal-weight allocation)",
-                "parameters": {
-                    "lookback": ParameterSpec(
-                        name="lookback",
-                        type="int",
-                        default=20,
-                        min_value=5,
-                        max_value=60,
-                        step=5,
-                        description="Momentum lookback period",
-                    ),
-                },
-            },
-            {
-                "name": "bt_BuyAndHold",
-                "module_path": "bt.strategies.buy_and_hold",
-                "description": "[bt] Simple Buy and Hold Strategy",
-                "parameters": {},
-            },
-            {
-                "name": "bt_VBO_SingleCoin",
-                "module_path": "bt.strategies.vbo_single_coin",
-                "description": "[bt] Single-asset VBO Strategy (BTC MA filter, all-in allocation)",
-                "parameters": {
-                    "ma_short": _ma_short,
-                    "btc_ma": _btc_ma,
-                    "noise_ratio": _noise_ratio,
-                },
-            },
-            {
-                "name": "bt_VBO_Portfolio",
-                "module_path": "bt.strategies.vbo_portfolio",
-                "description": "[bt] Multi-asset VBO Strategy (BTC MA filter, 1/N allocation)",
-                "parameters": {
-                    "ma_short": _ma_short,
-                    "btc_ma": _btc_ma,
-                    "noise_ratio": _noise_ratio,
-                },
-            },
         ]
 
         try:
-            for defn in bt_strategy_defs:
+            for defn in vbo_strategy_defs:
                 info = StrategyInfo(
                     name=defn["name"],
                     class_name=defn["name"],
@@ -391,8 +274,8 @@ class StrategyRegistry:
                 self._strategies[defn["name"]] = info
 
             logger.info(
-                "Registered bt library strategies: "
-                + ", ".join(d["name"] for d in bt_strategy_defs)
+                "Registered VBO strategies: "
+                + ", ".join(d["name"] for d in vbo_strategy_defs)
             )
         except Exception as e:
-            logger.warning(f"Failed to register bt strategies: {e}")
+            logger.warning(f"Failed to register VBO strategies: {e}")

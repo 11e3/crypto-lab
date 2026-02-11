@@ -25,7 +25,7 @@ This document contains detailed architecture diagrams for the Upbit Quant System
                                 │
                     ┌───────────▼───────────┐
                     │   Strategy System     │
-                    │  (VanillaVBO, etc.)  │
+                    │  (VBOV1, etc.)  │
                     └───────────┬───────────┘
                                 │
           ┌─────────────────────┼─────────────────────┐
@@ -132,7 +132,7 @@ This document contains detailed architecture diagrams for the Upbit Quant System
 │  │              Concrete Strategies                           │  │
 │  │                                                            │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │  │
-│  │  │ VanillaVBO   │  │ MinimalVBO   │  │ StrictVBO    │    │  │
+│  │  │         VBOV1             │                    │  │
 │  │  └──────────────┘  └──────────────┘  └──────────────┘    │  │
 │  └────────────────────────────────────────────────────────────┘  │
 │                                                                  │

@@ -43,7 +43,7 @@ class RobustnessAnalyzer:
     ```python
     analyzer = RobustnessAnalyzer(
         data=ohlcv_df,
-        strategy_factory=lambda p: VanillaVBO(**p)
+        strategy_factory=lambda p: VBOV1(**p)
     )
 
     report = analyzer.analyze(

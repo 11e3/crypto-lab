@@ -54,10 +54,10 @@ Parquet 파일에서 OHLCV 데이터를 로드합니다.
 **예시:**
 ```python
 from src.backtester import VectorizedBacktestEngine, BacktestConfig
-from src.strategies.volatility_breakout import VanillaVBO
+from src.strategies.volatility_breakout import VBOV1
 
 engine = VectorizedBacktestEngine(BacktestConfig())
-strategy = VanillaVBO()
+strategy = VBOV1()
 result = engine.run_backtest(
     tickers=["KRW-BTC", "KRW-ETH"],
     strategy=strategy
@@ -135,7 +135,7 @@ result = engine.run_backtest(...)
 print(result.summary())
 # 출력:
 # ==================================================
-# Strategy: VanillaVBO
+# Strategy: VBOV1
 # ==================================================
 # CAGR: 105.40%
 # MDD: 24.97%
@@ -176,9 +176,9 @@ class Trade:
 
 ```python
 from src.backtester import run_backtest, BacktestConfig
-from src.strategies.volatility_breakout import VanillaVBO
+from src.strategies.volatility_breakout import VBOV1
 
-strategy = VanillaVBO()
+strategy = VBOV1()
 config = BacktestConfig(
     initial_capital=1_000_000.0,
     fee_rate=0.0005,
@@ -237,10 +237,10 @@ generate_report(
 
 ```python
 from src.backtester import run_backtest, BacktestConfig
-from src.strategies.volatility_breakout import VanillaVBO
+from src.strategies.volatility_breakout import VBOV1
 
 # 전략 생성
-strategy = VanillaVBO(
+strategy = VBOV1(
     sma_period=4,
     trend_sma_period=8,
     short_noise_period=4,

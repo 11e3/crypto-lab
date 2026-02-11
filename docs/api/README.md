@@ -9,7 +9,7 @@
 - **[Strategy Layer](strategies.md)** - 전략 및 조건 인터페이스
   - `Strategy` 기본 클래스
   - `Condition` 인터페이스
-  - `VanillaVBO` 전략 구현
+  - `VBOV1` 전략 구현
 
 - **[Backtester API](backtester.md)** - 백테스팅 엔진
   - `VectorizedBacktestEngine`
@@ -36,9 +36,9 @@
 ### 전략 사용
 
 ```python
-from src.strategies.volatility_breakout import VanillaVBO
+from src.strategies.volatility_breakout import VBOV1
 
-strategy = VanillaVBO(
+strategy = VBOV1(
     sma_period=4,
     trend_sma_period=8
 )

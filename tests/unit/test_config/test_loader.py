@@ -35,7 +35,7 @@ def sample_yaml_config(temp_config_dir: Path) -> Path:
             "min_order_amount": 5000.0,
         },
         "strategy": {
-            "name": "VanillaVBO",
+            "name": "VBOV1",
             "sma_period": 5,
         },
     }
@@ -183,7 +183,7 @@ class TestConfigLoader:
 
         strategy_config = loader.get_strategy_config()
 
-        assert strategy_config["name"] == "VanillaVBO"
+        assert strategy_config["name"] == "VBOV1"
         assert strategy_config["sma_period"] == 5
 
     def test_get_bot_config(self, sample_yaml_config: Path) -> None:

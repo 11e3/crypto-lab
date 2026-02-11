@@ -9,13 +9,17 @@ src/backtester/
 ├── __init__.py           # 패키지 exports
 ├── models.py             # 데이터 모델 (BacktestConfig, Trade, BacktestResult)
 ├── metrics.py            # 성능 메트릭 계산
-├── engine.py             # VectorizedBacktestEngine (고속, VBO 전용)
-├── simple_engine.py      # SimpleBacktestEngine (범용, Event-driven)
+├── engine/               # 백테스트 엔진
+│   ├── vectorized.py     # VectorizedBacktestEngine (고속)
+│   ├── event_driven.py   # EventDrivenBacktestEngine (범용)
+│   ├── signal_processor.py # 진입/퇴출 가격 (exit_price_base 지원)
+│   ├── trade_simulator.py  # 벡터화 거래 시뮬레이션
+│   ├── event_exec.py     # 이벤트 기반 거래 실행
+│   └── trade_costs.py    # 수수료/슬리피지 계산
+├── analysis/             # CPCV, Bootstrap, Monte Carlo
+├── wfa/                  # Walk-Forward Analysis
 ├── report.py             # 리포트 생성
-├── optimization.py       # 파라미터 최적화
-├── monte_carlo.py        # Monte Carlo 시뮬레이션
-├── walk_forward.py       # Walk-Forward 분석
-└── parallel.py           # 병렬 백테스트
+└── optimization.py       # 파라미터 최적화
 ```
 
 ## 모듈 설명
@@ -46,21 +50,15 @@ src/backtester/
   - 거래 통계 (승률, Profit Factor)
   - 포트폴리오 리스크 메트릭
 
-- `calculate_trade_metrics()`: 거래별 상세 통계
-  - 평균 수익/손실
-  - 최대 수익/손실
-  - 승률, Profit Factor
-
-### engine.py
+### engine/vectorized.py
 **VectorizedBacktestEngine**
 
 - 고속 벡터화 처리 (pandas/numpy)
-- VBO 전략 전용
-- 복잡한 포트폴리오 최적화
-- 대량 데이터 분석용
+- 모든 Strategy 서브클래스와 호환
+- 대량 데이터 분석 및 파라미터 최적화용
 
-### simple_engine.py
-**SimpleBacktestEngine**
+### engine/event_driven.py
+**EventDrivenBacktestEngine**
 
 - Event-driven 방식 (날짜별 순회)
 - 모든 전략과 호환
@@ -73,31 +71,33 @@ src/backtester/
 
 ```python
 from src.backtester.models import BacktestConfig
-from src.backtester.simple_engine import SimpleBacktestEngine
-from src.strategies.opening_range_breakout.orb import ORBStrategy
+from src.backtester.engine.vectorized import VectorizedBacktestEngine
+from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
 # 설정
 config = BacktestConfig(
     initial_capital=10_000_000,
     fee_rate=0.0005,
-    max_slots=4,
-    trailing_stop_pct=0.05,
+    max_slots=3,
 )
 
 # 전략
-strategy = ORBStrategy(
-    breakout_mode="atr",
-    k_multiplier=0.5,
+strategy = VBOV1(
+    name="VBOV1",
+    ma_short=5,
+    btc_ma=10,
+    data_dir=DATA_DIR,
+    interval="day",
 )
 
 # 백테스트
-engine = SimpleBacktestEngine(config)
+engine = VectorizedBacktestEngine(config)
 result = engine.run(strategy, data_files)
 
 # 결과
-print(result.summary())
-print(f"Trades: {result.total_trades}")
 print(f"CAGR: {result.cagr:.2f}%")
+print(f"MDD: {result.mdd:.2f}%")
+print(f"Trades: {result.total_trades}")
 ```
 
 ### 메트릭 직접 계산
@@ -119,7 +119,6 @@ result = calculate_metrics(
 ```python
 from src.backtester.models import Trade
 
-# 수동으로 Trade 생성
 trade = Trade(
     ticker="KRW-BTC",
     entry_date=date(2023, 1, 1),
@@ -131,148 +130,37 @@ trade = Trade(
     pnl_pct=16.67,
     exit_reason="trailing_stop",
 )
-
-print(f"Trade closed: {trade.is_closed}")
-```
-
-## 장점
-
-### 1. 코드 재사용성
-- 공통 데이터 모델을 여러 엔진에서 공유
-- 메트릭 계산 로직 중복 제거
-- 쉬운 확장 (새로운 엔진 추가)
-
-### 2. 테스트 용이성
-- 각 모듈을 독립적으로 테스트
-- Mock 데이터로 메트릭 계산 테스트
-- 엔진 간 결과 비교 간편
-
-### 3. 유지보수성
-- 명확한 책임 분리
-- 버그 수정이 간단
-- 새로운 메트릭 추가 용이
-
-### 4. 하위 호환성
-- `__init__.py`에서 기존 import 지원
-- 기존 코드 수정 불필요
-
-```python
-# 기존 방식 (여전히 작동)
-from src.backtester.engine import BacktestConfig
-
-# 새로운 방식 (권장)
-from src.backtester.models import BacktestConfig
-```
-
-## 마이그레이션 가이드
-
-### 기존 코드 업데이트
-
-**Before:**
-```python
-from src.backtester.engine import BacktestConfig, Trade, BacktestResult
-```
-
-**After (권장):**
-```python
-from src.backtester.models import BacktestConfig, Trade, BacktestResult
-```
-
-또는 패키지 레벨에서 import:
-```python
-from src.backtester import BacktestConfig, Trade, BacktestResult
-```
-
-### SimpleBacktestEngine 추가
-
-**기존:**
-```python
-from src.backtester.engine import VectorizedBacktestEngine
-
-engine = VectorizedBacktestEngine(config)
-result = engine.run(strategy, data_files)
-```
-
-**새로운:**
-```python
-from src.backtester.simple_engine import SimpleBacktestEngine
-
-engine = SimpleBacktestEngine(config)
-result = engine.run(strategy, data_files)
 ```
 
 ## 엔진 선택 가이드
 
 | 상황 | 권장 엔진 |
 |------|----------|
-| VBO 전략 백테스트 | VectorizedBacktestEngine |
-| ORB/기타 전략 백테스트 | SimpleBacktestEngine |
+| 파라미터 최적화 | VectorizedBacktestEngine |
 | 대량 데이터 (수년 × 수십 자산) | VectorizedBacktestEngine |
-| 전략 개발/디버깅 | SimpleBacktestEngine |
-| 명확한 Trade 기록 필요 | SimpleBacktestEngine |
-| 최고 성능 필요 | VectorizedBacktestEngine |
+| 전략 개발/디버깅 | EventDrivenBacktestEngine |
+| 명확한 Trade 기록 필요 | EventDrivenBacktestEngine |
 
 ## 확장 가이드
 
-### 새로운 엔진 추가
+### 새로운 전략 추가
 
-1. `BaseBacktestEngine` 클래스 생성 (선택사항)
-2. `run()` 메서드 구현
-3. `calculate_metrics()` 사용하여 결과 생성
-
-```python
-from src.backtester.metrics import calculate_metrics
-from src.backtester.models import BacktestConfig, BacktestResult
-
-class MyCustomEngine:
-    def __init__(self, config: BacktestConfig):
-        self.config = config
-    
-    def run(self, strategy, data_files) -> BacktestResult:
-        # 백테스트 실행
-        equity_curve, dates, trades = self._execute_backtest(...)
-        
-        # 메트릭 계산 (재사용)
-        return calculate_metrics(
-            equity_curve=equity_curve,
-            dates=dates,
-            trades=trades,
-            config=self.config,
-            strategy_name=strategy.name,
-        )
-```
+1. `Strategy` 서브클래스 생성
+2. `generate_signals()` 구현
+3. `StrategyRegistry`가 자동 검색 → 대시보드 UI 자동 생성
 
 ### 새로운 메트릭 추가
 
-`metrics.py`의 `calculate_metrics()` 함수 수정:
+`metrics.py`의 `calculate_metrics()` 함수에 추가:
 
 ```python
 def calculate_metrics(...) -> BacktestResult:
-    # 기존 메트릭 계산
     result = BacktestResult(...)
-    
-    # 새로운 메트릭 추가
     result.sortino_ratio = calculate_sortino(...)
-    result.omega_ratio = calculate_omega(...)
-    
     return result
-```
-
-## 테스트
-
-```bash
-# 단일 자산 테스트
-python scripts/test_orb_simple_engine.py
-
-# 다중 자산 테스트
-python examples/orb_backtest.py
-
-# 엔진 비교
-python scripts/compare_engines.py
 ```
 
 ## 관련 문서
 
 - [SimpleBacktestEngine 가이드](simple_backtest_engine.md)
-- [VectorizedBacktestEngine 가이드](../api/backtester.md)
-- [백테스팅 개요](../README.md)
+- [전략 가이드](strategies.md)

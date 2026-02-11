@@ -1,4 +1,4 @@
-"""Tests for bt_backtest_runner service (native crypto-lab engine)."""
+"""Tests for vbo_backtest_runner service."""
 
 from __future__ import annotations
 
@@ -8,12 +8,12 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from src.web.services.bt_backtest_runner import (
-    BtBacktestResult,
+from src.web.services.vbo_backtest_runner import (
+    VboBacktestResult,
     _convert_result,
     _create_strategy,
     _get_data_files,
-    get_available_bt_symbols,
+    get_available_symbols,
     get_default_model_path,
 )
 
@@ -27,10 +27,10 @@ class TestGetDefaultModelPath:
         assert path.name.endswith(".joblib")
 
 
-class TestGetAvailableBtSymbols:
+class TestGetAvailableSymbols:
     """Test symbol discovery."""
 
-    @patch("src.web.services.bt_backtest_runner.DATA_DIR")
+    @patch("src.web.services.vbo_backtest_runner.DATA_DIR")
     def test_returns_sorted_symbols(self, mock_data_dir: MagicMock) -> None:
         mock_data_dir.exists.return_value = True
         mock_data_dir.glob.return_value = [
@@ -38,20 +38,20 @@ class TestGetAvailableBtSymbols:
             Path("KRW-BTC_day.parquet"),
             Path("KRW-XRP_day.parquet"),
         ]
-        symbols = get_available_bt_symbols("day")
+        symbols = get_available_symbols("day")
         assert symbols == ["BTC", "ETH", "XRP"]
 
-    @patch("src.web.services.bt_backtest_runner.DATA_DIR")
+    @patch("src.web.services.vbo_backtest_runner.DATA_DIR")
     def test_empty_when_no_data(self, mock_data_dir: MagicMock) -> None:
         mock_data_dir.exists.return_value = False
-        symbols = get_available_bt_symbols()
+        symbols = get_available_symbols()
         assert symbols == []
 
 
 class TestGetDataFiles:
     """Test data file resolution."""
 
-    @patch("src.web.services.bt_backtest_runner.DATA_DIR")
+    @patch("src.web.services.vbo_backtest_runner.DATA_DIR")
     def test_builds_correct_paths(self, mock_data_dir: MagicMock, tmp_path: Path) -> None:
         mock_data_dir.__truediv__ = lambda self, name: tmp_path / name
 
@@ -62,7 +62,7 @@ class TestGetDataFiles:
         assert "KRW-BTC" in files
         assert files["KRW-BTC"] == tmp_path / "KRW-BTC_day.parquet"
 
-    @patch("src.web.services.bt_backtest_runner.DATA_DIR")
+    @patch("src.web.services.vbo_backtest_runner.DATA_DIR")
     def test_skips_missing_symbols(self, mock_data_dir: MagicMock, tmp_path: Path) -> None:
         mock_data_dir.__truediv__ = lambda self, name: tmp_path / name
 
@@ -70,11 +70,11 @@ class TestGetDataFiles:
         assert len(files) == 0
 
 
-class TestBtBacktestResult:
-    """Test BtBacktestResult dataclass."""
+class TestVboBacktestResult:
+    """Test VboBacktestResult dataclass."""
 
     def test_creation(self) -> None:
-        result = BtBacktestResult(
+        result = VboBacktestResult(
             total_return=10.0,
             cagr=5.0,
             mdd=-15.0,
@@ -97,7 +97,7 @@ class TestBtBacktestResult:
 
 
 class TestConvertResult:
-    """Test BacktestResult to BtBacktestResult conversion."""
+    """Test BacktestResult to VboBacktestResult conversion."""
 
     def test_converts_basic_result(self) -> None:
         """Test conversion with minimal BacktestResult."""
@@ -117,7 +117,7 @@ class TestConvertResult:
 
         bt_result = _convert_result(mock_result)
 
-        assert isinstance(bt_result, BtBacktestResult)
+        assert isinstance(bt_result, VboBacktestResult)
         assert bt_result.total_return == 10.0
         assert bt_result.num_trades == 0
         assert bt_result.final_equity == 11_000_000.0
@@ -176,30 +176,15 @@ class TestConvertResult:
 class TestCreateStrategy:
     """Test strategy factory function."""
 
-    def test_momentum_strategy(self) -> None:
-        strategy = _create_strategy("momentum", lookback=14)
+    def test_vbo_strategy(self) -> None:
+        strategy = _create_strategy("vbo", ma_short=5, btc_ma=20)
         assert strategy is not None
-        assert strategy.name == "Momentum"
+        assert strategy.name == "VBOV1"
 
-    def test_buy_and_hold(self) -> None:
-        strategy = _create_strategy("buy_and_hold")
+    def test_vbo_with_lookback(self) -> None:
+        strategy = _create_strategy("vbo", lookback=5)
         assert strategy is not None
-        assert strategy.name == "BuyAndHold"
-
-    def test_vbo_portfolio(self) -> None:
-        strategy = _create_strategy("vbo_portfolio", ma_short=5, btc_ma=20)
-        assert strategy is not None
-        assert strategy.name == "VBOPortfolio"
-
-    def test_vbo_single_coin(self) -> None:
-        strategy = _create_strategy("vbo_single_coin", ma_short=5, btc_ma=20)
-        assert strategy is not None
-        assert strategy.name == "VBOSingleCoin"
-
-    def test_vbo_alias(self) -> None:
-        strategy = _create_strategy("vbo", lookback=5, multiplier=2)
-        assert strategy is not None
-        assert strategy.name == "VBOPortfolio"
+        assert strategy.name == "VBOV1"
 
     def test_unknown_strategy(self) -> None:
         strategy = _create_strategy("nonexistent")

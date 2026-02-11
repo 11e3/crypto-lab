@@ -11,15 +11,15 @@ from src.data.collector_fetch import Interval
 from src.utils.logger import get_logger
 from src.web.components.sidebar.strategy_selector import get_cached_registry
 from src.web.config.constants import DEFAULT_TICKERS, INTERVAL_DISPLAY_MAP, OPTIMIZATION_METRICS
-from src.web.services.bt_backtest_runner import get_available_bt_symbols
 from src.web.services.data_loader import validate_data_availability
 from src.web.services.optimization_service import (
-    execute_bt_optimization,
     execute_native_optimization,
+    execute_vbo_optimization,
     get_default_param_range,
     parse_dynamic_param_grid,
 )
-from src.web.services.strategy_registry import is_bt_strategy
+from src.web.services.strategy_registry import is_vbo_strategy
+from src.web.services.vbo_backtest_runner import get_available_symbols
 
 logger = get_logger(__name__)
 
@@ -34,12 +34,12 @@ def render_optimization_page() -> None:
     registry = get_cached_registry()
     all_strategies = registry.list_strategies()
 
-    # Separate bt and non-bt strategies
-    native_strategies = [s for s in all_strategies if not is_bt_strategy(s.name)]
-    bt_strategies = [s for s in all_strategies if is_bt_strategy(s.name)]
+    # Separate native and VBO strategies
+    native_strategies = [s for s in all_strategies if not is_vbo_strategy(s.name)]
+    vbo_strategies = [s for s in all_strategies if is_vbo_strategy(s.name)]
 
-    # Combine all strategies (native first, then bt)
-    strategies = native_strategies + bt_strategies
+    # Combine all strategies (native first, then VBO)
+    strategies = native_strategies + vbo_strategies
 
     if not strategies:
         st.error("⚠️ No strategies available for optimization.")
@@ -56,20 +56,20 @@ def render_optimization_page() -> None:
 
             # Format strategy names to show engine type
             def format_strategy_name(name: str) -> str:
-                if is_bt_strategy(name):
-                    return f"{name} [bt]"
+                if is_vbo_strategy(name):
+                    return f"{name} [VBO]"
                 return name
 
             selected_strategy_name = st.selectbox(
                 "Strategy",
                 options=strategy_names,
                 format_func=format_strategy_name,
-                help="Select strategy to optimize. [bt] strategies use bt library backtest engine.",
+                help="Select strategy to optimize. [VBO] strategies use vectorized backtest engine.",
             )
 
             # Get selected strategy info
             selected_strategy = registry.get_strategy(selected_strategy_name)
-            is_bt = is_bt_strategy(selected_strategy_name)
+            is_vbo = is_vbo_strategy(selected_strategy_name)
 
             if selected_strategy and selected_strategy.description:
                 st.caption(f"ℹ️ {selected_strategy.description}")
@@ -174,19 +174,19 @@ def render_optimization_page() -> None:
         with col2:
             st.subheader("📈 Ticker/Symbol Selection")
 
-            if is_bt:
-                # bt strategies use symbol names without KRW- prefix
-                bt_interval = "day" if interval == "day" else "day"  # bt only supports day
-                available_bt_symbols = get_available_bt_symbols(bt_interval)
+            if is_vbo:
+                # VBO strategies use symbol names without KRW- prefix
+                vbo_interval = "day" if interval == "day" else "day"  # VBO only supports day
+                available_symbols = get_available_symbols(vbo_interval)
 
-                if not available_bt_symbols:
-                    st.warning("⚠️ No data available for bt backtest.")
+                if not available_symbols:
+                    st.warning("⚠️ No data available for VBO backtest.")
 
                 selected_symbols = st.multiselect(
                     "Symbols",
-                    options=available_bt_symbols,
-                    default=available_bt_symbols[:4] if available_bt_symbols else [],
-                    help="Select symbols for bt backtest (without KRW- prefix)",
+                    options=available_symbols,
+                    default=available_symbols[:4] if available_symbols else [],
+                    help="Select symbols for VBO backtest (without KRW- prefix)",
                 )
                 # Convert to tickers format for consistency
                 selected_tickers = [f"KRW-{s}" for s in selected_symbols]
@@ -247,9 +247,9 @@ def render_optimization_page() -> None:
 
     # Run optimization
     if run_button:
-        if is_bt:
-            # bt strategy optimization
-            _run_bt_optimization(
+        if is_vbo:
+            # VBO strategy optimization
+            _run_vbo_optimization(
                 strategy_name=selected_strategy_name,
                 param_grid=param_grid,
                 symbols=[t.replace("KRW-", "") for t in selected_tickers],
@@ -328,7 +328,7 @@ def _show_help() -> None:
 
         **1. Strategy Selection**
         - Select any strategy from the dropdown (same as backtest page)
-        - bt library strategies are not supported for optimization
+        - VBO strategies use vectorized backtest engine
 
         **2. Search Method**
         - Grid Search: Tests all combinations (accurate but slow)
@@ -394,7 +394,7 @@ def _run_optimization(
         progress_placeholder.error(f"❌ Optimization failed: {e}")
 
 
-def _run_bt_optimization(
+def _run_vbo_optimization(
     strategy_name: str,
     param_grid: dict[str, list[Any]],
     symbols: list[str],
@@ -404,18 +404,18 @@ def _run_bt_optimization(
     initial_capital: int,
     fee_rate: float,
 ) -> None:
-    """Run bt strategy optimization."""
-    st.subheader("🔄 bt Optimization in Progress...")
+    """Run VBO strategy optimization."""
+    st.subheader("🔄 VBO Optimization in Progress...")
     progress_placeholder = st.empty()
     progress_bar = st.progress(0)
-    progress_placeholder.info("Starting bt optimization...")
+    progress_placeholder.info("Starting VBO optimization...")
 
     def on_progress(current: int, total: int) -> None:
         progress_bar.progress(current / total)
         progress_placeholder.info(f"Running backtests... ({current}/{total})")
 
     try:
-        result_obj = execute_bt_optimization(
+        result_obj = execute_vbo_optimization(
             strategy_name=strategy_name,
             param_grid=param_grid,
             symbols=symbols,
@@ -431,13 +431,13 @@ def _run_bt_optimization(
         st.session_state.optimization_metric = metric
         progress_bar.progress(1.0)
         progress_placeholder.success(
-            f"✅ bt Optimization completed! Best {metric}: {result_obj.best_score:.4f}"
+            f"✅ VBO Optimization completed! Best {metric}: {result_obj.best_score:.4f}"
         )
 
     except RuntimeError as e:
         progress_placeholder.error(f"❌ {e}")
     except Exception as e:
-        logger.error(f"bt Optimization error: {e}", exc_info=True)
+        logger.error(f"VBO Optimization error: {e}", exc_info=True)
         progress_placeholder.error(f"❌ Optimization failed: {e}")
 
 

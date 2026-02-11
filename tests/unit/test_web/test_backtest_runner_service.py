@@ -133,8 +133,8 @@ class TestExecuteBacktest:
         mock_service_cls.return_value = mock_service
 
         result = execute_backtest(
-            strategy_name="VanillaVBO",
-            strategy_params={"lookback": 5},
+            strategy_name="VBOV1",
+            strategy_params={"ma_short": 5},
             data_files_dict={"KRW-BTC": "/data/btc.parquet"},
             config_dict={"initial_capital": 1.0},
             start_date_str="2024-01-01",
@@ -142,7 +142,7 @@ class TestExecuteBacktest:
         )
 
         assert result is not None
-        mock_create.assert_called_once_with("VanillaVBO", {"lookback": 5})
+        mock_create.assert_called_once_with("VBOV1", {"ma_short": 5})
         mock_service.run.assert_called_once()
 
     @patch("src.web.components.sidebar.strategy_selector.create_strategy_instance")

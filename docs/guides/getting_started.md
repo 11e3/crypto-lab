@@ -178,15 +178,15 @@ upbit-quant backtest \
 ### Python 코드 사용
 
 ```python
-from src.backtester import run_backtest, BacktestConfig
-from src.strategies.volatility_breakout import VanillaVBO
+from src.backtester.models import BacktestConfig
+from src.backtester.engine.vectorized import VectorizedBacktestEngine
+from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
 # 전략 생성
-strategy = VanillaVBO(
-    sma_period=4,
-    trend_sma_period=8,
-    short_noise_period=4,
-    long_noise_period=8,
+strategy = VBOV1(
+    name="VBOV1",
+    ma_short=5,
+    btc_ma=10,
 )
 
 # 백테스트 설정
@@ -275,10 +275,10 @@ uv run jupyter lab
 # notebooks/01_vbo.ipynb 또는 notebooks/02_strategy_experiments.ipynb 참고
 import pandas as pd
 from src.backtester import run_backtest, BacktestConfig
-from src.strategies.volatility_breakout import VanillaVBO
+from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
 # 전략 및 설정
-strategy = VanillaVBO(...)
+strategy = VBOV1(name="VBOV1", ma_short=5, btc_ma=10)
 config = BacktestConfig(...)
 
 # 백테스트 실행

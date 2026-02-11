@@ -1,8 +1,6 @@
-"""Backtest execution service for bt-family strategies.
+"""Backtest execution service for VBO strategies.
 
-Runs VBO Portfolio, VBO Regime, Momentum, and Buy-and-Hold strategies
-using the native crypto-lab vectorized engine. Previously delegated to the
-external bt library; now fully integrated.
+Runs VBO strategies using the native crypto-lab vectorized engine.
 """
 
 from __future__ import annotations
@@ -25,11 +23,10 @@ from src.utils.metrics_core import calculate_sortino_ratio
 logger = get_logger(__name__)
 
 __all__ = [
-    "BtBacktestResult",
-    "run_bt_backtest_service",
-    "run_bt_backtest_regime_service",
-    "run_bt_backtest_generic_service",
-    "get_available_bt_symbols",
+    "VboBacktestResult",
+    "run_vbo_backtest_service",
+    "run_vbo_backtest_generic_service",
+    "get_available_symbols",
     "get_default_model_path",
 ]
 
@@ -49,11 +46,8 @@ def get_default_model_path() -> Path:
 
 
 @dataclass
-class BtBacktestResult:
-    """Result container for bt-family strategy backtests.
-
-    Maintains backward compatibility with the previous bt library integration.
-    """
+class VboBacktestResult:
+    """Result container for VBO strategy backtests."""
 
     # Performance metrics
     total_return: float
@@ -77,7 +71,7 @@ class BtBacktestResult:
     trades: list[dict[str, Any]]
 
 
-def get_available_bt_symbols(interval: str = "day") -> list[str]:
+def get_available_symbols(interval: str = "day") -> list[str]:
     """Get list of symbols available for backtest.
 
     Args:
@@ -116,8 +110,8 @@ def _to_datetime(d: date | datetime | None) -> datetime | None:
     return datetime.combine(d, datetime.min.time())
 
 
-def _convert_result(result: BacktestResult) -> BtBacktestResult:
-    """Convert native BacktestResult to BtBacktestResult."""
+def _convert_result(result: BacktestResult) -> VboBacktestResult:
+    """Convert native BacktestResult to VboBacktestResult."""
     # Calculate sortino ratio from equity curve
     equity = np.array(result.equity_curve)
     if len(equity) > 1:
@@ -173,7 +167,7 @@ def _convert_result(result: BacktestResult) -> BtBacktestResult:
                 year_return = (group["equity"].iloc[-1] / group["equity"].iloc[0] - 1) * 100
                 yearly_returns[int(str(year))] = float(year_return)
 
-    return BtBacktestResult(
+    return VboBacktestResult(
         total_return=result.total_return,
         cagr=result.cagr,
         mdd=result.mdd,
@@ -201,7 +195,7 @@ def _run_native_backtest(
     slippage: float,
     start_date: date | None,
     end_date: date | None,
-) -> BtBacktestResult | None:
+) -> VboBacktestResult | None:
     """Run a backtest using the native vectorized engine."""
     data_files = _get_data_files(symbols, interval)
     if not data_files:
@@ -235,7 +229,7 @@ def _run_native_backtest(
         return None
 
 
-def run_bt_backtest_service(
+def run_vbo_backtest_service(
     symbols: tuple[str, ...],
     interval: str = "day",
     initial_cash: int = 10_000_000,
@@ -245,8 +239,8 @@ def run_bt_backtest_service(
     lookback: int = 5,
     start_date: date | None = None,
     end_date: date | None = None,
-) -> BtBacktestResult | None:
-    """Run VBO Portfolio backtest with BTC MA filter.
+) -> VboBacktestResult | None:
+    """Run VBO backtest with BTC MA filter.
 
     Args:
         symbols: Tuple of symbols to trade
@@ -260,12 +254,12 @@ def run_bt_backtest_service(
         end_date: Backtest end date (inclusive)
 
     Returns:
-        BtBacktestResult or None on failure
+        VboBacktestResult or None on failure
     """
-    from src.strategies.volatility_breakout.vbo_portfolio import VBOPortfolio
+    from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
-    strategy = VBOPortfolio(
-        name="VBOPortfolio",
+    strategy = VBOV1(
+        name="VBOV1",
         ma_short=lookback,
         btc_ma=lookback * multiplier,
         data_dir=DATA_DIR,
@@ -284,66 +278,7 @@ def run_bt_backtest_service(
     )
 
 
-def run_bt_backtest_regime_service(
-    symbols: tuple[str, ...],
-    interval: str = "day",
-    initial_cash: int = 10_000_000,
-    fee: float = 0.0005,
-    slippage: float = 0.0005,
-    ma_short: int = 5,
-    noise_ratio: float = 0.5,
-    model_path: str | None = None,
-    start_date: date | None = None,
-    end_date: date | None = None,
-) -> BtBacktestResult | None:
-    """Run VBO Regime backtest with ML model filter.
-
-    Args:
-        symbols: Tuple of symbols to trade
-        interval: Time interval
-        initial_cash: Initial capital in KRW
-        fee: Trading fee
-        slippage: Slippage
-        ma_short: Short MA period
-        noise_ratio: Volatility breakout multiplier
-        model_path: Path to regime model (.joblib)
-        start_date: Backtest start date
-        end_date: Backtest end date
-
-    Returns:
-        BtBacktestResult or None on failure
-    """
-    if model_path is None:
-        model_path = str(get_default_model_path())
-
-    if not Path(model_path).exists():
-        logger.error(f"Regime model not found: {model_path}")
-        return None
-
-    from src.strategies.volatility_breakout.vbo_regime import VBORegime
-
-    strategy = VBORegime(
-        name="VBORegime",
-        ma_short=ma_short,
-        noise_ratio=noise_ratio,
-        model_path=model_path,
-        data_dir=DATA_DIR,
-        interval=interval,
-    )
-
-    return _run_native_backtest(
-        strategy=strategy,
-        symbols=list(symbols),
-        interval=interval,
-        initial_cash=initial_cash,
-        fee=fee,
-        slippage=slippage,
-        start_date=start_date,
-        end_date=end_date,
-    )
-
-
-def run_bt_backtest_generic_service(
+def run_vbo_backtest_generic_service(
     strategy_type: str,
     symbols: tuple[str, ...],
     interval: str = "day",
@@ -353,11 +288,11 @@ def run_bt_backtest_generic_service(
     start_date: date | None = None,
     end_date: date | None = None,
     **strategy_params: int | float | str,
-) -> BtBacktestResult | None:
-    """Run backtest with any bt-family strategy type.
+) -> VboBacktestResult | None:
+    """Run backtest with any VBO strategy variant.
 
     Args:
-        strategy_type: Strategy type (momentum, buy_and_hold, vbo_single_coin, vbo_portfolio)
+        strategy_type: Strategy type (currently only vbo supported)
         symbols: Tuple of symbols to trade
         interval: Time interval
         initial_cash: Initial capital in KRW
@@ -368,7 +303,7 @@ def run_bt_backtest_generic_service(
         **strategy_params: Strategy-specific parameters
 
     Returns:
-        BtBacktestResult or None on failure
+        VboBacktestResult or None on failure
     """
     strategy = _create_strategy(strategy_type, interval, **strategy_params)
     if strategy is None:
@@ -393,50 +328,14 @@ def _create_strategy(
     **params: int | float | str,
 ) -> Strategy | None:
     """Create a Strategy instance from strategy type string."""
-    from src.strategies.momentum import MomentumStrategy
-    from src.strategies.volatility_breakout.vbo import VanillaVBO
-    from src.strategies.volatility_breakout.vbo_portfolio import (
-        VBOPortfolio,
-        VBOSingleCoin,
-    )
-
-    if strategy_type == "momentum":
-        lookback = int(params.get("lookback", 20))
-        return MomentumStrategy(name="Momentum", rsi_period=lookback)
-
-    if strategy_type == "buy_and_hold":
-        return VanillaVBO(
-            name="BuyAndHold",
-            use_default_conditions=False,
-            entry_conditions=[],
-            exit_conditions=[],
-        )
-
-    if strategy_type == "vbo_single_coin":
-        return VBOSingleCoin(
-            name="VBOSingleCoin",
-            ma_short=int(params.get("ma_short", 5)),
-            btc_ma=int(params.get("btc_ma", 20)),
-            noise_ratio=float(params.get("noise_ratio", 0.5)),
-            data_dir=DATA_DIR,
-            interval=interval,
-        )
-
-    if strategy_type == "vbo_portfolio":
-        return VBOPortfolio(
-            name="VBOPortfolio",
-            ma_short=int(params.get("ma_short", 5)),
-            btc_ma=int(params.get("btc_ma", 20)),
-            noise_ratio=float(params.get("noise_ratio", 0.5)),
-            data_dir=DATA_DIR,
-            interval=interval,
-        )
+    from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
     if strategy_type == "vbo":
-        return VBOPortfolio(
-            name="VBOPortfolio",
-            ma_short=int(params.get("lookback", 5)),
-            btc_ma=int(params.get("lookback", 5)) * int(params.get("multiplier", 2)),
+        return VBOV1(
+            name="VBOV1",
+            ma_short=int(params.get("ma_short", params.get("lookback", 5))),
+            btc_ma=int(params.get("btc_ma", 20)),
+            noise_ratio=float(params.get("noise_ratio", 0.5)),
             data_dir=DATA_DIR,
             interval=interval,
         )

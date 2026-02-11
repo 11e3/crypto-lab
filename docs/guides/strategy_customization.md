@@ -25,7 +25,7 @@ class MyCustomStrategy(Strategy):
         pass
 ```
 
-## VanillaVBO 전략 분석
+## VBOV1 전략 분석
 
 ### 지표 계산
 

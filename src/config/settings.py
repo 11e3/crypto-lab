@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     )
 
     # Strategy Configuration
-    strategy_name: str = Field(default="VanillaVBO", description="Strategy name")
+    strategy_name: str = Field(default="VBOV1", description="Strategy name")
     strategy_sma_period: int = Field(default=5, description="SMA period for strategy")
     strategy_trend_sma_period: int = Field(default=10, description="Trend SMA period")
     strategy_short_noise_period: int = Field(default=5, description="Short noise period")

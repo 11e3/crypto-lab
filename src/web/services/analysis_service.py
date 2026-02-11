@@ -11,7 +11,7 @@ from src.backtester import BacktestConfig, run_backtest, run_walk_forward_analys
 from src.backtester.analysis.monte_carlo import MonteCarloResult, run_monte_carlo
 from src.backtester.models import BacktestResult
 from src.backtester.wfa.walk_forward import WalkForwardResult
-from src.strategies.volatility_breakout import create_vbo_strategy
+from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 from src.utils.logger import get_logger
 from src.web.services.strategy_registry import create_analysis_strategy
 
@@ -113,20 +113,7 @@ def execute_walk_forward(
     """
 
     def create_strategy(params: dict[str, Any]) -> Any:
-        if strategy_type == "vanilla":
-            return create_vbo_strategy(
-                name="VanillaVBO",
-                use_trend_filter=False,
-                use_noise_filter=False,
-                **params,
-            )
-        else:
-            return create_vbo_strategy(
-                name="LegacyVBO",
-                use_trend_filter=True,
-                use_noise_filter=True,
-                **params,
-            )
+        return VBOV1(name="VBOV1", **params)
 
     config = BacktestConfig(
         initial_capital=initial_capital,

@@ -39,10 +39,10 @@ def render_backtest_page() -> None:
     _render_settings_section()
 
     # Display results below settings if available
-    if "bt_backtest_result" in st.session_state:
+    if "vbo_backtest_result" in st.session_state:
         st.divider()
-        strategy_name = st.session_state.get("bt_strategy_name", "bt_VBO")
-        unified = UnifiedBacktestResult.from_bt(st.session_state.bt_backtest_result, strategy_name)
+        strategy_name = st.session_state.get("vbo_strategy_name", "VBO")
+        unified = UnifiedBacktestResult.from_vbo(st.session_state.vbo_backtest_result, strategy_name)
         render_backtest_results(unified)
     elif "backtest_result" in st.session_state:
         st.divider()
@@ -95,8 +95,8 @@ def _render_settings_section() -> None:
             st.cache_data.clear()
             if "backtest_result" in st.session_state:
                 del st.session_state.backtest_result
-            if "bt_backtest_result" in st.session_state:
-                del st.session_state.bt_backtest_result
+            if "vbo_backtest_result" in st.session_state:
+                del st.session_state.vbo_backtest_result
             st.success("Cache cleared!")
             st.rerun()
 
@@ -128,10 +128,10 @@ def _render_settings_section() -> None:
     # Run backtest
     if run_button:
         # Check if bt library strategy
-        from src.web.services.strategy_registry import is_bt_strategy
+        from src.web.services.strategy_registry import is_vbo_strategy
 
-        if is_bt_strategy(strategy_name):
-            _run_bt_backtest(
+        if is_vbo_strategy(strategy_name):
+            _run_vbo_backtest(
                 strategy_name=strategy_name,
                 strategy_params=strategy_params,
                 available_tickers=available_tickers,
@@ -199,8 +199,8 @@ def _run_event_driven_backtest(
 
         if result:
             # Clear bt result if exists
-            if "bt_backtest_result" in st.session_state:
-                del st.session_state.bt_backtest_result
+            if "vbo_backtest_result" in st.session_state:
+                del st.session_state.vbo_backtest_result
             st.session_state.backtest_result = result
             st.success("Backtest completed!")
             st.rerun()
@@ -208,7 +208,7 @@ def _run_event_driven_backtest(
             st.error("Backtest execution failed")
 
 
-def _run_bt_backtest(
+def _run_vbo_backtest(
     strategy_name: str,
     strategy_params: dict[str, Any],
     available_tickers: list[str],
@@ -216,38 +216,24 @@ def _run_bt_backtest(
     start_date: date_type | None,
     end_date: date_type | None,
 ) -> None:
-    """Run backtest using bt library."""
-    from src.web.services.bt_backtest_runner import (
-        run_bt_backtest_generic_service,
-        run_bt_backtest_regime_service,
-        run_bt_backtest_service,
+    """Run backtest using VBO vectorized engine."""
+    from src.web.services.vbo_backtest_runner import (
+        run_vbo_backtest_generic_service,
+        run_vbo_backtest_service,
     )
 
     # Convert tickers: KRW-BTC -> BTC
     symbols = [t.replace("KRW-", "") for t in available_tickers]
 
     # Strategy name to bt strategy type mapping (centralized in strategy_registry)
-    from src.web.services.strategy_registry import get_bt_strategy_type
+    from src.web.services.strategy_registry import get_vbo_strategy_type
 
-    bt_strategy_type, strategy_display = get_bt_strategy_type(strategy_name)
+    vbo_strategy_type, strategy_display = get_vbo_strategy_type(strategy_name)
 
     # Run backtest based on strategy type
-    if strategy_name == "bt_VBO_Regime":
-        with st.spinner(f"Running {strategy_display} backtest (ML model)..."):
-            result = run_bt_backtest_regime_service(
-                symbols=tuple(symbols),
-                interval="day",
-                initial_cash=int(trading_config.initial_capital),
-                fee=trading_config.fee_rate,
-                slippage=trading_config.slippage_rate,
-                ma_short=strategy_params.get("ma_short", 5),
-                noise_ratio=strategy_params.get("noise_ratio", 0.5),
-                start_date=start_date,
-                end_date=end_date,
-            )
-    elif strategy_name == "bt_VBO":
+    if strategy_name == "VBO":
         with st.spinner(f"Running {strategy_display} backtest..."):
-            result = run_bt_backtest_service(
+            result = run_vbo_backtest_service(
                 symbols=tuple(symbols),
                 interval="day",
                 initial_cash=int(trading_config.initial_capital),
@@ -261,8 +247,8 @@ def _run_bt_backtest(
     else:
         # Use generic service for other strategies
         with st.spinner(f"Running {strategy_display} backtest..."):
-            result = run_bt_backtest_generic_service(
-                strategy_type=bt_strategy_type,
+            result = run_vbo_backtest_generic_service(
+                strategy_type=vbo_strategy_type,
                 symbols=tuple(symbols),
                 interval="day",
                 initial_cash=int(trading_config.initial_capital),
@@ -277,12 +263,12 @@ def _run_bt_backtest(
         # Clear event-driven result if exists
         if "backtest_result" in st.session_state:
             del st.session_state.backtest_result
-        st.session_state.bt_backtest_result = result
-        st.session_state.bt_strategy_name = strategy_name
+        st.session_state.vbo_backtest_result = result
+        st.session_state.vbo_strategy_name = strategy_name
         st.success(f"{strategy_display} Backtest completed!")
         st.rerun()
     else:
-        st.error("bt Backtest execution failed")
+        st.error("VBO Backtest execution failed")
 
 
 def _show_config_summary(

@@ -11,7 +11,7 @@ import pandas as pd
 from src.backtester.engine.vectorized import VectorizedBacktestEngine
 from src.backtester.models import BacktestConfig, BacktestResult
 from src.backtester.report_pkg.report import BacktestReport
-from src.strategies.volatility_breakout import VanillaVBO
+from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
 
 class TestCompleteBacktestPipeline:
@@ -29,12 +29,7 @@ class TestCompleteBacktestPipeline:
         sample_ohlcv_data.to_parquet(filepath)
 
         # Step 2: Create strategy
-        strategy = VanillaVBO(
-            sma_period=4,
-            trend_sma_period=8,
-            short_noise_period=4,
-            long_noise_period=8,
-        )
+        strategy = VBOV1(ma_short=5, btc_ma=20)
 
         # Step 3: Run backtest
         engine = VectorizedBacktestEngine(default_backtest_config)
@@ -45,7 +40,7 @@ class TestCompleteBacktestPipeline:
             equity_curve=result.equity_curve,
             dates=result.dates,
             trades=result.trades,
-            strategy_name="VanillaVBO",
+            strategy_name="VBOV1",
             initial_capital=default_backtest_config.initial_capital,
         )
 
@@ -70,7 +65,7 @@ class TestCompleteBacktestPipeline:
             files[ticker] = filepath
 
         # Run backtest
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
         result = engine.run(strategy, files)
 
@@ -79,7 +74,7 @@ class TestCompleteBacktestPipeline:
             equity_curve=result.equity_curve,
             dates=result.dates,
             trades=result.trades,
-            strategy_name="VanillaVBO",
+            strategy_name="VBOV1",
             initial_capital=default_backtest_config.initial_capital,
         )
 
@@ -97,7 +92,7 @@ class TestCompleteBacktestPipeline:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         large_ohlcv_data.to_parquet(filepath)
 
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
 
         # Get date range from data
@@ -125,7 +120,7 @@ class TestCompleteBacktestPipeline:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         sample_ohlcv_data.to_parquet(filepath)
 
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
 
         result1 = engine.run(strategy, {"KRW-BTC": filepath})
@@ -150,7 +145,7 @@ class TestRiskAnalysisPipeline:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         sample_ohlcv_data.to_parquet(filepath)
 
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
         result = engine.run(strategy, {"KRW-BTC": filepath})
 
@@ -169,7 +164,7 @@ class TestRiskAnalysisPipeline:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         downtrend_ohlcv_data.to_parquet(filepath)
 
-        strategy = VanillaVBO(sma_period=4, trend_sma_period=8)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         engine = VectorizedBacktestEngine(default_backtest_config)
         result = engine.run(strategy, {"KRW-BTC": filepath})
 
@@ -187,17 +182,14 @@ class TestStrategyComparisonPipeline:
         default_backtest_config: BacktestConfig,
         temp_data_dir: Path,
     ) -> None:
-        """Test comparing multiple strategies on same data."""
-        from src.strategies.mean_reversion import MeanReversionStrategy
-        from src.strategies.momentum import MomentumStrategy
-
+        """Test comparing multiple strategy configurations on same data."""
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         sample_ohlcv_data.to_parquet(filepath)
 
         strategies = [
-            VanillaVBO(sma_period=4, trend_sma_period=8),
-            MomentumStrategy(rsi_period=14, rsi_oversold=30, rsi_overbought=70),
-            MeanReversionStrategy(bb_period=20, bb_std=2.0, rsi_period=14),
+            VBOV1(ma_short=3, btc_ma=10),
+            VBOV1(ma_short=5, btc_ma=20),
+            VBOV1(ma_short=10, btc_ma=40),
         ]
 
         engine = VectorizedBacktestEngine(default_backtest_config)
@@ -225,12 +217,12 @@ class TestStrategyComparisonPipeline:
 
         engine = VectorizedBacktestEngine(default_backtest_config)
 
-        # Test different SMA periods
-        sma_periods = [3, 4, 5, 6]
+        # Test different MA periods
+        ma_periods = [3, 4, 5, 6]
         results = []
 
-        for sma_period in sma_periods:
-            strategy = VanillaVBO(sma_period=sma_period, trend_sma_period=sma_period * 2)
+        for ma_period in ma_periods:
+            strategy = VBOV1(ma_short=ma_period, btc_ma=ma_period * 4)
             result = engine.run(strategy, {"KRW-BTC": filepath})
             results.append(result)
 
@@ -263,7 +255,7 @@ class TestDataQualityPipeline:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         df.to_parquet(filepath)
 
-        strategy = VanillaVBO(sma_period=2, trend_sma_period=3)
+        strategy = VBOV1(ma_short=3, btc_ma=10)
         engine = VectorizedBacktestEngine(default_backtest_config)
 
         # Should handle gracefully (either run or raise specific error)
@@ -294,7 +286,7 @@ class TestDataQualityPipeline:
         filepath = temp_data_dir / "KRW-BTC_day.parquet"
         df.to_parquet(filepath)
 
-        strategy = VanillaVBO(sma_period=2, trend_sma_period=3)
+        strategy = VBOV1(ma_short=3, btc_ma=10)
         engine = VectorizedBacktestEngine(default_backtest_config)
 
         result = engine.run(strategy, {"KRW-BTC": filepath})

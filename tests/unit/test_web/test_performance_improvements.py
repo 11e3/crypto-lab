@@ -18,7 +18,7 @@ import pytest
 
 from src.backtester.engine import VectorizedBacktestEngine
 from src.backtester.models import BacktestConfig
-from src.strategies.mean_reversion import MeanReversionStrategy
+from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
 # Import web services only when streamlit is available
 try:
@@ -62,11 +62,11 @@ class TestVectorizedEngineIntegration:
         config = BacktestConfig(initial_capital=10_000_000)
         vectorized_engine = VectorizedBacktestEngine(config)
 
-        strategy = MeanReversionStrategy(bb_period=20, bb_std=2.0)
+        strategy = VBOV1(ma_short=5, btc_ma=20)
         result = vectorized_engine.run(strategy, mock_data_files)
 
         assert result is not None
-        assert result.strategy_name == "MeanReversionStrategy"
+        assert result.strategy_name == "VBOV1"
         assert len(result.equity_curve) > 0
 
 

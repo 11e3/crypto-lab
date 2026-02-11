@@ -68,7 +68,7 @@ def _render_monte_carlo() -> None:
 
             selected_strategy = st.selectbox(
                 "Strategy",
-                options=strategy_names if strategy_names else ["VanillaVBO"],
+                options=strategy_names if strategy_names else ["VBOV1"],
                 key="mc_strategy_name",
                 help="Select a registered strategy",
             )
@@ -354,7 +354,7 @@ def _render_walk_forward() -> None:
 
             selected_strategy = st.selectbox(
                 "Strategy",
-                options=strategy_names if strategy_names else ["VanillaVBO"],
+                options=strategy_names if strategy_names else ["VBOV1"],
                 key="wf_strategy_name",
                 help="Select a registered strategy",
             )

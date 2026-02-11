@@ -22,7 +22,7 @@ import pandas as pd  # noqa: E402
 import pytest  # noqa: E402
 
 from src.backtester.models import BacktestConfig, BacktestResult, Trade  # noqa: E402
-from src.strategies.volatility_breakout import VanillaVBO  # noqa: E402
+from src.strategies.volatility_breakout.vbo_v1 import VBOV1  # noqa: E402
 from tests.fixtures.data.sample_ohlcv import (  # noqa: E402
     generate_multiple_tickers_data,
     generate_ohlcv_data,
@@ -63,14 +63,9 @@ def test_config_path() -> Path:
 
 
 @pytest.fixture
-def vbo_strategy() -> VanillaVBO:
-    """Create a VanillaVBO strategy instance for testing."""
-    return VanillaVBO(
-        sma_period=4,
-        trend_sma_period=8,
-        short_noise_period=4,
-        long_noise_period=8,
-    )
+def vbo_strategy() -> VBOV1:
+    """Create a VBOV1 strategy instance for testing."""
+    return VBOV1(ma_short=5, btc_ma=20)
 
 
 # ============================================================================
@@ -179,39 +174,12 @@ def sample_backtest_result(
 
 
 @pytest.fixture
-def momentum_strategy_params() -> dict[str, Any]:
-    """Create momentum strategy parameters."""
-    return {
-        "rsi_period": 14,
-        "rsi_oversold": 30,
-        "rsi_overbought": 70,
-        "macd_fast": 12,
-        "macd_slow": 26,
-        "macd_signal": 9,
-    }
-
-
-@pytest.fixture
-def mean_reversion_strategy_params() -> dict[str, Any]:
-    """Create mean reversion strategy parameters."""
-    return {
-        "bb_period": 20,
-        "bb_std": 2.0,
-        "rsi_period": 14,
-        "rsi_oversold": 30,
-        "rsi_overbought": 70,
-    }
-
-
-@pytest.fixture
 def vbo_strategy_params() -> dict[str, Any]:
-    """Create VBO strategy parameters."""
+    """Create VBOV1 strategy parameters."""
     return {
-        "sma_period": 4,
-        "trend_sma_period": 8,
-        "short_noise_period": 4,
-        "long_noise_period": 8,
-        "k": 0.5,
+        "ma_short": 5,
+        "btc_ma": 20,
+        "noise_ratio": 0.5,
     }
 
 

@@ -167,7 +167,7 @@ class TestVBOV1EntrySignal:
             assert entry_rows["btc_above_ma"].all()
 
     def test_entry_no_sma_filter(self) -> None:
-        """Entry should NOT require target > SMA (unlike VBOPortfolio)."""
+        """Entry should NOT require target > SMA."""
         dates = pd.date_range("2023-01-01", periods=10, freq="D")
         df = pd.DataFrame(
             {
@@ -296,7 +296,7 @@ class TestVBOV1ExitPriceBase:
 
 
 class TestVBOV1BtcFilter:
-    """Test BTC market filter matches VBOPortfolio behavior."""
+    """Test BTC market filter behavior."""
 
     def test_btc_filter_uses_prev_day(
         self, btc_data: pd.DataFrame, target_ohlcv: pd.DataFrame

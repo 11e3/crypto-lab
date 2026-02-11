@@ -79,7 +79,7 @@ exchange.set_price("KRW-BTC", 50_000_000.0)
 - `volatile_ohlcv_data`: 변동성이 큰 OHLCV DataFrame
 - `multiple_tickers_data`: 여러 티커에 대한 DataFrame 딕셔너리
 - `mock_exchange`: MockExchange 인스턴스
-- `vbo_strategy`: VanillaVBO 전략 인스턴스
+- `vbo_strategy`: VBOV1 전략 인스턴스
 - `sample_balance`: 샘플 Balance 객체
 - `sample_order`: 샘플 Order 객체
 - `sample_ticker`: 샘플 Ticker 객체

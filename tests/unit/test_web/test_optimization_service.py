@@ -1,11 +1,11 @@
 """Tests for optimization service — pure computation logic.
 
 Tests:
-- BtOptimizationResult dataclass
+- VboOptimizationResult dataclass
 - get_default_param_range (int, float, bool types)
 - parse_dynamic_param_grid (parsing, validation, error handling)
-- extract_bt_metric (all metric types)
-- execute_bt_optimization (mock-based, grid/random, progress callback)
+- extract_vbo_metric (all metric types)
+- execute_vbo_optimization (mock-based, grid/random, progress callback)
 """
 
 from __future__ import annotations
@@ -15,21 +15,21 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.web.services.optimization_service import (
-    BtOptimizationResult,
-    extract_bt_metric,
+    VboOptimizationResult,
+    extract_vbo_metric,
     get_default_param_range,
     parse_dynamic_param_grid,
 )
 from src.web.services.parameter_models import ParameterSpec
 
-# ── BtOptimizationResult ──
+# ── VboOptimizationResult ──
 
 
-class TestBtOptimizationResult:
-    """Test BtOptimizationResult dataclass."""
+class TestVboOptimizationResult:
+    """Test VboOptimizationResult dataclass."""
 
     def test_creation(self) -> None:
-        result = BtOptimizationResult(
+        result = VboOptimizationResult(
             best_params={"lookback": 5},
             best_score=1.5,
             all_params=[{"lookback": 5}, {"lookback": 10}],
@@ -40,7 +40,7 @@ class TestBtOptimizationResult:
         assert len(result.all_params) == 2
 
     def test_default_factory(self) -> None:
-        result = BtOptimizationResult(best_params={}, best_score=0.0)
+        result = VboOptimizationResult(best_params={}, best_score=0.0)
         assert result.all_params == []
         assert result.all_scores == []
 
@@ -185,11 +185,11 @@ class TestParseDynamicParamGrid:
         assert result == {"x": [3, 5, 7]}
 
 
-# ── extract_bt_metric ──
+# ── extract_vbo_metric ──
 
 
-class TestExtractBtMetric:
-    """Test metric extraction from BtBacktestResult."""
+class TestExtractVboMetric:
+    """Test metric extraction from VboBacktestResult."""
 
     @pytest.fixture
     def mock_result(self) -> MagicMock:
@@ -204,45 +204,45 @@ class TestExtractBtMetric:
         return result
 
     def test_sharpe_ratio(self, mock_result: MagicMock) -> None:
-        assert extract_bt_metric(mock_result, "sharpe_ratio") == 1.5
+        assert extract_vbo_metric(mock_result, "sharpe_ratio") == 1.5
 
     def test_cagr(self, mock_result: MagicMock) -> None:
-        assert extract_bt_metric(mock_result, "cagr") == 25.0
+        assert extract_vbo_metric(mock_result, "cagr") == 25.0
 
     def test_total_return(self, mock_result: MagicMock) -> None:
-        assert extract_bt_metric(mock_result, "total_return") == 50.0
+        assert extract_vbo_metric(mock_result, "total_return") == 50.0
 
     def test_win_rate(self, mock_result: MagicMock) -> None:
-        assert extract_bt_metric(mock_result, "win_rate") == 0.6
+        assert extract_vbo_metric(mock_result, "win_rate") == 0.6
 
     def test_profit_factor(self, mock_result: MagicMock) -> None:
-        assert extract_bt_metric(mock_result, "profit_factor") == 2.0
+        assert extract_vbo_metric(mock_result, "profit_factor") == 2.0
 
     def test_sortino_ratio(self, mock_result: MagicMock) -> None:
-        assert extract_bt_metric(mock_result, "sortino_ratio") == 2.5
+        assert extract_vbo_metric(mock_result, "sortino_ratio") == 2.5
 
     def test_calmar_ratio(self, mock_result: MagicMock) -> None:
         # calmar = cagr / |mdd| = 25.0 / 10.0 = 2.5
-        assert extract_bt_metric(mock_result, "calmar_ratio") == 2.5
+        assert extract_vbo_metric(mock_result, "calmar_ratio") == 2.5
 
     def test_calmar_ratio_zero_mdd(self, mock_result: MagicMock) -> None:
         mock_result.mdd = 0.0
         # When mdd is 0, uses 1.0 as denominator
-        assert extract_bt_metric(mock_result, "calmar_ratio") == 25.0
+        assert extract_vbo_metric(mock_result, "calmar_ratio") == 25.0
 
     def test_unknown_metric_defaults_to_sharpe(self, mock_result: MagicMock) -> None:
-        assert extract_bt_metric(mock_result, "nonexistent") == 1.5
+        assert extract_vbo_metric(mock_result, "nonexistent") == 1.5
 
 
-# ── execute_bt_optimization ──
+# ── execute_vbo_optimization ──
 
 
-class TestExecuteBtOptimization:
-    """Test bt optimization execution with mocked backtest runners."""
+class TestExecuteVboOptimization:
+    """Test VBO optimization execution with mocked backtest runners."""
 
-    @patch("src.web.services.optimization_service.run_bt_backtest_service")
+    @patch("src.web.services.optimization_service.run_vbo_backtest_service")
     def test_grid_search_all_combinations(self, mock_bt: MagicMock) -> None:
-        from src.web.services.optimization_service import execute_bt_optimization
+        from src.web.services.optimization_service import execute_vbo_optimization
 
         mock_result = MagicMock()
         mock_result.sharpe_ratio = 1.5
@@ -250,8 +250,8 @@ class TestExecuteBtOptimization:
         mock_result.cagr = 20.0
         mock_bt.return_value = mock_result
 
-        result = execute_bt_optimization(
-            strategy_name="bt_VBO",
+        result = execute_vbo_optimization(
+            strategy_name="VBO",
             param_grid={"lookback": [3, 5], "multiplier": [2, 3]},
             symbols=["BTC"],
             metric="sharpe_ratio",
@@ -262,13 +262,13 @@ class TestExecuteBtOptimization:
         )
 
         assert mock_bt.call_count == 4  # 2x2 grid
-        assert isinstance(result, BtOptimizationResult)
+        assert isinstance(result, VboOptimizationResult)
         assert result.best_score == 1.5
         assert len(result.all_params) == 4
 
-    @patch("src.web.services.optimization_service.run_bt_backtest_service")
+    @patch("src.web.services.optimization_service.run_vbo_backtest_service")
     def test_random_search_limits_iterations(self, mock_bt: MagicMock) -> None:
-        from src.web.services.optimization_service import execute_bt_optimization
+        from src.web.services.optimization_service import execute_vbo_optimization
 
         mock_result = MagicMock()
         mock_result.sharpe_ratio = 1.0
@@ -276,8 +276,8 @@ class TestExecuteBtOptimization:
         mock_result.cagr = 10.0
         mock_bt.return_value = mock_result
 
-        result = execute_bt_optimization(
-            strategy_name="bt_VBO",
+        result = execute_vbo_optimization(
+            strategy_name="VBO",
             param_grid={"lookback": [3, 5, 7, 10], "multiplier": [1, 2, 3]},
             symbols=["BTC"],
             metric="sharpe_ratio",
@@ -290,9 +290,9 @@ class TestExecuteBtOptimization:
         assert mock_bt.call_count == 3  # Limited to n_iter
         assert len(result.all_params) == 3
 
-    @patch("src.web.services.optimization_service.run_bt_backtest_service")
+    @patch("src.web.services.optimization_service.run_vbo_backtest_service")
     def test_progress_callback(self, mock_bt: MagicMock) -> None:
-        from src.web.services.optimization_service import execute_bt_optimization
+        from src.web.services.optimization_service import execute_vbo_optimization
 
         mock_result = MagicMock()
         mock_result.sharpe_ratio = 1.0
@@ -304,8 +304,8 @@ class TestExecuteBtOptimization:
         def on_progress(current: int, total: int) -> None:
             progress_calls.append((current, total))
 
-        execute_bt_optimization(
-            strategy_name="bt_VBO",
+        execute_vbo_optimization(
+            strategy_name="VBO",
             param_grid={"lookback": [3, 5]},
             symbols=["BTC"],
             metric="sharpe_ratio",
@@ -320,15 +320,15 @@ class TestExecuteBtOptimization:
         assert progress_calls[0] == (1, 2)
         assert progress_calls[1] == (2, 2)
 
-    @patch("src.web.services.optimization_service.run_bt_backtest_service")
+    @patch("src.web.services.optimization_service.run_vbo_backtest_service")
     def test_all_backtests_fail_raises(self, mock_bt: MagicMock) -> None:
-        from src.web.services.optimization_service import execute_bt_optimization
+        from src.web.services.optimization_service import execute_vbo_optimization
 
         mock_bt.return_value = None
 
         with pytest.raises(RuntimeError, match="All backtests failed"):
-            execute_bt_optimization(
-                strategy_name="bt_VBO",
+            execute_vbo_optimization(
+                strategy_name="VBO",
                 param_grid={"lookback": [3]},
                 symbols=["BTC"],
                 metric="sharpe_ratio",
@@ -338,10 +338,10 @@ class TestExecuteBtOptimization:
                 fee_rate=0.0005,
             )
 
-    @patch("src.web.services.optimization_service.run_bt_backtest_service")
+    @patch("src.web.services.optimization_service.run_vbo_backtest_service")
     def test_partial_failures_skip_failed(self, mock_bt: MagicMock) -> None:
         """If some backtests fail, they are excluded from results."""
-        from src.web.services.optimization_service import execute_bt_optimization
+        from src.web.services.optimization_service import execute_vbo_optimization
 
         good_result = MagicMock()
         good_result.sharpe_ratio = 2.0
@@ -351,8 +351,8 @@ class TestExecuteBtOptimization:
         # First call succeeds, second returns None
         mock_bt.side_effect = [good_result, None]
 
-        result = execute_bt_optimization(
-            strategy_name="bt_VBO",
+        result = execute_vbo_optimization(
+            strategy_name="VBO",
             param_grid={"lookback": [3, 5]},
             symbols=["BTC"],
             metric="sharpe_ratio",
@@ -365,38 +365,10 @@ class TestExecuteBtOptimization:
         assert result.best_score == 2.0
         assert len(result.all_params) == 1  # Only successful one
 
-    @patch("src.web.services.optimization_service.run_bt_backtest_regime_service")
-    @patch("src.web.services.optimization_service.get_default_model_path")
-    def test_regime_strategy_uses_regime_runner(
-        self, mock_model_path: MagicMock, mock_regime: MagicMock
-    ) -> None:
-        from src.web.services.optimization_service import execute_bt_optimization
-
-        mock_model_path.return_value = "/tmp/model.joblib"
-        mock_result = MagicMock()
-        mock_result.sharpe_ratio = 1.5
-        mock_result.mdd = -10.0
-        mock_result.cagr = 20.0
-        mock_regime.return_value = mock_result
-
-        result = execute_bt_optimization(
-            strategy_name="bt_VBO_Regime",
-            param_grid={"ma_short": [5]},
-            symbols=["BTC"],
-            metric="sharpe_ratio",
-            method="grid",
-            n_iter=100,
-            initial_capital=10_000_000,
-            fee_rate=0.0005,
-        )
-
-        mock_regime.assert_called_once()
-        assert result.best_score == 1.5
-
-    @patch("src.web.services.optimization_service.run_bt_backtest_service")
+    @patch("src.web.services.optimization_service.run_vbo_backtest_service")
     def test_exception_during_backtest_logs_warning(self, mock_bt: MagicMock) -> None:
         """Exceptions are caught and logged, not propagated."""
-        from src.web.services.optimization_service import execute_bt_optimization
+        from src.web.services.optimization_service import execute_vbo_optimization
 
         good_result = MagicMock()
         good_result.sharpe_ratio = 1.0
@@ -405,8 +377,8 @@ class TestExecuteBtOptimization:
 
         mock_bt.side_effect = [RuntimeError("boom"), good_result]
 
-        result = execute_bt_optimization(
-            strategy_name="bt_VBO",
+        result = execute_vbo_optimization(
+            strategy_name="VBO",
             param_grid={"lookback": [3, 5]},
             symbols=["BTC"],
             metric="sharpe_ratio",

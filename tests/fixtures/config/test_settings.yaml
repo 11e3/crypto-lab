@@ -12,11 +12,10 @@ trading:
   slippage_rate: 0.0005
 
 strategy:
-  name: "VanillaVBO"
-  sma_period: 4
-  trend_sma_period: 8
-  short_noise_period: 4
-  long_noise_period: 8
+  name: "VBOV1"
+  ma_short: 5
+  btc_ma: 10
+  noise_ratio: 0.5
 
 bot:
   daily_reset_hour: 9
