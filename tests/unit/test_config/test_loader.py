@@ -554,4 +554,4 @@ class TestGetConfig:
         loader = ConfigLoader(config_path=config_file)
 
         with pytest.raises(ValueError, match="not supported"):
-            loader.get_exchange_keys(exchange_name="binance")
+            loader.get_exchange_keys(exchange_name="kraken")

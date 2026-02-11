@@ -16,9 +16,14 @@ RAW_DATA_DIR: Final[Path] = DATA_DIR / "raw"
 PROCESSED_DATA_DIR: Final[Path] = DATA_DIR / "processed"
 REPORTS_DIR: Final[Path] = PROJECT_ROOT / "reports"
 
-# API Configuration
+# Upbit API Configuration
 UPBIT_MAX_CANDLES_PER_REQUEST: Final[int] = 200
 UPBIT_API_RATE_LIMIT_DELAY: Final[float] = 0.1  # seconds
+
+# Binance API Configuration
+BINANCE_MAX_CANDLES_PER_REQUEST: Final[int] = 1000
+BINANCE_API_RATE_LIMIT_DELAY: Final[float] = 0.05  # seconds
+BINANCE_DATA_DIR: Final[Path] = DATA_DIR / "raw" / "binance"
 
 # Backtest Defaults
 DEFAULT_INITIAL_CAPITAL: Final[float] = 1.0

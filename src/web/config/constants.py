@@ -35,6 +35,40 @@ DATA_COLLECT_INTERVALS: list[tuple[str, str]] = [
     ("month", "Monthly"),
 ]
 
+# Binance ticker list for data collection (USDT + BTC pairs)
+BINANCE_DATA_COLLECT_TICKERS: list[str] = [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "DOGEUSDT",
+    "ADAUSDT",
+    "AVAXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "ETHBTC",
+    "BNBBTC",
+    "SOLBTC",
+    "XRPBTC",
+    "ADABTC",
+]
+
+# Binance intervals for data collection
+BINANCE_DATA_COLLECT_INTERVALS: list[tuple[str, str]] = [
+    ("1m", "1 min"),
+    ("3m", "3 min"),
+    ("5m", "5 min"),
+    ("15m", "15 min"),
+    ("30m", "30 min"),
+    ("1h", "1 hour"),
+    ("2h", "2 hours"),
+    ("4h", "4 hours"),
+    ("1d", "Daily"),
+    ("1w", "Weekly"),
+    ("1M", "Monthly"),
+]
+
 # Interval display mapping for backtest/analysis pages
 INTERVAL_DISPLAY_MAP: dict[str, str] = {
     "minute240": "4 Hours",

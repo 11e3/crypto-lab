@@ -2,6 +2,9 @@
 
 from src.config.constants import (
     ANNUALIZATION_FACTOR,
+    BINANCE_API_RATE_LIMIT_DELAY,
+    BINANCE_DATA_DIR,
+    BINANCE_MAX_CANDLES_PER_REQUEST,
     CACHE_METADATA_FILENAME,
     DATA_DIR,
     DEFAULT_FEE_RATE,
@@ -25,6 +28,9 @@ from src.config.settings import Settings, get_settings
 
 __all__ = [
     "ANNUALIZATION_FACTOR",
+    "BINANCE_API_RATE_LIMIT_DELAY",
+    "BINANCE_DATA_DIR",
+    "BINANCE_MAX_CANDLES_PER_REQUEST",
     "CACHE_METADATA_FILENAME",
     "ConfigLoader",
     "DATA_DIR",

@@ -274,8 +274,7 @@ class StrategyRegistry:
                 self._strategies[defn["name"]] = info
 
             logger.info(
-                "Registered VBO strategies: "
-                + ", ".join(d["name"] for d in vbo_strategy_defs)
+                "Registered VBO strategies: " + ", ".join(d["name"] for d in vbo_strategy_defs)
             )
         except Exception as e:
             logger.warning(f"Failed to register VBO strategies: {e}")

@@ -32,9 +32,9 @@ def render_analysis_page() -> None:
     analysis_type = st.radio(
         "Select Analysis Type",
         options=["monte_carlo", "walk_forward"],
-        format_func=lambda x: "🎲 Monte Carlo Simulation"
-        if x == "monte_carlo"
-        else "📈 Walk-Forward Analysis",
+        format_func=lambda x: (
+            "🎲 Monte Carlo Simulation" if x == "monte_carlo" else "📈 Walk-Forward Analysis"
+        ),
         horizontal=True,
     )
 
@@ -108,9 +108,11 @@ def _render_monte_carlo() -> None:
             method = st.radio(
                 "Simulation Method",
                 options=["bootstrap", "parametric"],
-                format_func=lambda x: "Bootstrap (Resampling)"
-                if x == "bootstrap"
-                else "Parametric (Normal Distribution)",
+                format_func=lambda x: (
+                    "Bootstrap (Resampling)"
+                    if x == "bootstrap"
+                    else "Parametric (Normal Distribution)"
+                ),
                 horizontal=True,
                 key="mc_method",
             )

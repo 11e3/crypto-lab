@@ -5,22 +5,62 @@ Page for data collection execution and status display.
 
 import streamlit as st
 
-from src.data.collector_factory import DataCollectorFactory
+from src.data.collector_factory import DataCollectorFactory, ExchangeName
 from src.utils.logger import get_logger
-from src.web.config.constants import DATA_COLLECT_INTERVALS, DATA_COLLECT_TICKERS
+from src.web.config.constants import (
+    BINANCE_DATA_COLLECT_INTERVALS,
+    BINANCE_DATA_COLLECT_TICKERS,
+    DATA_COLLECT_INTERVALS,
+    DATA_COLLECT_TICKERS,
+)
 
 logger = get_logger(__name__)
 
 __all__ = ["render_data_collect_page"]
 
-# Local aliases
-DEFAULT_TICKERS = DATA_COLLECT_TICKERS
-INTERVALS = DATA_COLLECT_INTERVALS
+
+def _get_exchange_config(
+    exchange: str,
+) -> tuple[list[str], list[tuple[str, str]], list[str], str]:
+    """Get ticker list, interval list, default intervals, and placeholder for an exchange.
+
+    Args:
+        exchange: Exchange name
+
+    Returns:
+        Tuple of (tickers, intervals, default_intervals, custom_placeholder)
+    """
+    if exchange == "binance":
+        return (
+            BINANCE_DATA_COLLECT_TICKERS,
+            BINANCE_DATA_COLLECT_INTERVALS,
+            ["4h", "1d", "1w"],
+            "e.g., MATICUSDT",
+        )
+    # Default: Upbit
+    return (
+        DATA_COLLECT_TICKERS,
+        DATA_COLLECT_INTERVALS,
+        ["minute240", "day", "week"],
+        "e.g., KRW-MATIC",
+    )
 
 
 def render_data_collect_page() -> None:
     """Render data collection page."""
     st.header("📥 Data Collection")
+
+    # ===== Exchange Selection =====
+    exchange = st.selectbox(
+        "Exchange",
+        options=["Upbit", "Binance"],
+        key="collect_exchange",
+        help="Select exchange to collect data from",
+    )
+    exchange_lower: ExchangeName = "binance" if exchange == "Binance" else "upbit"
+    tickers_list, intervals_list, default_intervals, custom_placeholder = _get_exchange_config(
+        exchange_lower
+    )
 
     # ===== Settings Section =====
     st.subheader("⚙️ Collection Settings")
@@ -35,7 +75,7 @@ def render_data_collect_page() -> None:
         btn_col1, btn_col2 = st.columns(2)
         with btn_col1:
             if st.button("Select All", key="select_all_tickers"):
-                st.session_state.collect_selected_tickers = list(DEFAULT_TICKERS)
+                st.session_state.collect_selected_tickers = list(tickers_list)
                 st.rerun()
         with btn_col2:
             if st.button("Deselect All", key="deselect_all_tickers"):
@@ -44,13 +84,16 @@ def render_data_collect_page() -> None:
 
         # Ticker multiselect
         if "collect_selected_tickers" not in st.session_state:
-            st.session_state.collect_selected_tickers = DEFAULT_TICKERS[:6]
+            st.session_state.collect_selected_tickers = tickers_list[:6]
+
+        # Ensure defaults are valid for current exchange
+        valid_defaults = [t for t in st.session_state.collect_selected_tickers if t in tickers_list]
 
         selected_tickers = st.multiselect(
             "Select Tickers",
-            options=DEFAULT_TICKERS,
-            default=st.session_state.collect_selected_tickers,
-            key="collect_ticker_multiselect",
+            options=tickers_list,
+            default=valid_defaults,
+            key=f"collect_ticker_multiselect_{exchange_lower}",
         )
 
         # Custom ticker input
@@ -59,8 +102,8 @@ def render_data_collect_page() -> None:
 
         custom_ticker = st.text_input(
             "Add Custom Ticker",
-            placeholder="e.g., KRW-MATIC",
-            help="Enter KRW market ticker supported by Upbit",
+            placeholder=custom_placeholder,
+            help=f"Enter ticker supported by {exchange}",
         )
         if (
             custom_ticker
@@ -79,16 +122,15 @@ def render_data_collect_page() -> None:
     with col2:
         st.markdown("### ⏱️ Interval Selection")
 
-        interval_options = [code for code, _ in INTERVALS]
-        interval_labels = {code: f"{name} ({code})" for code, name in INTERVALS}
-        default_intervals = ["minute240", "day", "week"]
+        interval_options = [code for code, _ in intervals_list]
+        interval_labels = {code: f"{name} ({code})" for code, name in intervals_list}
 
         selected_intervals = st.multiselect(
             "Select Intervals",
             options=interval_options,
             default=[i for i in default_intervals if i in interval_options],
             format_func=lambda x: interval_labels.get(x, x),
-            key="collect_interval_multiselect",
+            key=f"collect_interval_multiselect_{exchange_lower}",
         )
 
     # Column 3: Options
@@ -132,19 +174,20 @@ def render_data_collect_page() -> None:
 
         with col2:
             st.markdown("**⏱️ Selected Intervals**")
-            interval_names = [name for code, name in INTERVALS if code in selected_intervals]
+            interval_names = [name for code, name in intervals_list if code in selected_intervals]
             st.write(", ".join(interval_names))
             st.metric("Interval Count", len(selected_intervals))
 
         with col3:
             st.markdown("**⚙️ Options**")
+            st.write(f"Exchange: {exchange}")
             st.write(f"Full Refresh: {'Yes' if full_refresh else 'No'}")
             total_tasks = len(selected_tickers) * len(selected_intervals)
             st.metric("Total Tasks", total_tasks)
 
     # Execute data collection
     if run_button:
-        _run_collection(selected_tickers, selected_intervals, full_refresh)
+        _run_collection(selected_tickers, selected_intervals, full_refresh, exchange_lower)
 
     # Display previous collection results
     if "collection_results" in st.session_state:
@@ -155,6 +198,7 @@ def _run_collection(
     tickers: list[str],
     intervals: list[str],
     full_refresh: bool,
+    exchange: ExchangeName = "upbit",
 ) -> None:
     """Execute data collection.
 
@@ -162,6 +206,7 @@ def _run_collection(
         tickers: List of tickers to collect
         intervals: List of intervals to collect
         full_refresh: Whether to perform full refresh
+        exchange: Exchange name
     """
     st.subheader("📊 Collection Progress")
 
@@ -175,7 +220,7 @@ def _run_collection(
     completed = 0
 
     try:
-        collector = DataCollectorFactory.create()
+        collector = DataCollectorFactory.create(exchange_name=exchange)
 
         for ticker in tickers:
             for interval in intervals:

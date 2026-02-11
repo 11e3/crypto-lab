@@ -42,7 +42,9 @@ def render_backtest_page() -> None:
     if "vbo_backtest_result" in st.session_state:
         st.divider()
         strategy_name = st.session_state.get("vbo_strategy_name", "VBO")
-        unified = UnifiedBacktestResult.from_vbo(st.session_state.vbo_backtest_result, strategy_name)
+        unified = UnifiedBacktestResult.from_vbo(
+            st.session_state.vbo_backtest_result, strategy_name
+        )
         render_backtest_results(unified)
     elif "backtest_result" in st.session_state:
         st.divider()

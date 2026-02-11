@@ -48,7 +48,7 @@ def render_equity_curve(
         downsampled_dates, downsampled_equity = downsample_timeseries(
             dates, equity, max_points=max_points
         )
-        dates = downsampled_dates  # type: ignore[assignment]
+        dates = downsampled_dates
         equity = downsampled_equity
         if benchmark is not None:
             _, downsampled_benchmark = downsample_timeseries(

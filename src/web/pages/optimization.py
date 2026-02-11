@@ -79,9 +79,11 @@ def render_optimization_page() -> None:
             method = st.radio(
                 "Search Method",
                 options=["grid", "random"],
-                format_func=lambda x: "Grid Search (Full exploration)"
-                if x == "grid"
-                else "Random Search (Random sampling)",
+                format_func=lambda x: (
+                    "Grid Search (Full exploration)"
+                    if x == "grid"
+                    else "Random Search (Random sampling)"
+                ),
                 horizontal=True,
             )
 
