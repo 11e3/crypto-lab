@@ -10,12 +10,12 @@ from typing import Any
 import pytest
 
 from src.data.cache.cache_eviction import (
+    _evict_to_entry_limit,
+    _evict_to_size_limit,
     cleanup_expired,
     enforce_cache_limits,
     evict_entry,
     get_total_size_mb,
-    _evict_to_entry_limit,
-    _evict_to_size_limit,
 )
 
 
@@ -77,9 +77,7 @@ class TestCleanupExpired:
             "old": {"created_at": old_time},
             "new": {"created_at": time.time()},
         }
-        access_times: OrderedDict[str, float] = OrderedDict(
-            {"old": old_time, "new": time.time()}
-        )
+        access_times: OrderedDict[str, float] = OrderedDict({"old": old_time, "new": time.time()})
         _make_cache_file(tmp_path, "old")
         _make_cache_file(tmp_path, "new")
 
@@ -118,9 +116,7 @@ class TestEvictToEntryLimit:
             "k2": {"created_at": 0},
             "k3": {"created_at": 0},
         }
-        access_times: OrderedDict[str, float] = OrderedDict(
-            {"k1": 1.0, "k2": 2.0, "k3": 3.0}
-        )
+        access_times: OrderedDict[str, float] = OrderedDict({"k1": 1.0, "k2": 2.0, "k3": 3.0})
         for key in metadata:
             _make_cache_file(tmp_path, key)
 
@@ -157,9 +153,7 @@ class TestEvictToSizeLimit:
             "k1": {"created_at": 0},
             "k2": {"created_at": 0},
         }
-        access_times: OrderedDict[str, float] = OrderedDict(
-            {"k1": 1.0, "k2": 2.0}
-        )
+        access_times: OrderedDict[str, float] = OrderedDict({"k1": 1.0, "k2": 2.0})
         # Create large files (each ~0.5MB)
         _make_cache_file(tmp_path, "k1", size=512 * 1024)
         _make_cache_file(tmp_path, "k2", size=512 * 1024)
@@ -216,15 +210,17 @@ class TestEnforceCacheLimits:
             "k2": {"created_at": time.time()},
             "k3": {"created_at": time.time()},
         }
-        access_times: OrderedDict[str, float] = OrderedDict(
-            {"k1": 1.0, "k2": 2.0, "k3": 3.0}
-        )
+        access_times: OrderedDict[str, float] = OrderedDict({"k1": 1.0, "k2": 2.0, "k3": 3.0})
         for key in metadata:
             _make_cache_file(tmp_path, key, size=100)
 
         enforce_cache_limits(
-            metadata, access_times, tmp_path,
-            max_entries=2, max_size_mb=100.0, ttl_days=30,
+            metadata,
+            access_times,
+            tmp_path,
+            max_entries=2,
+            max_size_mb=100.0,
+            ttl_days=30,
         )
         assert len(metadata) <= 2
 
@@ -234,15 +230,17 @@ class TestEnforceCacheLimits:
             "old": {"created_at": old_time},
             "new": {"created_at": time.time()},
         }
-        access_times: OrderedDict[str, float] = OrderedDict(
-            {"old": old_time, "new": time.time()}
-        )
+        access_times: OrderedDict[str, float] = OrderedDict({"old": old_time, "new": time.time()})
         _make_cache_file(tmp_path, "old")
         _make_cache_file(tmp_path, "new")
 
         enforce_cache_limits(
-            metadata, access_times, tmp_path,
-            max_entries=100, max_size_mb=100.0, ttl_days=7,
+            metadata,
+            access_times,
+            tmp_path,
+            max_entries=100,
+            max_size_mb=100.0,
+            ttl_days=7,
         )
         assert "old" not in metadata
         assert "new" in metadata

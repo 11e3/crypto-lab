@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -18,7 +17,6 @@ from src.data.storage import (
     is_gcs_available,
 )
 
-
 # =========================================================================
 # _get_gcs_client
 # =========================================================================
@@ -28,22 +26,29 @@ class TestGetGCSClient:
     """Tests for _get_gcs_client helper."""
 
     def test_import_error_raises_storage_error(self) -> None:
-        with patch.dict("sys.modules", {"google.cloud": None, "google.cloud.storage": None}):
-            with pytest.raises(GCSStorageError, match="not installed"):
-                _get_gcs_client()
+        with (
+            patch.dict("sys.modules", {"google.cloud": None, "google.cloud.storage": None}),
+            pytest.raises(GCSStorageError, match="not installed"),
+        ):
+            _get_gcs_client()
 
     def test_os_error_raises_storage_error(self) -> None:
         mock_storage_mod = MagicMock()
         mock_storage_mod.Client.side_effect = OSError("connection failed")
         mock_google_cloud = MagicMock()
         mock_google_cloud.storage = mock_storage_mod
-        with patch.dict("sys.modules", {
-            "google": MagicMock(),
-            "google.cloud": mock_google_cloud,
-            "google.cloud.storage": mock_storage_mod,
-        }):
-            with pytest.raises(GCSStorageError, match="Failed to create GCS client"):
-                _get_gcs_client()
+        with (
+            patch.dict(
+                "sys.modules",
+                {
+                    "google": MagicMock(),
+                    "google.cloud": mock_google_cloud,
+                    "google.cloud.storage": mock_storage_mod,
+                },
+            ),
+            pytest.raises(GCSStorageError, match="Failed to create GCS client"),
+        ):
+            _get_gcs_client()
 
     def test_auth_error_raises_storage_error(self) -> None:
         """Google auth errors are caught by the generic Exception handler."""
@@ -55,13 +60,18 @@ class TestGetGCSClient:
         mock_storage_mod.Client.side_effect = FakeAuthError("no credentials")
         mock_google_cloud = MagicMock()
         mock_google_cloud.storage = mock_storage_mod
-        with patch.dict("sys.modules", {
-            "google": MagicMock(),
-            "google.cloud": mock_google_cloud,
-            "google.cloud.storage": mock_storage_mod,
-        }):
-            with pytest.raises(GCSStorageError, match="credentials not configured"):
-                _get_gcs_client()
+        with (
+            patch.dict(
+                "sys.modules",
+                {
+                    "google": MagicMock(),
+                    "google.cloud": mock_google_cloud,
+                    "google.cloud.storage": mock_storage_mod,
+                },
+            ),
+            pytest.raises(GCSStorageError, match="credentials not configured"),
+        ):
+            _get_gcs_client()
 
 
 # =========================================================================
@@ -73,9 +83,11 @@ class TestGCSStorageInit:
     """Tests for GCSStorage initialization."""
 
     def test_raises_without_bucket(self) -> None:
-        with patch.dict("os.environ", {}, clear=True):
-            with pytest.raises(GCSStorageError, match="bucket not specified"):
-                GCSStorage(bucket_name=None)
+        with (
+            patch.dict("os.environ", {}, clear=True),
+            pytest.raises(GCSStorageError, match="bucket not specified"),
+        ):
+            GCSStorage(bucket_name=None)
 
     def test_uses_env_variable(self) -> None:
         with patch.dict("os.environ", {"GCS_BUCKET": "test-bucket"}):
@@ -481,8 +493,10 @@ class TestModuleFunctions:
 
     def test_get_gcs_storage_returns_none_on_error(self) -> None:
         get_gcs_storage.cache_clear()
-        with patch.dict("os.environ", {"GCS_BUCKET": "test-bucket"}, clear=False):
-            with patch("src.data.storage.GCSStorage.__init__", side_effect=GCSStorageError("fail")):
-                result = get_gcs_storage()
-                assert result is None
+        with (
+            patch.dict("os.environ", {"GCS_BUCKET": "test-bucket"}, clear=False),
+            patch("src.data.storage.GCSStorage.__init__", side_effect=GCSStorageError("fail")),
+        ):
+            result = get_gcs_storage()
+            assert result is None
         get_gcs_storage.cache_clear()

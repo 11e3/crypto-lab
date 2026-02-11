@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -16,7 +15,6 @@ from src.backtester.wfa.wfa_backtest import (
     _simulate_positions,
     simple_backtest,
 )
-
 
 # =========================================================================
 # _calculate_win_rate
@@ -84,19 +82,23 @@ class TestSimulatePositions:
         assert equity[0] == 10000.0
 
     def test_single_long_trade(self) -> None:
-        df = pd.DataFrame({
-            "close": [100.0, 105.0, 110.0],
-            "signal": [1, 0, -1],
-        })
+        df = pd.DataFrame(
+            {
+                "close": [100.0, 105.0, 110.0],
+                "signal": [1, 0, -1],
+            }
+        )
         trades, equity = _simulate_positions(df, 10000.0)
         # Entry at 100, exit at 110 with reversed signal
         assert len(trades) >= 1
 
     def test_open_position_closed_at_end(self) -> None:
-        df = pd.DataFrame({
-            "close": [100.0, 105.0, 110.0],
-            "signal": [1, 0, 0],
-        })
+        df = pd.DataFrame(
+            {
+                "close": [100.0, 105.0, 110.0],
+                "signal": [1, 0, 0],
+            }
+        )
         trades, equity = _simulate_positions(df, 10000.0)
         # Position should be closed at last bar
         assert len(trades) == 1
@@ -137,13 +139,15 @@ class TestSimpleBacktest:
 
     def test_with_mock_strategy(self) -> None:
         """Test simple_backtest with a mock strategy."""
-        data = pd.DataFrame({
-            "open": [100.0, 101.0, 102.0, 103.0],
-            "high": [105.0, 106.0, 107.0, 108.0],
-            "low": [95.0, 96.0, 97.0, 98.0],
-            "close": [101.0, 102.0, 103.0, 104.0],
-            "volume": [1000, 1100, 1200, 1300],
-        })
+        data = pd.DataFrame(
+            {
+                "open": [100.0, 101.0, 102.0, 103.0],
+                "high": [105.0, 106.0, 107.0, 108.0],
+                "low": [95.0, 96.0, 97.0, 98.0],
+                "close": [101.0, 102.0, 103.0, 104.0],
+                "volume": [1000, 1100, 1200, 1300],
+            }
+        )
 
         # Create mock strategy that adds signals
         strategy = MagicMock()
@@ -159,13 +163,15 @@ class TestSimpleBacktest:
 
     def test_no_signal_column(self) -> None:
         """Returns empty result when strategy produces no signals."""
-        data = pd.DataFrame({
-            "open": [100.0],
-            "high": [105.0],
-            "low": [95.0],
-            "close": [101.0],
-            "volume": [1000],
-        })
+        data = pd.DataFrame(
+            {
+                "open": [100.0],
+                "high": [105.0],
+                "low": [95.0],
+                "close": [101.0],
+                "volume": [1000],
+            }
+        )
 
         strategy = MagicMock()
         strategy.calculate_indicators.return_value = data.copy()

@@ -59,9 +59,7 @@ class TestPriceAboveSMACondition:
         cond = PriceAboveSMACondition()
         assert cond.evaluate(sample_ohlcv, empty_history, {}) is False
 
-    def test_custom_sma_key(
-        self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame
-    ) -> None:
+    def test_custom_sma_key(self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame) -> None:
         cond = PriceAboveSMACondition(sma_key="sma_20")
         assert cond.evaluate(sample_ohlcv, empty_history, {"sma_20": 100.0}) is True
         assert cond.evaluate(sample_ohlcv, empty_history, {"sma": 100.0}) is False
@@ -101,9 +99,7 @@ class TestPriceBelowSMACondition:
         cond = PriceBelowSMACondition()
         assert cond.evaluate(sample_ohlcv, empty_history, {}) is False
 
-    def test_custom_sma_key(
-        self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame
-    ) -> None:
+    def test_custom_sma_key(self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame) -> None:
         cond = PriceBelowSMACondition(sma_key="sma_50")
         assert cond.evaluate(sample_ohlcv, empty_history, {"sma_50": 110.0}) is True
 
@@ -138,16 +134,12 @@ class TestRSIOversoldCondition:
         cond = RSIOversoldCondition()
         assert cond.evaluate(sample_ohlcv, empty_history, {}) is False
 
-    def test_custom_threshold(
-        self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame
-    ) -> None:
+    def test_custom_threshold(self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame) -> None:
         cond = RSIOversoldCondition(oversold_threshold=40.0)
         assert cond.evaluate(sample_ohlcv, empty_history, {"rsi": 35.0}) is True
         assert cond.evaluate(sample_ohlcv, empty_history, {"rsi": 45.0}) is False
 
-    def test_custom_rsi_key(
-        self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame
-    ) -> None:
+    def test_custom_rsi_key(self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame) -> None:
         cond = RSIOversoldCondition(rsi_key="rsi_14")
         assert cond.evaluate(sample_ohlcv, empty_history, {"rsi_14": 25.0}) is True
         assert cond.evaluate(sample_ohlcv, empty_history, {"rsi": 25.0}) is False
@@ -183,16 +175,12 @@ class TestRSIOverboughtCondition:
         cond = RSIOverboughtCondition()
         assert cond.evaluate(sample_ohlcv, empty_history, {}) is False
 
-    def test_custom_threshold(
-        self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame
-    ) -> None:
+    def test_custom_threshold(self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame) -> None:
         cond = RSIOverboughtCondition(overbought_threshold=60.0)
         assert cond.evaluate(sample_ohlcv, empty_history, {"rsi": 65.0}) is True
         assert cond.evaluate(sample_ohlcv, empty_history, {"rsi": 55.0}) is False
 
-    def test_custom_rsi_key(
-        self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame
-    ) -> None:
+    def test_custom_rsi_key(self, sample_ohlcv: OHLCV, empty_history: pd.DataFrame) -> None:
         cond = RSIOverboughtCondition(rsi_key="rsi_7")
         assert cond.evaluate(sample_ohlcv, empty_history, {"rsi_7": 80.0}) is True
         assert cond.evaluate(sample_ohlcv, empty_history, {"rsi": 80.0}) is False

@@ -6,7 +6,7 @@ Trading-related settings (interval, fees, slippage, etc.) UI component.
 import streamlit as st
 
 from src.data.collector_fetch import Interval
-from src.web.config import get_web_settings
+from src.web.config import WebAppSettings, get_web_settings
 
 __all__ = ["render_trading_config", "TradingConfig"]
 
@@ -36,14 +36,12 @@ class TradingConfig:
         self.trailing_stop_pct = trailing_stop_pct
 
 
-def render_trading_config() -> TradingConfig:
-    """Render trading configuration UI.
+def _render_interval_selector() -> Interval:
+    """Render candle interval selectbox.
 
     Returns:
-        TradingConfig object
+        Selected Interval value.
     """
-    settings = get_web_settings()
-
     st.subheader("⏱️ Candle Interval")
     interval_options = {
         "1 min": "minute1",
@@ -66,10 +64,19 @@ def render_trading_config() -> TradingConfig:
         help="Candle interval to use for backtest",
     )
     interval: Interval = interval_options[interval_label]  # type: ignore
+    return interval
 
-    st.markdown("---")
 
-    # Trading costs
+def _render_trading_costs(settings: WebAppSettings) -> tuple[float, float]:
+    """Render trading costs inputs (fee rate, slippage rate).
+
+    Args:
+        settings: Web settings with default_fee_rate and
+            default_slippage_rate.
+
+    Returns:
+        Tuple of (fee_rate, slippage_rate) as decimals.
+    """
     st.subheader("💰 Trading Costs")
 
     col1, col2 = st.columns(2)
@@ -102,9 +109,18 @@ def render_trading_config() -> TradingConfig:
             / 100
         )
 
-    st.markdown("---")
+    return fee_rate, slippage_rate
 
-    # Portfolio settings
+
+def _render_portfolio_settings(settings: WebAppSettings) -> tuple[int, int]:
+    """Render portfolio settings inputs (initial capital, max slots).
+
+    Args:
+        settings: Web settings with default_initial_capital.
+
+    Returns:
+        Tuple of (initial_capital, max_slots).
+    """
     st.subheader("⚙️ Portfolio Settings")
 
     col1, col2 = st.columns(2)
@@ -133,9 +149,16 @@ def render_trading_config() -> TradingConfig:
             help="Maximum number of assets to hold simultaneously (auto-synced with selected assets)",
         )
 
-    st.markdown("---")
+    return initial_capital, max_slots
 
-    # Advanced settings
+
+def _render_advanced_settings() -> tuple[float | None, float | None, float | None]:
+    """Render advanced settings expander (stop loss, take profit, trailing stop).
+
+    Returns:
+        Tuple of (stop_loss_pct, take_profit_pct, trailing_stop_pct),
+        each None if not enabled, otherwise a decimal fraction.
+    """
     with st.expander("🔧 Advanced Settings (Optional)"):
         enable_stop_loss = st.checkbox("Enable Stop Loss", value=False)
         stop_loss_pct = None
@@ -181,6 +204,31 @@ def render_trading_config() -> TradingConfig:
                 )
                 / 100
             )
+
+    return stop_loss_pct, take_profit_pct, trailing_stop_pct
+
+
+def render_trading_config() -> TradingConfig:
+    """Render trading configuration UI.
+
+    Returns:
+        TradingConfig object
+    """
+    settings = get_web_settings()
+
+    interval = _render_interval_selector()
+
+    st.markdown("---")
+
+    fee_rate, slippage_rate = _render_trading_costs(settings)
+
+    st.markdown("---")
+
+    initial_capital, max_slots = _render_portfolio_settings(settings)
+
+    st.markdown("---")
+
+    stop_loss_pct, take_profit_pct, trailing_stop_pct = _render_advanced_settings()
 
     return TradingConfig(
         interval=interval,

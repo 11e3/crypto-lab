@@ -12,14 +12,9 @@ import pandas as pd
 import pytest
 
 from src.utils.indicators_vbo import (
-    _atr_local,
-    _noise_ratio_local,
-    _sma_local,
     add_improved_indicators,
-    add_vbo_indicators,
-    calculate_natr,
-    calculate_volatility_regime,
     calculate_adaptive_noise,
+    calculate_volatility_regime,
 )
 from src.utils.indicators_vbo_adaptive import (
     calculate_adaptive_k_value,
@@ -38,13 +33,15 @@ def ohlcv_df() -> pd.DataFrame:
     open_ = close + np.random.randn(n) * 0.1
     volume = np.random.randint(100, 10000, size=n).astype(float)
 
-    return pd.DataFrame({
-        "open": open_,
-        "high": high,
-        "low": low,
-        "close": close,
-        "volume": volume,
-    })
+    return pd.DataFrame(
+        {
+            "open": open_,
+            "high": high,
+            "low": low,
+            "close": close,
+            "volume": volume,
+        }
+    )
 
 
 # =========================================================================
@@ -56,9 +53,7 @@ class TestCalculateVolatilityRegime:
     """Tests for calculate_volatility_regime."""
 
     def test_returns_series_of_regimes(self, ohlcv_df: pd.DataFrame) -> None:
-        regime = calculate_volatility_regime(
-            ohlcv_df["high"], ohlcv_df["low"], ohlcv_df["close"]
-        )
+        regime = calculate_volatility_regime(ohlcv_df["high"], ohlcv_df["low"], ohlcv_df["close"])
         assert isinstance(regime, pd.Series)
         assert len(regime) == len(ohlcv_df)
         # Regime values should be 0, 1, or 2
@@ -110,16 +105,12 @@ class TestCalculateNoiseRatio:
     """Tests for calculate_noise_ratio."""
 
     def test_returns_series(self, ohlcv_df: pd.DataFrame) -> None:
-        ratio = calculate_noise_ratio(
-            ohlcv_df["high"], ohlcv_df["low"], ohlcv_df["close"]
-        )
+        ratio = calculate_noise_ratio(ohlcv_df["high"], ohlcv_df["low"], ohlcv_df["close"])
         assert isinstance(ratio, pd.Series)
         assert len(ratio) == len(ohlcv_df)
 
     def test_ratio_is_positive(self, ohlcv_df: pd.DataFrame) -> None:
-        ratio = calculate_noise_ratio(
-            ohlcv_df["high"], ohlcv_df["low"], ohlcv_df["close"]
-        )
+        ratio = calculate_noise_ratio(ohlcv_df["high"], ohlcv_df["low"], ohlcv_df["close"])
         valid = ratio.dropna()
         assert (valid >= 0).all()
 
@@ -133,9 +124,7 @@ class TestCalculateAdaptiveKValue:
     """Tests for calculate_adaptive_k_value."""
 
     def test_returns_series(self, ohlcv_df: pd.DataFrame) -> None:
-        k = calculate_adaptive_k_value(
-            ohlcv_df["high"], ohlcv_df["low"], ohlcv_df["close"]
-        )
+        k = calculate_adaptive_k_value(ohlcv_df["high"], ohlcv_df["low"], ohlcv_df["close"])
         assert isinstance(k, pd.Series)
         assert len(k) == len(ohlcv_df)
 
@@ -172,9 +161,13 @@ class TestAddImprovedIndicators:
     def test_adds_expected_columns(self, ohlcv_df: pd.DataFrame) -> None:
         result = add_improved_indicators(ohlcv_df)
         expected_cols = [
-            "atr", "natr", "volatility_regime",
-            "short_noise_adaptive", "long_noise_adaptive",
-            "noise_ratio", "k_value_adaptive",
+            "atr",
+            "natr",
+            "volatility_regime",
+            "short_noise_adaptive",
+            "long_noise_adaptive",
+            "noise_ratio",
+            "k_value_adaptive",
         ]
         for col in expected_cols:
             assert col in result.columns, f"Missing column: {col}"

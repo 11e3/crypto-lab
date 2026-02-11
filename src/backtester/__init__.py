@@ -30,119 +30,54 @@ __all__ = [
     "run_walk_forward_analysis",
 ]
 
+import importlib
 from typing import Any
+
+_LAZY_IMPORTS: dict[str, tuple[str, str]] = {
+    # Models
+    "BacktestConfig": ("src.backtester.models", "BacktestConfig"),
+    "BacktestResult": ("src.backtester.models", "BacktestResult"),
+    "Trade": ("src.backtester.models", "Trade"),
+    # Monte Carlo
+    "MonteCarloResult": ("src.backtester.analysis.monte_carlo", "MonteCarloResult"),
+    "MonteCarloSimulator": ("src.backtester.analysis.monte_carlo", "MonteCarloSimulator"),
+    "run_monte_carlo": ("src.backtester.analysis.monte_carlo", "run_monte_carlo"),
+    # Engine
+    "BacktestEngine": ("src.backtester.engine", "BacktestEngine"),
+    "EventDrivenBacktestEngine": ("src.backtester.engine", "EventDrivenBacktestEngine"),
+    "VectorizedBacktestEngine": ("src.backtester.engine", "VectorizedBacktestEngine"),
+    "run_backtest": ("src.backtester.engine", "run_backtest"),
+    # Optimization
+    "OptimizationResult": ("src.backtester.optimization", "OptimizationResult"),
+    "ParameterOptimizer": ("src.backtester.optimization", "ParameterOptimizer"),
+    "optimize_strategy_parameters": (
+        "src.backtester.optimization",
+        "optimize_strategy_parameters",
+    ),
+    # Parallel
+    "ParallelBacktestRunner": ("src.backtester.parallel", "ParallelBacktestRunner"),
+    "ParallelBacktestTask": ("src.backtester.parallel", "ParallelBacktestTask"),
+    "compare_strategies": ("src.backtester.parallel", "compare_strategies"),
+    "optimize_parameters": ("src.backtester.parallel", "optimize_parameters"),
+    # Report
+    "BacktestReport": ("src.backtester.report_pkg.report", "BacktestReport"),
+    "PerformanceMetrics": ("src.backtester.report_pkg.report", "PerformanceMetrics"),
+    "generate_report": ("src.backtester.report_pkg.report", "generate_report"),
+    # Walk Forward Analysis
+    "WalkForwardAnalyzer": ("src.backtester.wfa.walk_forward", "WalkForwardAnalyzer"),
+    "WalkForwardPeriod": ("src.backtester.wfa.walk_forward", "WalkForwardPeriod"),
+    "WalkForwardResult": ("src.backtester.wfa.walk_forward", "WalkForwardResult"),
+    "run_walk_forward_analysis": (
+        "src.backtester.wfa.walk_forward",
+        "run_walk_forward_analysis",
+    ),
+}
 
 
 def __getattr__(name: str) -> Any:
     """Lazy import to avoid loading pyupbit unless needed."""
-    # Models
-    if name == "BacktestConfig":
-        from src.backtester.models import BacktestConfig
-
-        return BacktestConfig
-    elif name == "BacktestResult":
-        from src.backtester.models import BacktestResult
-
-        return BacktestResult
-    elif name == "Trade":
-        from src.backtester.models import Trade
-
-        return Trade
-
-    # Monte Carlo
-    elif name == "MonteCarloResult":
-        from src.backtester.analysis.monte_carlo import MonteCarloResult
-
-        return MonteCarloResult
-    elif name == "MonteCarloSimulator":
-        from src.backtester.analysis.monte_carlo import MonteCarloSimulator
-
-        return MonteCarloSimulator
-    elif name == "run_monte_carlo":
-        from src.backtester.analysis.monte_carlo import run_monte_carlo
-
-        return run_monte_carlo
-
-    # Engine
-    elif name == "BacktestEngine":
-        from src.backtester.engine import BacktestEngine
-
-        return BacktestEngine
-    elif name == "EventDrivenBacktestEngine":
-        from src.backtester.engine import EventDrivenBacktestEngine
-
-        return EventDrivenBacktestEngine
-    elif name == "VectorizedBacktestEngine":
-        from src.backtester.engine import VectorizedBacktestEngine
-
-        return VectorizedBacktestEngine
-    elif name == "run_backtest":
-        from src.backtester.engine import run_backtest
-
-        return run_backtest
-
-    # Optimization
-    elif name == "OptimizationResult":
-        from src.backtester.optimization import OptimizationResult
-
-        return OptimizationResult
-    elif name == "ParameterOptimizer":
-        from src.backtester.optimization import ParameterOptimizer
-
-        return ParameterOptimizer
-    elif name == "optimize_strategy_parameters":
-        from src.backtester.optimization import optimize_strategy_parameters
-
-        return optimize_strategy_parameters
-
-    # Parallel
-    elif name == "ParallelBacktestRunner":
-        from src.backtester.parallel import ParallelBacktestRunner
-
-        return ParallelBacktestRunner
-    elif name == "ParallelBacktestTask":
-        from src.backtester.parallel import ParallelBacktestTask
-
-        return ParallelBacktestTask
-    elif name == "compare_strategies":
-        from src.backtester.parallel import compare_strategies
-
-        return compare_strategies
-    elif name == "optimize_parameters":
-        from src.backtester.parallel import optimize_parameters
-
-        return optimize_parameters
-
-    # Report
-    elif name == "BacktestReport":
-        from src.backtester.report_pkg.report import BacktestReport
-
-        return BacktestReport
-    elif name == "PerformanceMetrics":
-        from src.backtester.report_pkg.report import PerformanceMetrics
-
-        return PerformanceMetrics
-    elif name == "generate_report":
-        from src.backtester.report_pkg.report import generate_report
-
-        return generate_report
-
-    # Walk Forward Analysis
-    elif name == "WalkForwardAnalyzer":
-        from src.backtester.wfa.walk_forward import WalkForwardAnalyzer
-
-        return WalkForwardAnalyzer
-    elif name == "WalkForwardPeriod":
-        from src.backtester.wfa.walk_forward import WalkForwardPeriod
-
-        return WalkForwardPeriod
-    elif name == "WalkForwardResult":
-        from src.backtester.wfa.walk_forward import WalkForwardResult
-
-        return WalkForwardResult
-    elif name == "run_walk_forward_analysis":
-        from src.backtester.wfa.walk_forward import run_walk_forward_analysis
-
-        return run_walk_forward_analysis
-
+    if name in _LAZY_IMPORTS:
+        module_path, attr_name = _LAZY_IMPORTS[name]
+        module = importlib.import_module(module_path)
+        return getattr(module, attr_name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -46,6 +46,120 @@ def render_analysis_page() -> None:
         _render_walk_forward()
 
 
+def _render_mc_strategy_settings(strategy_names: list[str]) -> tuple[str, str, float, float, int]:
+    """Render Monte Carlo strategy and trading settings (left column).
+
+    Must be called from within a Streamlit column context.
+
+    Returns:
+        Tuple of (selected_strategy, strategy_type, initial_capital, fee_rate, max_slots).
+    """
+    st.markdown("##### 📈 Strategy")
+
+    selected_strategy = st.selectbox(
+        "Strategy",
+        options=strategy_names if strategy_names else ["VBOV1"],
+        key="mc_strategy_name",
+        help="Select a registered strategy",
+    )
+    strategy_type = map_strategy_to_internal_type(selected_strategy)
+
+    st.markdown("##### 💰 Trading Settings")
+    initial_capital = st.number_input(
+        "Initial Capital",
+        min_value=0.1,
+        max_value=100.0,
+        value=1.0,
+        step=0.1,
+        key="mc_capital",
+    )
+    fee_rate = st.number_input(
+        "Fee Rate",
+        min_value=0.0,
+        max_value=0.01,
+        value=0.0005,
+        step=0.0001,
+        format="%.4f",
+        key="mc_fee",
+    )
+    max_slots = st.slider("Max Slots", min_value=1, max_value=10, value=4, key="mc_slots")
+
+    return selected_strategy, strategy_type, initial_capital, fee_rate, max_slots
+
+
+def _render_mc_simulation_settings() -> tuple[int, str, int]:
+    """Render Monte Carlo simulation settings (right column).
+
+    Must be called from within a Streamlit column context.
+
+    Returns:
+        Tuple of (n_simulations, method, seed).
+    """
+    st.markdown("##### 🎯 Simulation")
+    n_simulations = st.slider(
+        "Number of Simulations",
+        min_value=100,
+        max_value=5000,
+        value=1000,
+        step=100,
+        key="mc_n_sim",
+    )
+
+    method = st.radio(
+        "Simulation Method",
+        options=["bootstrap", "parametric"],
+        format_func=lambda x: (
+            "Bootstrap (Resampling)" if x == "bootstrap" else "Parametric (Normal Distribution)"
+        ),
+        horizontal=True,
+        key="mc_method",
+    )
+
+    seed = st.number_input(
+        "Random Seed (Optional)",
+        min_value=0,
+        max_value=99999,
+        value=0,
+        help="0 for random, otherwise use specific seed for reproducibility",
+        key="mc_seed",
+    )
+
+    return n_simulations, method, seed
+
+
+def _render_mc_data_settings() -> tuple[str, list[str]]:
+    """Render Monte Carlo data settings row (interval and tickers).
+
+    Contains its own ``st.columns()`` call for the two-column layout.
+
+    Returns:
+        Tuple of (interval, selected_tickers).
+    """
+    st.markdown("---")
+    st.markdown("##### 📊 Data Settings")
+    col3, col4 = st.columns(2)
+
+    with col3:
+        interval = st.selectbox(
+            "Interval",
+            options=["minute240", "day", "week"],
+            format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
+            index=1,
+            key="mc_interval",
+        )
+
+    with col4:
+        available, _ = validate_data_availability(DEFAULT_TICKERS, cast(Interval, interval))
+        selected_tickers = st.multiselect(
+            "Tickers",
+            options=available if available else DEFAULT_TICKERS,
+            default=available[:2] if available else [],
+            key="mc_tickers",
+        )
+
+    return interval, selected_tickers
+
+
 def _render_monte_carlo() -> None:
     """Monte Carlo simulation page."""
     st.subheader("🎲 Monte Carlo Simulation")
@@ -64,90 +178,15 @@ def _render_monte_carlo() -> None:
         col1, col2 = st.columns(2)
 
         with col1:
-            st.markdown("##### 📈 Strategy")
-
-            selected_strategy = st.selectbox(
-                "Strategy",
-                options=strategy_names if strategy_names else ["VBOV1"],
-                key="mc_strategy_name",
-                help="Select a registered strategy",
+            selected_strategy, strategy_type, initial_capital, fee_rate, max_slots = (
+                _render_mc_strategy_settings(strategy_names)
             )
-            strategy_type = map_strategy_to_internal_type(selected_strategy)
-
-            st.markdown("##### 💰 Trading Settings")
-            initial_capital = st.number_input(
-                "Initial Capital",
-                min_value=0.1,
-                max_value=100.0,
-                value=1.0,
-                step=0.1,
-                key="mc_capital",
-            )
-            fee_rate = st.number_input(
-                "Fee Rate",
-                min_value=0.0,
-                max_value=0.01,
-                value=0.0005,
-                step=0.0001,
-                format="%.4f",
-                key="mc_fee",
-            )
-            max_slots = st.slider("Max Slots", min_value=1, max_value=10, value=4, key="mc_slots")
 
         with col2:
-            st.markdown("##### 🎯 Simulation")
-            n_simulations = st.slider(
-                "Number of Simulations",
-                min_value=100,
-                max_value=5000,
-                value=1000,
-                step=100,
-                key="mc_n_sim",
-            )
-
-            method = st.radio(
-                "Simulation Method",
-                options=["bootstrap", "parametric"],
-                format_func=lambda x: (
-                    "Bootstrap (Resampling)"
-                    if x == "bootstrap"
-                    else "Parametric (Normal Distribution)"
-                ),
-                horizontal=True,
-                key="mc_method",
-            )
-
-            seed = st.number_input(
-                "Random Seed (Optional)",
-                min_value=0,
-                max_value=99999,
-                value=0,
-                help="0 for random, otherwise use specific seed for reproducibility",
-                key="mc_seed",
-            )
+            n_simulations, method, seed = _render_mc_simulation_settings()
 
         # Second row: Data Settings
-        st.markdown("---")
-        st.markdown("##### 📊 Data Settings")
-        col3, col4 = st.columns(2)
-
-        with col3:
-            interval = st.selectbox(
-                "Interval",
-                options=["minute240", "day", "week"],
-                format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
-                index=1,
-                key="mc_interval",
-            )
-
-        with col4:
-            available, _ = validate_data_availability(DEFAULT_TICKERS, cast(Interval, interval))
-            selected_tickers = st.multiselect(
-                "Tickers",
-                options=available if available else DEFAULT_TICKERS,
-                default=available[:2] if available else [],
-                key="mc_tickers",
-            )
+        interval, selected_tickers = _render_mc_data_settings()
 
     # Run button
     run_button = st.button(
@@ -334,6 +373,141 @@ def _display_monte_carlo_results() -> None:
     st.plotly_chart(fig, use_container_width=True)
 
 
+def _render_wf_strategy_period_settings(
+    strategy_names: list[str],
+) -> tuple[str, str, int, int, int]:
+    """Render Walk-Forward strategy and period settings (left column).
+
+    Must be called from within a Streamlit column context.
+
+    Returns:
+        Tuple of (selected_strategy, strategy_type, optimization_days, test_days, step_days).
+    """
+    st.markdown("##### 📈 Strategy")
+
+    selected_strategy = st.selectbox(
+        "Strategy",
+        options=strategy_names if strategy_names else ["VBOV1"],
+        key="wf_strategy_name",
+        help="Select a registered strategy",
+    )
+    strategy_type = map_strategy_to_internal_type(selected_strategy)
+
+    st.markdown("##### 📅 Period Settings")
+    optimization_days = st.slider(
+        "Optimization Period (days)",
+        min_value=90,
+        max_value=730,
+        value=365,
+        step=30,
+        key="wf_opt_days",
+    )
+    test_days = st.slider(
+        "Test Period (days)",
+        min_value=30,
+        max_value=180,
+        value=90,
+        step=30,
+        key="wf_test_days",
+    )
+    step_days = st.slider(
+        "Step Size (days)",
+        min_value=30,
+        max_value=180,
+        value=90,
+        step=30,
+        key="wf_step_days",
+    )
+
+    return selected_strategy, strategy_type, optimization_days, test_days, step_days
+
+
+def _render_wf_metric_param_settings() -> tuple[str, str, str, int]:
+    """Render Walk-Forward optimization metric and parameter settings (right column).
+
+    Must be called from within a Streamlit column context.
+
+    Returns:
+        Tuple of (metric, sma_range, trend_range, workers).
+    """
+    st.markdown("##### 📊 Optimization Metric")
+    metric = st.selectbox(
+        "Optimization Target",
+        options=[m[0] for m in OPTIMIZATION_METRICS],
+        format_func=lambda x: next(name for code, name in OPTIMIZATION_METRICS if code == x),
+        key="wf_metric",
+    )
+
+    st.markdown("##### 📐 Parameter Range")
+    sma_range = st.text_input(
+        "SMA Period",
+        value="4,5,6",
+        key="wf_sma",
+    )
+    trend_range = st.text_input(
+        "Trend SMA Period",
+        value="8,10,12",
+        key="wf_trend",
+    )
+
+    st.markdown("##### ⚙️ Parallel Processing")
+    workers = st.slider("Number of Workers", min_value=1, max_value=8, value=4, key="wf_workers")
+
+    return metric, sma_range, trend_range, workers
+
+
+def _render_wf_trading_data_settings() -> tuple[float, float, int, str, list[str]]:
+    """Render Walk-Forward trading and data settings row.
+
+    Contains its own ``st.columns()`` call for the two-column layout.
+
+    Returns:
+        Tuple of (initial_capital, fee_rate, max_slots, interval, selected_tickers).
+    """
+    st.markdown("---")
+    col3, col4 = st.columns(2)
+
+    with col3:
+        st.markdown("##### 💰 Trading Settings")
+        initial_capital = st.number_input(
+            "Initial Capital",
+            min_value=0.1,
+            max_value=100.0,
+            value=1.0,
+            step=0.1,
+            key="wf_capital",
+        )
+        fee_rate = st.number_input(
+            "Fee Rate",
+            min_value=0.0,
+            max_value=0.01,
+            value=0.0005,
+            format="%.4f",
+            key="wf_fee",
+        )
+        max_slots = st.slider("Max Slots", min_value=1, max_value=10, value=4, key="wf_slots")
+
+    with col4:
+        st.markdown("##### 📊 Data Settings")
+        interval = st.selectbox(
+            "Interval",
+            options=["minute240", "day", "week"],
+            format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
+            index=1,
+            key="wf_interval",
+        )
+
+        available, _ = validate_data_availability(DEFAULT_TICKERS, cast(Interval, interval))
+        selected_tickers = st.multiselect(
+            "Tickers",
+            options=available if available else DEFAULT_TICKERS,
+            default=available[:2] if available else [],
+            key="wf_tickers",
+        )
+
+    return initial_capital, fee_rate, max_slots, interval, selected_tickers
+
+
 def _render_walk_forward() -> None:
     """Walk-Forward analysis page."""
     st.subheader("📈 Walk-Forward Analysis")
@@ -352,111 +526,17 @@ def _render_walk_forward() -> None:
         col1, col2 = st.columns(2)
 
         with col1:
-            st.markdown("##### 📈 Strategy")
-
-            selected_strategy = st.selectbox(
-                "Strategy",
-                options=strategy_names if strategy_names else ["VBOV1"],
-                key="wf_strategy_name",
-                help="Select a registered strategy",
-            )
-            strategy_type = map_strategy_to_internal_type(selected_strategy)
-
-            st.markdown("##### 📅 Period Settings")
-            optimization_days = st.slider(
-                "Optimization Period (days)",
-                min_value=90,
-                max_value=730,
-                value=365,
-                step=30,
-                key="wf_opt_days",
-            )
-            test_days = st.slider(
-                "Test Period (days)",
-                min_value=30,
-                max_value=180,
-                value=90,
-                step=30,
-                key="wf_test_days",
-            )
-            step_days = st.slider(
-                "Step Size (days)",
-                min_value=30,
-                max_value=180,
-                value=90,
-                step=30,
-                key="wf_step_days",
+            selected_strategy, strategy_type, optimization_days, test_days, step_days = (
+                _render_wf_strategy_period_settings(strategy_names)
             )
 
         with col2:
-            st.markdown("##### 📊 Optimization Metric")
-            metric = st.selectbox(
-                "Optimization Target",
-                options=[m[0] for m in OPTIMIZATION_METRICS],
-                format_func=lambda x: next(
-                    name for code, name in OPTIMIZATION_METRICS if code == x
-                ),
-                key="wf_metric",
-            )
-
-            st.markdown("##### 📐 Parameter Range")
-            sma_range = st.text_input(
-                "SMA Period",
-                value="4,5,6",
-                key="wf_sma",
-            )
-            trend_range = st.text_input(
-                "Trend SMA Period",
-                value="8,10,12",
-                key="wf_trend",
-            )
-
-            st.markdown("##### ⚙️ Parallel Processing")
-            workers = st.slider(
-                "Number of Workers", min_value=1, max_value=8, value=4, key="wf_workers"
-            )
+            metric, sma_range, trend_range, workers = _render_wf_metric_param_settings()
 
         # Second row: Trading and Data Settings
-        st.markdown("---")
-        col3, col4 = st.columns(2)
-
-        with col3:
-            st.markdown("##### 💰 Trading Settings")
-            initial_capital = st.number_input(
-                "Initial Capital",
-                min_value=0.1,
-                max_value=100.0,
-                value=1.0,
-                step=0.1,
-                key="wf_capital",
-            )
-            fee_rate = st.number_input(
-                "Fee Rate",
-                min_value=0.0,
-                max_value=0.01,
-                value=0.0005,
-                format="%.4f",
-                key="wf_fee",
-            )
-            max_slots = st.slider("Max Slots", min_value=1, max_value=10, value=4, key="wf_slots")
-
-        with col4:
-            st.markdown("##### 📊 Data Settings")
-            interval = st.selectbox(
-                "Interval",
-                options=["minute240", "day", "week"],
-                format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
-                index=1,
-                key="wf_interval",
-            )
-
-            available, _ = validate_data_availability(DEFAULT_TICKERS, cast(Interval, interval))
-            selected_tickers = st.multiselect(
-                "Tickers",
-                options=available if available else DEFAULT_TICKERS,
-                default=available[:2] if available else [],
-                key="wf_tickers",
-            )
+        initial_capital, fee_rate, max_slots, interval, selected_tickers = (
+            _render_wf_trading_data_settings()
+        )
 
     # Run button
     run_button = st.button(

@@ -3,7 +3,9 @@
 Strategy parameter optimization page.
 """
 
-from typing import Any, cast
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, cast
 
 import streamlit as st
 
@@ -21,9 +23,206 @@ from src.web.services.optimization_service import (
 from src.web.services.strategy_registry import is_vbo_strategy
 from src.web.services.vbo_backtest_runner import get_available_symbols
 
+if TYPE_CHECKING:
+    from src.web.services.parameter_models import StrategyInfo
+    from src.web.services.strategy_registry import StrategyRegistry
+
 logger = get_logger(__name__)
 
 __all__ = ["render_optimization_page"]
+
+
+def _render_strategy_method_settings(
+    registry: StrategyRegistry,
+    strategies: list[StrategyInfo],
+) -> tuple[StrategyInfo | None, bool, str, int]:
+    """Render strategy selection and optimization method settings.
+
+    Returns:
+        Tuple of (selected_strategy, is_vbo, method, n_iter).
+    """
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("📈 Strategy")
+        strategy_names = [s.name for s in strategies]
+
+        # Format strategy names to show engine type
+        def format_strategy_name(name: str) -> str:
+            if is_vbo_strategy(name):
+                return f"{name} [VBO]"
+            return name
+
+        selected_strategy_name = st.selectbox(
+            "Strategy",
+            options=strategy_names,
+            format_func=format_strategy_name,
+            help="Select strategy to optimize. [VBO] strategies use vectorized backtest engine.",
+        )
+
+        # Get selected strategy info
+        selected_strategy = registry.get_strategy(selected_strategy_name)
+        is_vbo = is_vbo_strategy(selected_strategy_name)
+
+        if selected_strategy and selected_strategy.description:
+            st.caption(f"ℹ️ {selected_strategy.description}")
+
+    with col2:
+        st.subheader("⚙️ Optimization Method")
+        method = st.radio(
+            "Search Method",
+            options=["grid", "random"],
+            format_func=lambda x: (
+                "Grid Search (Full exploration)"
+                if x == "grid"
+                else "Random Search (Random sampling)"
+            ),
+            horizontal=True,
+        )
+
+        if method == "random":
+            n_iter = st.slider(
+                "Number of Iterations", min_value=10, max_value=500, value=100, step=10
+            )
+        else:
+            n_iter = 100  # Not used in grid search
+
+    return selected_strategy, is_vbo, method, n_iter
+
+
+def _render_metric_trading_settings() -> tuple[str, float, float, int]:
+    """Render optimization metric and trading settings.
+
+    Returns:
+        Tuple of (metric, initial_capital, fee_rate, max_slots).
+    """
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("📊 Optimization Metric")
+        metric = st.selectbox(
+            "Optimization Target",
+            options=[m[0] for m in OPTIMIZATION_METRICS],
+            format_func=lambda x: next(name for code, name in OPTIMIZATION_METRICS if code == x),
+            index=0,
+        )
+
+    with col2:
+        st.subheader("💰 Trading Settings")
+        initial_capital = st.number_input(
+            "Initial Capital",
+            min_value=0.1,
+            max_value=100.0,
+            value=1.0,
+            step=0.1,
+            format="%.1f",
+        )
+        fee_rate = st.number_input(
+            "Fee Rate",
+            min_value=0.0,
+            max_value=0.01,
+            value=0.0005,
+            step=0.0001,
+            format="%.4f",
+        )
+        max_slots = st.slider("Maximum Slots", min_value=1, max_value=10, value=4)
+
+    return metric, float(initial_capital), float(fee_rate), int(max_slots)
+
+
+def _render_param_ranges(selected_strategy: StrategyInfo | None) -> dict[str, str]:
+    """Render dynamic parameter range inputs based on the selected strategy.
+
+    Returns:
+        Dictionary mapping parameter names to user-entered range strings.
+    """
+    st.subheader("📐 Parameter Ranges")
+
+    param_ranges: dict[str, str] = {}
+    if selected_strategy and selected_strategy.parameters:
+        # Create dynamic input fields for each parameter
+        params_list = list(selected_strategy.parameters.items())
+        n_params = len(params_list)
+
+        if n_params > 0:
+            # Create two columns for parameters
+            col1, col2 = st.columns(2)
+            for i, (param_name, spec) in enumerate(params_list):
+                target_col = col1 if i % 2 == 0 else col2
+                with target_col:
+                    label = param_name.replace("_", " ").title()
+                    default_values = get_default_param_range(spec)
+                    param_ranges[param_name] = st.text_input(
+                        label,
+                        value=default_values,
+                        help=f"{spec.description or param_name} - Enter comma-separated values",
+                        key=f"opt_param_{param_name}",
+                    )
+        else:
+            st.info("📌 This strategy has no configurable parameters.")
+    else:
+        st.warning("⚠️ No strategy selected or no parameters available.")
+
+    return param_ranges
+
+
+def _render_data_settings(is_vbo: bool) -> tuple[str, list[str], int]:
+    """Render data interval, ticker/symbol selection, and worker settings.
+
+    Returns:
+        Tuple of (interval, selected_tickers, workers).
+    """
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        interval = st.selectbox(
+            "Data Interval",
+            options=["minute240", "day", "week"],
+            format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
+            index=1,
+        )
+
+    with col2:
+        st.subheader("📈 Ticker/Symbol Selection")
+
+        if is_vbo:
+            # VBO strategies use symbol names without KRW- prefix
+            vbo_interval = "day" if interval == "day" else "day"  # VBO only supports day
+            available_symbols = get_available_symbols(vbo_interval)
+
+            if not available_symbols:
+                st.warning("⚠️ No data available for VBO backtest.")
+
+            selected_symbols = st.multiselect(
+                "Symbols",
+                options=available_symbols,
+                default=available_symbols[:4] if available_symbols else [],
+                help="Select symbols for VBO backtest (without KRW- prefix)",
+            )
+            # Convert to tickers format for consistency
+            selected_tickers = [f"KRW-{s}" for s in selected_symbols]
+        else:
+            # Native strategies use full ticker names
+            available, missing = validate_data_availability(
+                DEFAULT_TICKERS, cast(Interval, interval)
+            )
+
+            selected_tickers = st.multiselect(
+                "Tickers",
+                options=available if available else DEFAULT_TICKERS,
+                default=available[:2] if available else [],
+            )
+
+    with col3:
+        workers = st.slider(
+            "Parallel Workers",
+            min_value=1,
+            max_value=8,
+            value=4,
+            help="Adjust according to your CPU cores",
+        )
+
+    return interval, selected_tickers, int(workers)
 
 
 def render_optimization_page() -> None:
@@ -48,170 +247,24 @@ def render_optimization_page() -> None:
     # ===== Configuration Section =====
     with st.expander("⚙️ Optimization Settings", expanded=True):
         # Row 1: Strategy and Method
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.subheader("📈 Strategy")
-            strategy_names = [s.name for s in strategies]
-
-            # Format strategy names to show engine type
-            def format_strategy_name(name: str) -> str:
-                if is_vbo_strategy(name):
-                    return f"{name} [VBO]"
-                return name
-
-            selected_strategy_name = st.selectbox(
-                "Strategy",
-                options=strategy_names,
-                format_func=format_strategy_name,
-                help="Select strategy to optimize. [VBO] strategies use vectorized backtest engine.",
-            )
-
-            # Get selected strategy info
-            selected_strategy = registry.get_strategy(selected_strategy_name)
-            is_vbo = is_vbo_strategy(selected_strategy_name)
-
-            if selected_strategy and selected_strategy.description:
-                st.caption(f"ℹ️ {selected_strategy.description}")
-
-        with col2:
-            st.subheader("⚙️ Optimization Method")
-            method = st.radio(
-                "Search Method",
-                options=["grid", "random"],
-                format_func=lambda x: (
-                    "Grid Search (Full exploration)"
-                    if x == "grid"
-                    else "Random Search (Random sampling)"
-                ),
-                horizontal=True,
-            )
-
-            if method == "random":
-                n_iter = st.slider(
-                    "Number of Iterations", min_value=10, max_value=500, value=100, step=10
-                )
-            else:
-                n_iter = 100  # Not used in grid search
+        selected_strategy, is_vbo, method, n_iter = _render_strategy_method_settings(
+            registry, strategies
+        )
 
         st.markdown("---")
 
         # Row 2: Metric and Trading Settings
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.subheader("📊 Optimization Metric")
-            metric = st.selectbox(
-                "Optimization Target",
-                options=[m[0] for m in OPTIMIZATION_METRICS],
-                format_func=lambda x: next(
-                    name for code, name in OPTIMIZATION_METRICS if code == x
-                ),
-                index=0,
-            )
-
-        with col2:
-            st.subheader("💰 Trading Settings")
-            initial_capital = st.number_input(
-                "Initial Capital",
-                min_value=0.1,
-                max_value=100.0,
-                value=1.0,
-                step=0.1,
-                format="%.1f",
-            )
-            fee_rate = st.number_input(
-                "Fee Rate",
-                min_value=0.0,
-                max_value=0.01,
-                value=0.0005,
-                step=0.0001,
-                format="%.4f",
-            )
-            max_slots = st.slider("Maximum Slots", min_value=1, max_value=10, value=4)
+        metric, initial_capital, fee_rate, max_slots = _render_metric_trading_settings()
 
         st.markdown("---")
 
         # Row 3: Parameter Ranges (dynamically generated from strategy)
-        st.subheader("📐 Parameter Ranges")
-
-        param_ranges: dict[str, str] = {}
-        if selected_strategy and selected_strategy.parameters:
-            # Create dynamic input fields for each parameter
-            params_list = list(selected_strategy.parameters.items())
-            n_params = len(params_list)
-
-            if n_params > 0:
-                # Create two columns for parameters
-                col1, col2 = st.columns(2)
-                for i, (param_name, spec) in enumerate(params_list):
-                    target_col = col1 if i % 2 == 0 else col2
-                    with target_col:
-                        label = param_name.replace("_", " ").title()
-                        default_values = get_default_param_range(spec)
-                        param_ranges[param_name] = st.text_input(
-                            label,
-                            value=default_values,
-                            help=f"{spec.description or param_name} - Enter comma-separated values",
-                            key=f"opt_param_{param_name}",
-                        )
-            else:
-                st.info("📌 This strategy has no configurable parameters.")
-        else:
-            st.warning("⚠️ No strategy selected or no parameters available.")
+        param_ranges = _render_param_ranges(selected_strategy)
 
         st.markdown("---")
 
         # Row 4: Data Settings
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            interval = st.selectbox(
-                "Data Interval",
-                options=["minute240", "day", "week"],
-                format_func=lambda x: INTERVAL_DISPLAY_MAP[x],
-                index=1,
-            )
-
-        with col2:
-            st.subheader("📈 Ticker/Symbol Selection")
-
-            if is_vbo:
-                # VBO strategies use symbol names without KRW- prefix
-                vbo_interval = "day" if interval == "day" else "day"  # VBO only supports day
-                available_symbols = get_available_symbols(vbo_interval)
-
-                if not available_symbols:
-                    st.warning("⚠️ No data available for VBO backtest.")
-
-                selected_symbols = st.multiselect(
-                    "Symbols",
-                    options=available_symbols,
-                    default=available_symbols[:4] if available_symbols else [],
-                    help="Select symbols for VBO backtest (without KRW- prefix)",
-                )
-                # Convert to tickers format for consistency
-                selected_tickers = [f"KRW-{s}" for s in selected_symbols]
-            else:
-                # Native strategies use full ticker names
-                available, missing = validate_data_availability(
-                    DEFAULT_TICKERS, cast(Interval, interval)
-                )
-
-                selected_tickers = st.multiselect(
-                    "Tickers",
-                    options=available if available else DEFAULT_TICKERS,
-                    default=available[:2] if available else [],
-                )
-
-        with col3:
-            workers = st.slider(
-                "Parallel Workers",
-                min_value=1,
-                max_value=8,
-                value=4,
-                help="Adjust according to your CPU cores",
-            )
+        interval, selected_tickers, workers = _render_data_settings(is_vbo)
 
         st.markdown("---")
 
@@ -224,6 +277,9 @@ def render_optimization_page() -> None:
         )
 
     # ===== Main Area =====
+
+    # Determine strategy name for downstream use
+    selected_strategy_name = selected_strategy.name if selected_strategy else ""
 
     # Validation
     if not selected_tickers:

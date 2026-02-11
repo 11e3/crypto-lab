@@ -6,9 +6,25 @@ Monthly returns heatmap chart.
 import numpy as np
 import pandas as pd
 import plotly.figure_factory as ff
+import plotly.graph_objects as go
 import streamlit as st
 
 __all__ = ["render_monthly_heatmap", "calculate_monthly_returns"]
+
+MONTH_NAMES = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+]
 
 
 def calculate_monthly_returns(
@@ -61,27 +77,17 @@ def calculate_monthly_returns(
     return result
 
 
-def render_monthly_heatmap(
-    dates: np.ndarray,
-    equity: np.ndarray,
-) -> None:
-    """Render monthly returns heatmap.
+def _prepare_heatmap_data(
+    monthly: pd.DataFrame,
+) -> tuple[list[list[float]], list[list[str]], list[str], float]:
+    """Pivot monthly returns and compute display data.
 
     Args:
-        dates: Date array
-        equity: Portfolio value array
+        monthly: DataFrame with year, month, return_pct columns.
+
+    Returns:
+        Tuple of (z_display, annotation_text, years, abs_max).
     """
-    if len(dates) == 0 or len(equity) == 0:
-        st.warning("📊 No data to display.")
-        return
-
-    # Calculate monthly returns
-    monthly = calculate_monthly_returns(dates, equity)
-
-    if monthly.empty:
-        st.warning("📊 No monthly data available.")
-        return
-
     # Create pivot table (rows: year, columns: month)
     pivot = monthly.pivot(index="year", columns="month", values="return_pct")
 
@@ -91,22 +97,6 @@ def render_monthly_heatmap(
         if month not in pivot.columns:
             pivot[month] = np.nan
     pivot = pivot[all_months]
-
-    # Month names
-    month_names = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-    ]
 
     # Prepare data
     z_data = pivot.values
@@ -127,9 +117,9 @@ def render_monthly_heatmap(
         abs_max = min(abs_max, max(p95 * 1.2, 5.0))
 
     # Build annotation text matrix (show value or empty for NaN)
-    annotation_text = []
+    annotation_text: list[list[str]] = []
     for i in range(num_years):
-        row = []
+        row: list[str] = []
         for j in range(12):
             val = z_data[i, j]
             row.append(f"{val:.1f}%" if not np.isnan(val) else "")
@@ -137,10 +127,14 @@ def render_monthly_heatmap(
 
     # Replace NaN with 0 for plotly (ff.create_annotated_heatmap can't handle None)
     # Empty months show as white (0% = center of diverging scale) with no annotation
-    z_display = np.nan_to_num(z_data, nan=0.0).tolist()
+    z_display: list[list[float]] = np.nan_to_num(z_data, nan=0.0).tolist()
 
-    # Color scale: red-white-green, normalized to [-abs_max, abs_max]
-    colorscale = [
+    return z_display, annotation_text, years, abs_max
+
+
+def _get_heatmap_colorscale() -> list[list[object]]:
+    """Return the red-white-green diverging colorscale."""
+    return [
         [0.0, "rgb(165, 0, 38)"],
         [0.25, "rgb(215, 48, 39)"],
         [0.4, "rgb(244, 109, 67)"],
@@ -150,22 +144,14 @@ def render_monthly_heatmap(
         [1.0, "rgb(0, 104, 55)"],
     ]
 
-    # Use annotated heatmap — handles single-row properly
-    fig = ff.create_annotated_heatmap(
-        z=z_display,
-        x=month_names,
-        y=years,
-        annotation_text=annotation_text,
-        colorscale=colorscale,
-        zmin=-abs_max,
-        zmax=abs_max,
-        showscale=True,
-        hovertemplate="<b>%{y} %{x}</b><br>Return: %{z:.2f}%<extra></extra>",
-        xgap=3,
-        ygap=3,
-    )
 
-    # Fix annotation font colors based on cell value
+def _fix_annotation_colors(fig: go.Figure, abs_max: float) -> None:
+    """Set annotation font colors to white on dark cells, black on light cells.
+
+    Args:
+        fig: Plotly figure whose layout.annotations will be mutated.
+        abs_max: Symmetric color range bound used to determine threshold.
+    """
     color_threshold = abs_max * 0.35
     for ann in fig.layout.annotations:
         text = ann.text
@@ -177,6 +163,45 @@ def render_monthly_heatmap(
             except ValueError:
                 ann.font.color = "black"
                 ann.font.size = 12
+
+
+def render_monthly_heatmap(
+    dates: np.ndarray,
+    equity: np.ndarray,
+) -> None:
+    """Render monthly returns heatmap.
+
+    Args:
+        dates: Date array
+        equity: Portfolio value array
+    """
+    if len(dates) == 0 or len(equity) == 0:
+        st.warning("📊 No data to display.")
+        return
+
+    monthly = calculate_monthly_returns(dates, equity)
+    if monthly.empty:
+        st.warning("📊 No monthly data available.")
+        return
+
+    z_display, annotation_text, years, abs_max = _prepare_heatmap_data(monthly)
+    num_years = len(years)
+
+    fig = ff.create_annotated_heatmap(
+        z=z_display,
+        x=MONTH_NAMES,
+        y=years,
+        annotation_text=annotation_text,
+        colorscale=_get_heatmap_colorscale(),
+        zmin=-abs_max,
+        zmax=abs_max,
+        showscale=True,
+        hovertemplate="<b>%{y} %{x}</b><br>Return: %{z:.2f}%<extra></extra>",
+        xgap=3,
+        ygap=3,
+    )
+
+    _fix_annotation_colors(fig, abs_max)
 
     # Fixed row height for consistent cell sizing
     row_height = 50
@@ -192,7 +217,6 @@ def render_monthly_heatmap(
         margin={"l": 50, "r": 20, "t": 60, "b": 20},
     )
 
-    # Add colorbar config to the heatmap trace
     fig.data[0].update(
         colorbar={"title": "Return (%)", "ticksuffix": "%"},
     )
