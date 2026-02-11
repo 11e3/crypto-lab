@@ -3,7 +3,7 @@
 Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
 백테스팅, 전략 개발, 포트폴리오 최적화, 라이브 트레이딩 모니터링을 하나의 시스템으로 통합.
 
-**[crypto-lab](https://github.com/11e3/crypto-lab)** / [crypto-bot](https://github.com/11e3/crypto-bot) / [crypto-regime-classifier-ml](https://github.com/11e3/crypto-regime-classifier-ml)
+**[crypto-lab](https://github.com/11e3/crypto-lab)** / [crypto-bot](https://github.com/11e3/crypto-bot) / [crypto-ml](https://github.com/11e3/crypto-ml)
 
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-1644%20passed-brightgreen.svg)]()
@@ -76,7 +76,7 @@ Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
   └──────────────────────┘          │          │
                                     │          │
   ┌─────────────────────────────────┤          │
-  │  crypto-regime-classifier-ml    │          │
+  │  crypto-ml    │          │
   │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │          │
   │  ML Regime Classifier           │          │
   │  XGBoost / LSTM / Transformer   │  쓰기 ──►│
@@ -94,13 +94,13 @@ Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
 |------|------|-----|------|
 | **crypto-lab** | 백테스트, 대시보드, 데이터 파이프라인 | ~7,500 | Active |
 | **[crypto-bot](https://github.com/11e3/crypto-bot)** | Upbit 실매매 봇 (VBO) | ~720 | Active (독립 배포) |
-| **[crypto-regime-classifier-ml](https://github.com/11e3/crypto-regime-classifier-ml)** | ML 시장 국면 분류기 | ~6,100 | Active (모델 학습) |
+| **[crypto-ml](https://github.com/11e3/crypto-ml)** | ML 시장 국면 분류기 | ~6,100 | Active (모델 학습) |
 | **bt** | 이전 백테스트 프레임워크 | ~17K | Archived (CQS에 흡수) |
 
 ### 왜 분리하는가?
 
 - **crypto-bot**: 930줄 경량 봇. Docker로 GCP e2-micro(무료)에 독립 배포. 의존성 최소화(pyupbit+pandas). 흡수하면 배포 복잡도 증가.
-- **crypto-regime-classifier-ml**: PyTorch, XGBoost, TA-Lib 등 무거운 ML 의존성. 학습은 비정기적. CQS는 추론만 수행(.joblib 로드). 흡수하면 CQS 설치 사이즈 ~2GB 증가.
+- **crypto-ml**: PyTorch, XGBoost, TA-Lib 등 무거운 ML 의존성. 학습은 비정기적. CQS는 추론만 수행(.joblib 로드). 흡수하면 CQS 설치 사이즈 ~2GB 증가.
 - **bt**: 핵심 410줄 CQS에 포팅 완료. 나머지 ~16K줄은 REST API, 플러그인 시스템 등 불필요한 인프라. 아카이브.
 
 ---
@@ -181,7 +181,7 @@ streamlit run src/web/app.py
 
 ### ML Regime Integration
 
-CQS는 `crypto-regime-classifier-ml`에서 학습된 XGBoost 모델을 로드하여 시장 국면 분류:
+CQS는 `crypto-ml`에서 학습된 XGBoost 모델을 로드하여 시장 국면 분류:
 
 ```python
 from src.strategies.volatility_breakout import VBORegime

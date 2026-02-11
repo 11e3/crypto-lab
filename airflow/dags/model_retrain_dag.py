@@ -131,7 +131,7 @@ def retrain_model(**context) -> dict:
     X = df[available_cols].dropna()
 
     # Generate labels (simplified for DAG)
-    # In production, use RegimeLabeler from crypto-regime-classifier-ml
+    # In production, use RegimeLabeler from crypto-ml
     y = pd.Series("NOT_BULL", index=X.index)
     y[df.loc[X.index, "return_20d"] > 0.02] = "BULL_TREND"
 

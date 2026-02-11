@@ -6,7 +6,7 @@ Provides storage abstraction for the Crypto Lab Ecosystem:
 - Model storage and loading
 - Processed data sync
 
-Part of: crypto-lab -> crypto-bot -> crypto-regime-classifier-ml
+Part of: crypto-lab -> crypto-bot -> crypto-ml
 """
 
 from __future__ import annotations
