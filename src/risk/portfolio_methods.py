@@ -15,6 +15,9 @@ from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Minimum volatility to prevent division by zero in inverse-volatility weighting
+_MIN_VOLATILITY = 1e-8
+
 
 def _validate_covariance(
     cov_matrix: pd.DataFrame,
@@ -131,7 +134,7 @@ def optimize_risk_parity(
     constraints = {"type": "eq", "fun": lambda w: np.sum(w) - 1.0}
     bounds = tuple((min_weight, max_weight) for _ in range(n_assets))
     vols = np.sqrt(np.diag(cov_matrix))
-    inv_vols = 1.0 / (vols + 1e-8)
+    inv_vols = 1.0 / (vols + _MIN_VOLATILITY)
     initial_weights = inv_vols / np.sum(inv_vols)
 
     try:
@@ -162,7 +165,7 @@ def optimize_risk_parity(
     except Exception as e:
         logger.error(f"Risk parity optimization error: {e}")
         vols = np.sqrt(np.diag(cov_matrix))
-        inv_vols = 1.0 / (vols + 1e-8)
+        inv_vols = 1.0 / (vols + _MIN_VOLATILITY)
         weights = inv_vols / np.sum(inv_vols)
         return PortfolioWeights(
             weights={t: float(w) for t, w in zip(tickers, weights, strict=False)},

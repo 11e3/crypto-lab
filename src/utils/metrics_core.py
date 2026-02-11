@@ -11,6 +11,9 @@ import numpy as np
 
 from src.config import ANNUALIZATION_FACTOR, RISK_FREE_RATE
 
+# Cap for extreme CAGR values to prevent overflow in downstream calculations
+_MAX_CAGR_PCT = 99999.0
+
 __all__ = [
     "calculate_calmar_ratio",
     "calculate_cagr",
@@ -127,8 +130,8 @@ def calculate_cagr(
         return -100.0
     with np.errstate(over="ignore"):
         cagr_raw = (np.exp((365.0 / total_days) * np.log(ratio)) - 1) * 100
-    if np.isinf(cagr_raw):
-        return 1e18
+    if np.isinf(cagr_raw) or abs(cagr_raw) > _MAX_CAGR_PCT:
+        return _MAX_CAGR_PCT if cagr_raw > 0 else -_MAX_CAGR_PCT
     return float(cagr_raw)
 
 

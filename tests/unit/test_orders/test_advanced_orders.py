@@ -6,11 +6,11 @@ from datetime import date
 
 import pytest
 
-from src.execution.orders.advanced_orders import (
+from src.orders.advanced_orders import (
     AdvancedOrderManager,
     update_trailing_stop,
 )
-from src.execution.orders.advanced_orders_models import (
+from src.orders.advanced_orders_models import (
     AdvancedOrder,
     OrderType,
 )

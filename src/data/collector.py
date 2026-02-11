@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.config import RAW_DATA_DIR, UPBIT_API_RATE_LIMIT_DELAY
+from src.config import RAW_DATA_DIR, UPBIT_API_RATE_LIMIT_DELAY, parquet_filename
 from src.data.collector_fetch import Interval, fetch_all_candles
 from src.utils.logger import get_logger
 
@@ -45,7 +45,7 @@ class UpbitDataCollector:
         Returns:
             Path to parquet file
         """
-        return self.data_dir / f"{ticker}_{interval}.parquet"
+        return self.data_dir / parquet_filename(ticker, interval)
 
     def _load_existing_data(self, filepath: Path) -> pd.DataFrame | None:
         """

@@ -17,6 +17,7 @@ import pandas as pd
 from src.backtester.analysis.bootstrap_backtest import simple_backtest_vectorized
 from src.backtester.engine import run_backtest
 from src.backtester.models import BacktestConfig, BacktestResult
+from src.config import parquet_filename
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
 
@@ -57,7 +58,7 @@ class BootstrapAnalyzer:
         try:
             # Save resampled data to a temporary parquet file
             with tempfile.TemporaryDirectory() as tmpdir:
-                tmp_path = Path(tmpdir) / f"{self.ticker}_{self.interval}.parquet"
+                tmp_path = Path(tmpdir) / parquet_filename(self.ticker, self.interval)
                 df_to_save = data.copy()
                 if df_to_save.index.name is None:
                     df_to_save.index.name = "datetime"

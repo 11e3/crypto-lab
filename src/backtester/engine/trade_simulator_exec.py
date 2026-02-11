@@ -11,7 +11,7 @@ import numpy as np
 from src.backtester.engine.trade_costs import TradeCostCalculator
 from src.backtester.engine.trade_simulator_state import SimulationState
 from src.backtester.models import BacktestConfig
-from src.execution.orders.advanced_orders import AdvancedOrderManager
+from src.orders.advanced_orders import AdvancedOrderManager
 
 
 def execute_exit(

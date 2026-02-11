@@ -33,6 +33,15 @@ RISK_FREE_RATE: Final[float] = 0.0  # Risk-free rate for Sharpe/Sortino
 # Cache Configuration
 CACHE_METADATA_FILENAME: Final[str] = "_cache_metadata.json"
 
+# Data File Naming
+PARQUET_EXTENSION: Final[str] = ".parquet"
+
+
+def parquet_filename(ticker: str, interval: str) -> str:
+    """Generate standardized parquet filename for a ticker/interval pair."""
+    return f"{ticker}_{interval}{PARQUET_EXTENSION}"
+
+
 # Logging Configuration
 LOG_FORMAT: Final[str] = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_DATE_FORMAT: Final[str] = "%Y-%m-%d %H:%M:%S"

@@ -2,22 +2,21 @@
 
 ## Project Overview
 
-Crypto trading platform for Upbit exchange (KRW pairs). Backtesting, live trading, portfolio optimization, Streamlit dashboard.
+Crypto backtesting & analysis platform for Upbit exchange (KRW pairs). Backtesting, portfolio optimization, Streamlit dashboard. Live trading is in a separate repo (dev/crypto-bot).
 
 **Stack**: Python 3.13 | uv | Ruff | MyPy (strict) | Pytest | Streamlit | pandas/numpy/scipy
 
 ## Module Map
 
-| Module | LOC | Purpose |
-|--------|-----|---------|
-| `src/backtester/` | 8.6K | Dual engines: VectorizedBacktestEngine + EventDrivenBacktestEngine |
-| `src/web/` | 6.2K | Streamlit multi-page app (backtest, optimization, analysis, monitor, data_collect) |
-| `src/strategies/` | 4.3K | VBO (main), MeanReversion, Momentum, ORB — composable Condition pattern |
-| `src/execution/` | 3.3K | Live bot, trade executors, event bus, position management |
-| `src/data/` | 2.3K | Upbit data collection, caching, indicators |
-| `src/risk/` | 1.1K | Portfolio optimization (MPT, risk parity), position sizing, VaR/CVaR |
-| `src/exchange/` | 0.8K | Upbit API wrapper (REST), order management |
-| `src/config/` | 0.7K | YAML config loader, pydantic settings |
+| Module | Purpose |
+|--------|---------|
+| `src/backtester/` | Dual engines: VectorizedBacktestEngine + EventDrivenBacktestEngine |
+| `src/web/` | Streamlit multi-page app (backtest, optimization, analysis, monitor, data_collect) |
+| `src/strategies/` | VBO (main), MeanReversion, Momentum, ORB — composable Condition pattern |
+| `src/orders/` | Advanced order types (stop loss, take profit, trailing stop) for backtester |
+| `src/data/` | Upbit data collection, caching, indicators |
+| `src/risk/` | Portfolio optimization (MPT, risk parity), position sizing, VaR/CVaR |
+| `src/config/` | YAML config loader, pydantic settings, centralized constants |
 
 ## Windows/Environment Gotchas
 
@@ -28,8 +27,8 @@ Crypto trading platform for Upbit exchange (KRW pairs). Backtesting, live tradin
 
 ## Quality Standards
 
-- **Coverage**: 80% minimum (currently ~89.88%, 1665 tests)
-- **MyPy**: 14 known pre-existing errors in web/monitoring/storage (`dict` annotations) — only flag NEW errors
+- **Coverage**: 80% minimum (currently ~88.30%, 1249 tests)
+- **MyPy**: 0 errors — keep it clean
 - **Ruff**: 0 violations required
 - **Conventional commits**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `perf:`
 
@@ -51,20 +50,16 @@ Strategy → [EntryCondition, ExitCondition] → evaluate(current, history, indi
 - `ANNUALIZATION_FACTOR = 365` (crypto, not 252)
 - `RISK_FREE_RATE` from config
 - Fee model: Upbit 0.05% per trade
+- `parquet_filename()` in `src/config/constants.py` — centralized file naming convention
+- `_MAX_CAGR_PCT = 99999.0` in `src/utils/metrics_core.py` — overflow cap
+- `_MIN_VOLATILITY = 1e-8` in `src/risk/portfolio_methods.py` — zero-division guard
 
 ### Data Format
+- Use `parquet_filename(ticker, interval)` from `src.config` for file naming (not inline f-strings)
 - `data_loader` expects flat `{ticker}_{interval}.parquet` in `RAW_DATA_DIR`
 - `exit_price_base` column convention for strategies with non-close exit prices (e.g., VBOV1 exits at open)
 
 ## Common Pitfalls
-
-### Patch Targets in Tests
-- Bot components: patch `bot_factory` not `bot_init` (ExchangeFactory, get_config, get_notifier)
-- Signal handler: logger patches go to `signal_data` / `signal_metrics` (after SRP split)
-
-### Exception Handling
-- Exchange modules use `_UPBIT_ERRORS` tuple constant — add new types there, not inline
-- 11 intentional broad `except Exception` remain (event_bus, notification_handler, bot main loop)
 
 ### Streamlit Specifics
 - Render `col3` (asset_selector) before `col1` (trading_config) so `session_state` is populated
@@ -74,6 +69,10 @@ Strategy → [EntryCondition, ExitCondition] → evaluate(current, history, indi
 ### Position Sizing
 - `_volatility_based_sizing()` uses baseline normalization (0.02) — was a no-op before 2026-02-11 fix
 - `_inverse_volatility_sizing()` is the portfolio-level equivalent
+
+### Thread Safety
+- `get_cache()` uses double-checked locking with `threading.Lock()` (same as `get_config()`)
+- Global singletons must use this pattern to be safe in Streamlit's multi-threaded environment
 
 ## Workflow Rules
 
@@ -115,12 +114,11 @@ tests/
 ├── unit/           # Fast, isolated (mock external dependencies)
 │   ├── test_backtester/
 │   ├── test_strategies/
-│   ├── test_execution/
-│   ├── test_exchange/
+│   ├── test_orders/
 │   ├── test_risk/
 │   ├── test_web/
 │   └── ...
-├── integration/    # Multi-component (9 test files)
+├── integration/    # Multi-component (5 test files)
 └── fixtures/       # Shared test data
 ```
 

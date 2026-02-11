@@ -11,7 +11,7 @@ import pandas as pd
 
 from src.backtester.engine.vectorized import VectorizedBacktestEngine
 from src.backtester.models import BacktestConfig, BacktestResult
-from src.config import RAW_DATA_DIR
+from src.config import RAW_DATA_DIR, parquet_filename
 from src.data.collector import Interval
 from src.data.collector_factory import DataCollectorFactory
 from src.strategies.base import Strategy
@@ -47,7 +47,7 @@ def run_backtest(
     data_dir = data_dir or RAW_DATA_DIR
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    data_files = {ticker: data_dir / f"{ticker}_{interval}.parquet" for ticker in tickers}
+    data_files = {ticker: data_dir / parquet_filename(ticker, interval) for ticker in tickers}
 
     # Collect missing data
     missing_tickers = _find_missing_tickers(data_files)

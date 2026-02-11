@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.config import RAW_DATA_DIR
+from src.config import RAW_DATA_DIR, parquet_filename
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -90,8 +90,7 @@ def csv_to_parquet(
     df.index.name = "datetime"
 
     # Create output filename
-    output_filename = f"{ticker}_{interval}.parquet"
-    output_path = output_dir / output_filename
+    output_path = output_dir / parquet_filename(ticker, interval)
 
     # Save as parquet
     df.to_parquet(output_path, engine="pyarrow")

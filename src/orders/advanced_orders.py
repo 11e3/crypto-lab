@@ -11,8 +11,8 @@ Uses specialized handlers for each order type (SRP).
 
 from datetime import date
 
-from src.execution.orders.advanced_orders_models import AdvancedOrder, OrderType
-from src.execution.orders.order_handlers import (
+from src.orders.advanced_orders_models import AdvancedOrder, OrderType
+from src.orders.order_handlers import (
     StopLossHandler,
     TakeProfitHandler,
     TrailingStopHandler,

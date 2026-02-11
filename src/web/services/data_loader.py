@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from src.config import RAW_DATA_DIR
+from src.config import RAW_DATA_DIR, parquet_filename
 from src.data.collector_fetch import Interval
 from src.utils.logger import get_logger
 
@@ -46,7 +46,7 @@ def load_ticker_data(
     """
     try:
         # Data file path (files are stored directly in RAW_DATA_DIR)
-        file_path = RAW_DATA_DIR / f"{ticker}_{interval}.parquet"
+        file_path = RAW_DATA_DIR / parquet_filename(ticker, interval)
 
         if not file_path.exists():
             logger.warning(f"Data file not found: {file_path}")
@@ -87,7 +87,7 @@ def get_data_files(
 
     for ticker in tickers:
         # Files are stored directly in RAW_DATA_DIR
-        file_path = RAW_DATA_DIR / f"{ticker}_{interval}.parquet"
+        file_path = RAW_DATA_DIR / parquet_filename(ticker, interval)
         if file_path.exists():
             data_files[ticker] = file_path
         else:
@@ -114,7 +114,7 @@ def validate_data_availability(
 
     for ticker in tickers:
         # Files are stored directly in RAW_DATA_DIR
-        file_path = RAW_DATA_DIR / f"{ticker}_{interval}.parquet"
+        file_path = RAW_DATA_DIR / parquet_filename(ticker, interval)
         if file_path.exists():
             available.append(ticker)
         else:

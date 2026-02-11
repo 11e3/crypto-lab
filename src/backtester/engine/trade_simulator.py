@@ -18,7 +18,7 @@ from src.backtester.engine.trade_simulator_state import (
     initialize_simulation_state,
 )
 from src.backtester.models import BacktestConfig
-from src.execution.orders.advanced_orders import AdvancedOrderManager
+from src.orders.advanced_orders import AdvancedOrderManager
 from src.utils.logger import get_logger
 
 __all__ = [

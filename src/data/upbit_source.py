@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import pyupbit
 
-from src.config.constants import RAW_DATA_DIR
+from src.config.constants import RAW_DATA_DIR, parquet_filename
 from src.data.base import DataSource
 from src.data.upbit_source_utils import calculate_update_count, merge_ohlcv_data
 from src.exceptions.data import (
@@ -53,8 +53,7 @@ class UpbitDataSource(DataSource):
         Returns:
             Path to data file
         """
-        filename = f"{symbol}_{interval}.parquet"
-        return self.data_dir / filename
+        return self.data_dir / parquet_filename(symbol, interval)
 
     def get_ohlcv(
         self,

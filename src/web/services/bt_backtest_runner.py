@@ -17,6 +17,7 @@ import pandas as pd
 
 from src.backtester.engine.vectorized import VectorizedBacktestEngine
 from src.backtester.models import BacktestConfig, BacktestResult
+from src.config import parquet_filename
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
 from src.utils.metrics_core import calculate_sortino_ratio
@@ -98,7 +99,7 @@ def _get_data_files(symbols: list[str], interval: str = "day") -> dict[str, Path
     data_files: dict[str, Path] = {}
     for symbol in symbols:
         ticker = f"KRW-{symbol}"
-        file_path = DATA_DIR / f"{ticker}_{interval}.parquet"
+        file_path = DATA_DIR / parquet_filename(ticker, interval)
         if file_path.exists():
             data_files[ticker] = file_path
         else:

@@ -29,7 +29,7 @@ from src.backtester.engine.trade_simulator import (
     track_asset_returns,
 )
 from src.backtester.models import BacktestConfig, BacktestResult
-from src.execution.orders.advanced_orders import AdvancedOrderManager
+from src.orders.advanced_orders import AdvancedOrderManager
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
 from src.utils.memory import optimize_dtypes

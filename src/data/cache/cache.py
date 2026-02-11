@@ -11,6 +11,7 @@ Improvements:
 - Compression support
 """
 
+import threading
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any
@@ -187,13 +188,16 @@ class IndicatorCache:
         )
 
 
-# Global cache instance
+# Global cache instance with thread-safe initialization
 _cache: IndicatorCache | None = None
+_cache_lock = threading.Lock()
 
 
 def get_cache() -> IndicatorCache:
-    """Get global cache instance."""
+    """Get global cache instance (thread-safe)."""
     global _cache
     if _cache is None:
-        _cache = IndicatorCache()
+        with _cache_lock:
+            if _cache is None:
+                _cache = IndicatorCache()
     return _cache

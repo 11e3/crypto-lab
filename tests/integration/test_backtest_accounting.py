@@ -35,7 +35,7 @@ from src.backtester.engine.trade_simulator_exec import (
     handle_normal_entry,
 )
 from src.backtester.models import BacktestConfig
-from src.execution.orders.advanced_orders import AdvancedOrderManager
+from src.orders.advanced_orders import AdvancedOrderManager
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
