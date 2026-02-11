@@ -3,6 +3,8 @@
 Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
 백테스팅, 전략 개발, 포트폴리오 최적화, 라이브 트레이딩 모니터링을 하나의 시스템으로 통합.
 
+**[crypto-quant-system](https://github.com/11e3/crypto-quant-system)** / [crypto-bot](https://github.com/11e3/crypto-bot) / [crypto-regime-classifier-ml](https://github.com/11e3/crypto-regime-classifier-ml)
+
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-1644%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-89.84%25-green.svg)]()
