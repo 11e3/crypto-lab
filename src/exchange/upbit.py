@@ -1,6 +1,5 @@
 """Upbit exchange implementation."""
 
-import logging
 from datetime import datetime
 from typing import cast
 
@@ -17,13 +16,12 @@ from src.exchange.upbit_orders import (
     execute_sell_market_order,
     fetch_order_status,
 )
+from src.utils.logger import get_logger
 
+logger = get_logger(__name__)
 
-def _get_logger() -> logging.Logger:
-    """Lazy import logger to avoid circular imports."""
-    from src.utils.logger import get_logger
-
-    return get_logger(__name__)
+# Common exception types for Upbit API calls
+_UPBIT_ERRORS = (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError)
 
 
 class UpbitExchange(Exchange):
@@ -34,8 +32,8 @@ class UpbitExchange(Exchange):
         try:
             self.client = pyupbit.Upbit(access_key, secret_key)
             self.client.get_balances()
-        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
-            _get_logger().error(f"Failed to initialize Upbit client: {e}", exc_info=True)
+        except _UPBIT_ERRORS as e:
+            logger.error(f"Failed to initialize Upbit client: {e}", exc_info=True)
             raise ExchangeConnectionError(f"Failed to connect to Upbit: {e}") from e
 
     def get_balance(self, currency: str) -> Balance:
@@ -47,8 +45,8 @@ class UpbitExchange(Exchange):
 
             locked = self._get_locked_amount(currency)
             return Balance(currency=currency, balance=float(balance), locked=locked)
-        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
-            _get_logger().error(f"Error getting balance for {currency}: {e}", exc_info=True)
+        except _UPBIT_ERRORS as e:
+            logger.error(f"Error getting balance for {currency}: {e}", exc_info=True)
             raise ExchangeError(f"Failed to get balance for {currency}: {e}") from e
 
     def _get_locked_amount(self, currency: str) -> float:
@@ -59,8 +57,8 @@ class UpbitExchange(Exchange):
                 return sum(
                     float(order.get("locked", 0.0)) for order in orders if isinstance(order, dict)
                 )
-        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
-            _get_logger().warning(f"Could not retrieve locked amount for {currency}: {e}")
+        except _UPBIT_ERRORS as e:
+            logger.warning(f"Could not retrieve locked amount for {currency}: {e}")
         return 0.0
 
     def get_current_price(self, symbol: str) -> float:
@@ -72,8 +70,8 @@ class UpbitExchange(Exchange):
             return float(price)
         except ExchangeError:
             raise
-        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
-            _get_logger().error(f"Error getting price for {symbol}: {e}", exc_info=True)
+        except _UPBIT_ERRORS as e:
+            logger.error(f"Error getting price for {symbol}: {e}", exc_info=True)
             raise ExchangeError(f"Failed to get price for {symbol}: {e}") from e
 
     def get_ticker(self, symbol: str) -> Ticker:
@@ -94,8 +92,8 @@ class UpbitExchange(Exchange):
             )
         except ExchangeError:
             raise
-        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
-            _get_logger().error(f"Error getting ticker for {symbol}: {e}", exc_info=True)
+        except _UPBIT_ERRORS as e:
+            logger.error(f"Error getting ticker for {symbol}: {e}", exc_info=True)
             raise ExchangeError(f"Failed to get ticker for {symbol}: {e}") from e
 
     def buy_market_order(self, symbol: str, amount: float) -> Order:
@@ -116,11 +114,11 @@ class UpbitExchange(Exchange):
         try:
             df = pyupbit.get_ohlcv(symbol, interval=interval, count=count)
             if df is None or len(df) == 0:
-                _get_logger().warning(f"No OHLCV data for {symbol}")
+                logger.warning(f"No OHLCV data for {symbol}")
                 return None
             return cast(pd.DataFrame, df)
-        except (requests.RequestException, ConnectionError, OSError, ValueError, KeyError, TypeError) as e:
-            _get_logger().error(f"Error getting OHLCV for {symbol}: {e}", exc_info=True)
+        except _UPBIT_ERRORS as e:
+            logger.error(f"Error getting OHLCV for {symbol}: {e}", exc_info=True)
             return None
 
     def get_order_status(self, order_id: str) -> Order:

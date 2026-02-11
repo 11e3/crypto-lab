@@ -150,7 +150,12 @@ class TestSellExecutorErrors:
 
     def test_notification_failure_does_not_crash_sell(self) -> None:
         """Sell succeeds even if notification fails."""
-        executor, order_manager, position_manager, exchange = self._create_sell_executor()
+        order_manager = MagicMock()
+        position_manager = MagicMock()
+        exchange = MagicMock()
+        telegram = MagicMock()
+        # skip_notifications=False so notification path is exercised
+        executor = SellExecutor(order_manager, position_manager, exchange, telegram)
         mock_order = MagicMock()
         mock_order.order_id = "order-123"
         order_manager.sell_all.return_value = mock_order
@@ -158,9 +163,7 @@ class TestSellExecutorErrors:
         # Notification will fail, but sell should still succeed
         exchange.get_current_price.side_effect = ExchangeError("Price fetch failed")
 
-        # Force _is_testing to return False so notification path is exercised
-        with patch.object(SellExecutor, "_is_testing", return_value=False):
-            result = executor.execute(ticker="KRW-BTC", min_amount=0.0001)
+        result = executor.execute(ticker="KRW-BTC", min_amount=0.0001)
 
         assert result is True
         position_manager.remove_position.assert_called_once_with("KRW-BTC")

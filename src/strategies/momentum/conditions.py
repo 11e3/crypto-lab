@@ -8,82 +8,18 @@ to identify trend-following opportunities.
 import pandas as pd
 
 from src.strategies.base import OHLCV, Condition
-
-# Re-export RSI and MACD conditions for backward compatibility
-from src.strategies.momentum.conditions_macd import (  # noqa: E402
-    MACDBearishCondition,
-    MACDBullishCondition,
-)
-from src.strategies.momentum.conditions_rsi import (  # noqa: E402
+from src.strategies.common_conditions import (  # noqa: E402
+    PriceAboveSMACondition,
+    PriceBelowSMACondition,
     RSIOverboughtCondition,
     RSIOversoldCondition,
 )
 
-
-class PriceAboveSMACondition(Condition):
-    """
-    Condition: Current price must be above SMA.
-
-    Used to confirm uptrend before entry.
-    """
-
-    def __init__(self, sma_key: str = "sma", name: str = "PriceAboveSMA") -> None:
-        """
-        Initialize price above SMA condition.
-
-        Args:
-            sma_key: Key for SMA value in indicators dict
-            name: Condition name
-        """
-        super().__init__(name)
-        self.sma_key = sma_key
-
-    def evaluate(
-        self,
-        current: OHLCV,
-        history: pd.DataFrame,
-        indicators: dict[str, float],
-    ) -> bool:
-        """Check if close is above SMA."""
-        sma = indicators.get(self.sma_key)
-
-        if sma is None:
-            return False
-
-        return current.close > sma
-
-
-class PriceBelowSMACondition(Condition):
-    """
-    Exit condition: Close price falls below SMA.
-
-    Standard exit signal for momentum strategy.
-    """
-
-    def __init__(self, sma_key: str = "sma", name: str = "PriceBelowSMA") -> None:
-        """
-        Initialize price below SMA condition.
-
-        Args:
-            sma_key: Key for SMA value in indicators dict
-            name: Condition name
-        """
-        super().__init__(name)
-        self.sma_key = sma_key
-
-    def evaluate(
-        self,
-        current: OHLCV,
-        history: pd.DataFrame,
-        indicators: dict[str, float],
-    ) -> bool:
-        """Check if close is below SMA."""
-        sma = indicators.get(self.sma_key)
-
-        if sma is None:
-            return False
-
-        return current.close < sma
+# Re-export MACD conditions for backward compatibility
+from src.strategies.momentum.conditions_macd import (  # noqa: E402
+    MACDBearishCondition,
+    MACDBullishCondition,
+)
 
 
 class MomentumStrengthCondition(Condition):

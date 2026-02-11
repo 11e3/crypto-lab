@@ -16,6 +16,19 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def _validate_covariance(
+    cov_matrix: pd.DataFrame, tickers: list[str], method: str,
+) -> PortfolioWeights | None:
+    """Check covariance matrix condition; return equal-weight fallback if ill-conditioned."""
+    cond = np.linalg.cond(cov_matrix.values)
+    if cond > 1e12 or np.isnan(cond):
+        logger.warning(f"Covariance matrix ill-conditioned (cond={cond:.2e}), using equal weights")
+        return PortfolioWeights(
+            weights=dict.fromkeys(tickers, 1.0 / len(tickers)), method=method,
+        )
+    return None
+
+
 def optimize_mpt(
     returns: pd.DataFrame,
     risk_free_rate: float = 0.0,
@@ -33,11 +46,9 @@ def optimize_mpt(
     mean_returns = returns.mean() * 252
     cov_matrix = returns.cov() * 252
 
-    # Check for singular/ill-conditioned covariance matrix
-    cond = np.linalg.cond(cov_matrix.values)
-    if cond > 1e12 or np.isnan(cond):
-        logger.warning(f"Covariance matrix ill-conditioned (cond={cond:.2e}), using equal weights")
-        return PortfolioWeights(weights=dict.fromkeys(tickers, 1.0 / n_assets), method="mpt")
+    fallback = _validate_covariance(cov_matrix, tickers, "mpt")
+    if fallback is not None:
+        return fallback
 
     def objective(weights: np.ndarray) -> float:
         port_ret: float = float(np.dot(weights, mean_returns))
@@ -101,13 +112,9 @@ def optimize_risk_parity(
     n_assets = len(tickers)
     cov_matrix = returns.cov() * 252
 
-    # Check for singular/ill-conditioned covariance matrix
-    cond = np.linalg.cond(cov_matrix.values)
-    if cond > 1e12 or np.isnan(cond):
-        logger.warning(f"Covariance matrix ill-conditioned (cond={cond:.2e}), using equal weights")
-        return PortfolioWeights(
-            weights=dict.fromkeys(tickers, 1.0 / n_assets), method="risk_parity"
-        )
+    fallback = _validate_covariance(cov_matrix, tickers, "risk_parity")
+    if fallback is not None:
+        return fallback
 
     def objective(weights: np.ndarray) -> float:
         port_vol = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))

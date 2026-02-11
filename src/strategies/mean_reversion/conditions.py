@@ -8,12 +8,16 @@ and are likely to revert back.
 import pandas as pd
 
 from src.strategies.base import OHLCV, Condition
-
-# Re-export RSI conditions for backward compatibility
-from src.strategies.mean_reversion.conditions_rsi import (
-    MeanReversionStrengthCondition,
+from src.strategies.common_conditions import (
+    PriceAboveSMACondition,
+    PriceBelowSMACondition,
     RSIOverboughtCondition,
     RSIOversoldCondition,
+)
+
+# Re-export mean-reversion-specific RSI condition
+from src.strategies.mean_reversion.conditions_rsi import (
+    MeanReversionStrengthCondition,
 )
 
 __all__ = [
@@ -103,67 +107,3 @@ class BollingerUpperBandCondition(Condition):
         return current.high >= upper_band
 
 
-class PriceBelowSMACondition(Condition):
-    """
-    Entry condition: Price is below SMA (oversold).
-
-    Used in mean reversion to identify buying opportunities.
-    """
-
-    def __init__(self, sma_key: str = "sma", name: str = "PriceBelowSMA") -> None:
-        """
-        Initialize price below SMA condition.
-
-        Args:
-            sma_key: Key for SMA value in indicators dict
-            name: Condition name
-        """
-        super().__init__(name)
-        self.sma_key = sma_key
-
-    def evaluate(
-        self,
-        current: OHLCV,
-        history: pd.DataFrame,
-        indicators: dict[str, float],
-    ) -> bool:
-        """Check if close is below SMA."""
-        sma = indicators.get(self.sma_key)
-
-        if sma is None:
-            return False
-
-        return current.close < sma
-
-
-class PriceAboveSMACondition(Condition):
-    """
-    Exit condition: Price rises above SMA.
-
-    Indicates price has reverted back to mean.
-    """
-
-    def __init__(self, sma_key: str = "sma", name: str = "PriceAboveSMA") -> None:
-        """
-        Initialize price above SMA condition.
-
-        Args:
-            sma_key: Key for SMA value in indicators dict
-            name: Condition name
-        """
-        super().__init__(name)
-        self.sma_key = sma_key
-
-    def evaluate(
-        self,
-        current: OHLCV,
-        history: pd.DataFrame,
-        indicators: dict[str, float],
-    ) -> bool:
-        """Check if close is above SMA."""
-        sma = indicators.get(self.sma_key)
-
-        if sma is None:
-            return False
-
-        return current.close > sma

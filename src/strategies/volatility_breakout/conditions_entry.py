@@ -7,6 +7,7 @@ These conditions determine when to enter a position.
 import pandas as pd
 
 from src.strategies.base import OHLCV, Condition
+from src.strategies.common_conditions import PriceAboveSMACondition  # noqa: F401
 
 
 class BreakoutCondition(Condition):
@@ -72,33 +73,6 @@ class SMABreakoutCondition(Condition):
             return False
 
         return target > sma
-
-
-class PriceAboveSMACondition(Condition):
-    """
-    Condition: Current close price must be above SMA.
-
-    Used to confirm trend direction before entry.
-    """
-
-    def __init__(self, sma_key: str = "sma", name: str = "PriceAboveSMA") -> None:
-        """Initialize condition."""
-        super().__init__(name)
-        self.sma_key = sma_key
-
-    def evaluate(
-        self,
-        current: OHLCV,
-        history: pd.DataFrame,
-        indicators: dict[str, float],
-    ) -> bool:
-        """Check if close is above SMA."""
-        sma = indicators.get(self.sma_key)
-
-        if sma is None:
-            return False
-
-        return current.close > sma
 
 
 class TrendAlignmentCondition(Condition):

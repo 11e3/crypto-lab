@@ -28,7 +28,6 @@ __all__ = [
     "run_bt_backtest_service",
     "run_bt_backtest_regime_service",
     "run_bt_backtest_generic_service",
-    "is_bt_available",
     "get_available_bt_symbols",
     "get_default_model_path",
 ]
@@ -77,14 +76,6 @@ class BtBacktestResult:
     trades: list[dict[str, Any]]
 
 
-def is_bt_available() -> bool:
-    """Check if bt-family strategies are available.
-
-    Always returns True since strategies are now natively integrated.
-    """
-    return True
-
-
 def get_available_bt_symbols(interval: str = "day") -> list[str]:
     """Get list of symbols available for backtest.
 
@@ -117,6 +108,15 @@ def _get_data_files(
     return data_files
 
 
+def _to_datetime(d: date | datetime | None) -> datetime | None:
+    """Convert date to datetime if needed, pass through datetime/None."""
+    if d is None:
+        return None
+    if isinstance(d, datetime):
+        return d
+    return datetime.combine(d, datetime.min.time())
+
+
 def _convert_result(result: BacktestResult) -> BtBacktestResult:
     """Convert native BacktestResult to BtBacktestResult."""
     # Calculate sortino ratio from equity curve
@@ -137,19 +137,8 @@ def _convert_result(result: BacktestResult) -> BtBacktestResult:
         trades_list.append(
             {
                 "symbol": trade.ticker,
-                "entry_date": (
-                    datetime.combine(trade.entry_date, datetime.min.time())
-                    if isinstance(trade.entry_date, date)
-                    and not isinstance(trade.entry_date, datetime)
-                    else trade.entry_date
-                ),
-                "exit_date": (
-                    datetime.combine(trade.exit_date, datetime.min.time())
-                    if trade.exit_date
-                    and isinstance(trade.exit_date, date)
-                    and not isinstance(trade.exit_date, datetime)
-                    else trade.exit_date
-                ),
+                "entry_date": _to_datetime(trade.entry_date),
+                "exit_date": _to_datetime(trade.exit_date),
                 "entry_price": trade.entry_price,
                 "exit_price": trade.exit_price or 0.0,
                 "quantity": (

@@ -15,15 +15,7 @@ from src.web.services.bt_backtest_runner import (
     _get_data_files,
     get_available_bt_symbols,
     get_default_model_path,
-    is_bt_available,
 )
-
-
-class TestIsbtAvailable:
-    """Test is_bt_available always returns True."""
-
-    def test_always_true(self) -> None:
-        assert is_bt_available() is True
 
 
 class TestGetDefaultModelPath:

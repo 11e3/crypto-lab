@@ -101,19 +101,17 @@ def _volatility_based_sizing(
     Volatility-based position sizing.
 
     Allocates more capital to less volatile assets.
-    Uses inverse volatility weighting normalized across all slots.
+    Uses inverse volatility weighting normalized against a baseline.
     """
     volatility = calculate_return_volatility(historical_data, lookback_period)
     if volatility is None:
         return _equal_sizing(available_cash, available_slots)
 
-    # Inverse volatility weight (lower volatility = higher weight)
-    weight: float = 1.0 / volatility
-
-    # Normalize: assume all slots have similar volatility distribution
-    # For single asset, use equal sizing scaled by weight
     base_size = available_cash / available_slots
-    return float(base_size * weight / (1.0 / volatility))  # Normalize to base size
+    # Scale by inverse volatility relative to baseline (2% daily)
+    baseline_volatility = 0.02
+    weight = baseline_volatility / volatility
+    return float(base_size * weight)
 
 
 def _fixed_risk_sizing(

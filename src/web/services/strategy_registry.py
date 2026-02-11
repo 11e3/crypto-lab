@@ -69,15 +69,9 @@ def create_analysis_strategy(strategy_type: str) -> Any:
     from src.strategies.momentum import MomentumStrategy
     from src.strategies.volatility_breakout import create_vbo_strategy
 
-    if strategy_type == "vanilla":
+    if strategy_type in ("vanilla", "minimal"):
         return create_vbo_strategy(
             name="VanillaVBO",
-            use_trend_filter=False,
-            use_noise_filter=False,
-        )
-    elif strategy_type == "minimal":
-        return create_vbo_strategy(
-            name="MinimalVBO",
             use_trend_filter=False,
             use_noise_filter=False,
         )
@@ -279,197 +273,94 @@ class StrategyRegistry:
         The actual availability check happens when running a backtest.
         This avoids slow bt library import during app startup.
         """
+        # Shared parameter specs reused across strategies
+        _ma_short = ParameterSpec(
+            name="ma_short", type="int", default=5,
+            min_value=2, max_value=20, step=1,
+            description="Short-term MA period",
+        )
+        _btc_ma = ParameterSpec(
+            name="btc_ma", type="int", default=20,
+            min_value=5, max_value=60, step=5,
+            description="BTC MA period for market filter",
+        )
+        _noise_ratio = ParameterSpec(
+            name="noise_ratio", type="float", default=0.5,
+            min_value=0.1, max_value=1.0, step=0.1,
+            description="Volatility breakout multiplier (k factor)",
+        )
+
+        bt_strategy_defs: list[dict[str, Any]] = [
+            {
+                "name": "bt_VBO",
+                "module_path": "bt.strategies.vbo",
+                "description": "[bt] Volatility Breakout Strategy (BTC MA20 filter)",
+                "parameters": {
+                    "lookback": ParameterSpec(
+                        name="lookback", type="int", default=5,
+                        min_value=2, max_value=20, step=1,
+                        description="Short-term MA period (lookback period)",
+                    ),
+                    "multiplier": ParameterSpec(
+                        name="multiplier", type="int", default=2,
+                        min_value=1, max_value=5, step=1,
+                        description="Multiplier for long-term MA (Long MA = lookback * multiplier)",
+                    ),
+                },
+            },
+            {
+                "name": "bt_VBO_Regime",
+                "module_path": "bt.strategies.vbo_regime",
+                "description": "[bt] Volatility Breakout Strategy (ML Regime filter)",
+                "parameters": {"ma_short": _ma_short, "noise_ratio": _noise_ratio},
+            },
+            {
+                "name": "bt_Momentum",
+                "module_path": "bt.strategies.momentum",
+                "description": "[bt] Pure Momentum Strategy (equal-weight allocation)",
+                "parameters": {
+                    "lookback": ParameterSpec(
+                        name="lookback", type="int", default=20,
+                        min_value=5, max_value=60, step=5,
+                        description="Momentum lookback period",
+                    ),
+                },
+            },
+            {
+                "name": "bt_BuyAndHold",
+                "module_path": "bt.strategies.buy_and_hold",
+                "description": "[bt] Simple Buy and Hold Strategy",
+                "parameters": {},
+            },
+            {
+                "name": "bt_VBO_SingleCoin",
+                "module_path": "bt.strategies.vbo_single_coin",
+                "description": "[bt] Single-asset VBO Strategy (BTC MA filter, all-in allocation)",
+                "parameters": {"ma_short": _ma_short, "btc_ma": _btc_ma, "noise_ratio": _noise_ratio},
+            },
+            {
+                "name": "bt_VBO_Portfolio",
+                "module_path": "bt.strategies.vbo_portfolio",
+                "description": "[bt] Multi-asset VBO Strategy (BTC MA filter, 1/N allocation)",
+                "parameters": {"ma_short": _ma_short, "btc_ma": _btc_ma, "noise_ratio": _noise_ratio},
+            },
+        ]
+
         try:
-            # bt VBO Strategy
-            bt_vbo_params = {
-                "lookback": ParameterSpec(
-                    name="lookback",
-                    type="int",
-                    default=5,
-                    min_value=2,
-                    max_value=20,
-                    step=1,
-                    description="Short-term MA period (lookback period)",
-                ),
-                "multiplier": ParameterSpec(
-                    name="multiplier",
-                    type="int",
-                    default=2,
-                    min_value=1,
-                    max_value=5,
-                    step=1,
-                    description="Multiplier for long-term MA (Long MA = lookback * multiplier)",
-                ),
-            }
-
-            bt_vbo_info = StrategyInfo(
-                name="bt_VBO",
-                class_name="bt_VBO",
-                module_path="bt.strategies.vbo",
-                strategy_class=None,  # bt strategies don't use crypto-quant-system Strategy class
-                parameters=bt_vbo_params,
-                description="[bt] Volatility Breakout Strategy (BTC MA20 filter)",
-            )
-
-            self._strategies["bt_VBO"] = bt_vbo_info
-
-            # bt VBO Regime Strategy (ML model filter)
-            bt_vbo_regime_params = {
-                "ma_short": ParameterSpec(
-                    name="ma_short",
-                    type="int",
-                    default=5,
-                    min_value=2,
-                    max_value=20,
-                    step=1,
-                    description="Short-term MA period for individual coins",
-                ),
-                "noise_ratio": ParameterSpec(
-                    name="noise_ratio",
-                    type="float",
-                    default=0.5,
-                    min_value=0.1,
-                    max_value=1.0,
-                    step=0.1,
-                    description="Volatility breakout multiplier (k factor)",
-                ),
-            }
-
-            bt_vbo_regime_info = StrategyInfo(
-                name="bt_VBO_Regime",
-                class_name="bt_VBO_Regime",
-                module_path="bt.strategies.vbo_regime",
-                strategy_class=None,  # bt strategies don't use crypto-quant-system Strategy class
-                parameters=bt_vbo_regime_params,
-                description="[bt] Volatility Breakout Strategy (ML Regime filter)",
-            )
-
-            self._strategies["bt_VBO_Regime"] = bt_vbo_regime_info
-
-            # bt Momentum Strategy
-            bt_momentum_params = {
-                "lookback": ParameterSpec(
-                    name="lookback",
-                    type="int",
-                    default=20,
-                    min_value=5,
-                    max_value=60,
-                    step=5,
-                    description="Momentum lookback period",
-                ),
-            }
-
-            bt_momentum_info = StrategyInfo(
-                name="bt_Momentum",
-                class_name="bt_Momentum",
-                module_path="bt.strategies.momentum",
-                strategy_class=None,
-                parameters=bt_momentum_params,
-                description="[bt] Pure Momentum Strategy (equal-weight allocation)",
-            )
-
-            self._strategies["bt_Momentum"] = bt_momentum_info
-
-            # bt Buy and Hold Strategy
-            bt_buyhold_info = StrategyInfo(
-                name="bt_BuyAndHold",
-                class_name="bt_BuyAndHold",
-                module_path="bt.strategies.buy_and_hold",
-                strategy_class=None,
-                parameters={},
-                description="[bt] Simple Buy and Hold Strategy",
-            )
-
-            self._strategies["bt_BuyAndHold"] = bt_buyhold_info
-
-            # bt VBO Single Coin Strategy
-            bt_vbo_single_params = {
-                "ma_short": ParameterSpec(
-                    name="ma_short",
-                    type="int",
-                    default=5,
-                    min_value=2,
-                    max_value=20,
-                    step=1,
-                    description="Short-term MA period",
-                ),
-                "btc_ma": ParameterSpec(
-                    name="btc_ma",
-                    type="int",
-                    default=20,
-                    min_value=5,
-                    max_value=60,
-                    step=5,
-                    description="BTC MA period for market filter",
-                ),
-                "noise_ratio": ParameterSpec(
-                    name="noise_ratio",
-                    type="float",
-                    default=0.5,
-                    min_value=0.1,
-                    max_value=1.0,
-                    step=0.1,
-                    description="Volatility breakout multiplier (k factor)",
-                ),
-            }
-
-            bt_vbo_single_info = StrategyInfo(
-                name="bt_VBO_SingleCoin",
-                class_name="bt_VBO_SingleCoin",
-                module_path="bt.strategies.vbo_single_coin",
-                strategy_class=None,
-                parameters=bt_vbo_single_params,
-                description="[bt] Single-asset VBO Strategy (BTC MA filter, all-in allocation)",
-            )
-
-            self._strategies["bt_VBO_SingleCoin"] = bt_vbo_single_info
-
-            # bt VBO Portfolio Strategy
-            bt_vbo_portfolio_params = {
-                "ma_short": ParameterSpec(
-                    name="ma_short",
-                    type="int",
-                    default=5,
-                    min_value=2,
-                    max_value=20,
-                    step=1,
-                    description="Short-term MA period",
-                ),
-                "btc_ma": ParameterSpec(
-                    name="btc_ma",
-                    type="int",
-                    default=20,
-                    min_value=5,
-                    max_value=60,
-                    step=5,
-                    description="BTC MA period for market filter",
-                ),
-                "noise_ratio": ParameterSpec(
-                    name="noise_ratio",
-                    type="float",
-                    default=0.5,
-                    min_value=0.1,
-                    max_value=1.0,
-                    step=0.1,
-                    description="Volatility breakout multiplier (k factor)",
-                ),
-            }
-
-            bt_vbo_portfolio_info = StrategyInfo(
-                name="bt_VBO_Portfolio",
-                class_name="bt_VBO_Portfolio",
-                module_path="bt.strategies.vbo_portfolio",
-                strategy_class=None,
-                parameters=bt_vbo_portfolio_params,
-                description="[bt] Multi-asset VBO Strategy (BTC MA filter, 1/N allocation)",
-            )
-
-            self._strategies["bt_VBO_Portfolio"] = bt_vbo_portfolio_info
+            for defn in bt_strategy_defs:
+                info = StrategyInfo(
+                    name=defn["name"],
+                    class_name=defn["name"],
+                    module_path=defn["module_path"],
+                    strategy_class=None,
+                    parameters=defn["parameters"],
+                    description=defn["description"],
+                )
+                self._strategies[defn["name"]] = info
 
             logger.info(
-                "Registered bt library strategies: bt_VBO, bt_VBO_Regime, "
-                "bt_Momentum, bt_BuyAndHold, bt_VBO_SingleCoin, bt_VBO_Portfolio"
+                "Registered bt library strategies: "
+                + ", ".join(d["name"] for d in bt_strategy_defs)
             )
-
         except Exception as e:
             logger.warning(f"Failed to register bt strategies: {e}")

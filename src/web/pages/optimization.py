@@ -11,6 +11,7 @@ import streamlit as st
 from src.backtester import BacktestConfig, optimize_strategy_parameters
 from src.data.collector_fetch import Interval
 from src.utils.logger import get_logger
+from src.web.components.sidebar.strategy_selector import get_cached_registry
 from src.web.config.constants import DEFAULT_TICKERS, INTERVAL_DISPLAY_MAP, OPTIMIZATION_METRICS
 from src.web.services.bt_backtest_runner import (
     BtBacktestResult,
@@ -20,7 +21,7 @@ from src.web.services.bt_backtest_runner import (
     run_bt_backtest_service,
 )
 from src.web.services.data_loader import validate_data_availability
-from src.web.services.strategy_registry import StrategyRegistry, is_bt_strategy
+from src.web.services.strategy_registry import is_bt_strategy
 
 logger = get_logger(__name__)
 
@@ -44,18 +45,12 @@ class BtOptimizationResult:
         self.all_scores = all_scores
 
 
-@st.cache_resource(ttl=60)
-def _get_cached_registry() -> StrategyRegistry:
-    """Return cached strategy registry."""
-    return StrategyRegistry()
-
-
 def render_optimization_page() -> None:
     """Render optimization page."""
     st.header("🔧 Parameter Optimization")
 
     # Get strategy registry (same as backtest page)
-    registry = _get_cached_registry()
+    registry = get_cached_registry()
     all_strategies = registry.list_strategies()
 
     # Separate bt and non-bt strategies

@@ -6,8 +6,6 @@ Each executor handles a single trade direction (SRP).
 
 from __future__ import annotations
 
-import os
-import sys
 from typing import TYPE_CHECKING, Any
 
 from src.exchange import ExchangeError
@@ -130,12 +128,15 @@ class SellExecutor:
         position_manager: PositionManager,
         exchange: Exchange,
         telegram: TelegramNotifier,
+        *,
+        skip_notifications: bool = False,
     ) -> None:
         """Initialize sell executor."""
         self.order_manager = order_manager
         self.position_manager = position_manager
         self.exchange = exchange
         self.telegram = telegram
+        self._skip_notifications = skip_notifications
 
     def execute(self, ticker: str, min_amount: float) -> bool:
         """
@@ -161,8 +162,8 @@ class SellExecutor:
         return False
 
     def _send_notification(self, ticker: str) -> None:
-        """Send sell notification (skipped during testing)."""
-        if self._is_testing():
+        """Send sell notification (skipped if skip_notifications is set)."""
+        if self._skip_notifications:
             return
 
         try:
@@ -177,13 +178,3 @@ class SellExecutor:
             )
         except (ExchangeError, ConnectionError, OSError) as e:
             logger.debug(f"Sell notification skipped for {ticker}: {e}")
-
-    @staticmethod
-    def _is_testing() -> bool:
-        """Check if running in test environment."""
-        return (
-            "pytest" in sys.modules
-            or "unittest" in sys.modules
-            or "PYTEST_CURRENT_TEST" in os.environ
-            or any("test" in arg.lower() for arg in sys.argv)
-        )

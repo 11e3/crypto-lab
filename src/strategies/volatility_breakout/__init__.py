@@ -14,12 +14,12 @@ from src.strategies.volatility_breakout.vbo import (
     create_vbo_strategy,
     quick_vbo,
 )
+from src.strategies.volatility_breakout.vbo_hybrid import VBOHybrid
 from src.strategies.volatility_breakout.vbo_portfolio import (
     VBOPortfolio,
     VBOPortfolioLite,
     VBOSingleCoin,
 )
-from src.strategies.volatility_breakout.vbo_hybrid import VBOHybrid
 from src.strategies.volatility_breakout.vbo_regime import VBORegime
 from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
