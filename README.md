@@ -28,16 +28,23 @@ Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
 
 ## Backtest Results
 
-<table>
-  <tr>
-    <td align="center">Equity Curve</td>
-    <td align="center">Yearly Returns</td>
-  </tr>
-  <tr>
-    <td><img src="docs/images/screencapture-localhost-8501-2026-01-17-06_29_52.png" width="500"/></td>
-    <td><img src="docs/images/screencapture-localhost-8501-2026-01-17-06_30_03.png" width="500"/></td>
-  </tr>
-</table>
+**VBOV1** | BTC+ETH+XRP | Daily | 2017-09-25 ~ 2026-02-10 | Initial Capital: 10,000,000 KRW
+
+| Metric | Value | Metric | Value |
+|--------|-------|--------|-------|
+| Total Return | 57,633.80% | Sharpe Ratio | 1.94 |
+| CAGR | 113.71% | Sortino Ratio | 3.74 |
+| MDD | 30.17% | Profit Factor | 2.97 |
+| Win Rate | 32.0% | Calmar Ratio | 3.77 |
+| Trades | 857 | Best Year | 306.5% |
+| Positive Years | 10/10 | Avg Return/Year | 116.0% |
+
+<details>
+<summary>📊 Dashboard Screenshot</summary>
+
+![Backtest Results](docs/images/backtest-vbov1-2026-02-11.png)
+
+</details>
 
 ---
 
