@@ -8,7 +8,7 @@ Provides various position sizing methods:
 - Inverse-volatility: Alias for volatility-based (same formula)
 """
 
-from typing import Literal
+from enum import StrEnum
 
 import pandas as pd
 
@@ -17,7 +17,14 @@ from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-PositionSizingMethod = Literal["equal", "volatility", "fixed-risk", "inverse-volatility"]
+
+class PositionSizingMethod(StrEnum):
+    """Position sizing methods for individual assets."""
+
+    EQUAL = "equal"
+    VOLATILITY = "volatility"
+    FIXED_RISK = "fixed-risk"
+    INVERSE_VOLATILITY = "inverse-volatility"
 
 
 def calculate_position_size(

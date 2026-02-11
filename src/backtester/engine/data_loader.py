@@ -39,7 +39,7 @@ def load_parquet_data(filepath: Path) -> pd.DataFrame:
         df.index = pd.to_datetime(df.index)
         df.columns = df.columns.str.lower()
         return df
-    except Exception as e:
+    except Exception as e:  # parquet/pyarrow raises diverse error types
         raise ValueError(f"Error loading data from {filepath}: {e}") from e
 
 

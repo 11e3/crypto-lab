@@ -8,6 +8,7 @@ from src.risk.metrics import (
     calculate_var,
 )
 from src.risk.portfolio_optimization import (
+    OptimizationMethod,
     PortfolioOptimizer,
     PortfolioWeights,
     optimize_portfolio,
@@ -30,6 +31,7 @@ __all__ = [
     "calculate_position_size",
     "calculate_multi_asset_position_sizes",
     # Portfolio optimization
+    "OptimizationMethod",
     "PortfolioOptimizer",
     "PortfolioWeights",
     "optimize_portfolio",

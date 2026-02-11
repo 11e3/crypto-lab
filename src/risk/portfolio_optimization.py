@@ -17,7 +17,7 @@ from src.risk.portfolio_methods import (
     optimize_mpt,
     optimize_risk_parity,
 )
-from src.risk.portfolio_models import PortfolioWeights
+from src.risk.portfolio_models import OptimizationMethod, PortfolioWeights
 
 
 class PortfolioOptimizer:
@@ -97,7 +97,7 @@ class PortfolioOptimizer:
 
 def optimize_portfolio(
     returns: pd.DataFrame,
-    method: str = "mpt",
+    method: str | OptimizationMethod = OptimizationMethod.MPT,
     **kwargs: Any,
 ) -> PortfolioWeights:
     """
@@ -105,7 +105,7 @@ def optimize_portfolio(
 
     Args:
         returns: DataFrame with returns (columns = tickers, index = dates)
-        method: Optimization method ("mpt", "risk_parity", "kelly")
+        method: Optimization method (OptimizationMethod enum or string)
         **kwargs: Additional arguments for optimization
 
     Returns:
@@ -113,11 +113,11 @@ def optimize_portfolio(
     """
     optimizer = PortfolioOptimizer()
 
-    if method == "mpt":
+    if method == OptimizationMethod.MPT:
         return optimizer.optimize_mpt(returns, **kwargs)
-    elif method == "risk_parity":
+    elif method == OptimizationMethod.RISK_PARITY:
         return optimizer.optimize_risk_parity(returns, **kwargs)
-    elif method == "kelly":
+    elif method == OptimizationMethod.KELLY:
         if "trades" not in kwargs:
             raise ValueError("Kelly method requires 'trades' DataFrame")
         trades = kwargs.pop("trades")
@@ -132,6 +132,7 @@ def optimize_portfolio(
 
 
 __all__ = [
+    "OptimizationMethod",
     "PortfolioWeights",
     "PortfolioOptimizer",
     "optimize_portfolio",
