@@ -33,7 +33,7 @@ __all__ = [
     "get_default_model_path",
 ]
 
-# Data directory for crypto-quant-system
+# Data directory for crypto-lab
 DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "raw"
 
 # Models directory

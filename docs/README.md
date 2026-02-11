@@ -1,4 +1,4 @@
-# Crypto Quant System 문서
+# Crypto Lab 문서
 
 이 디렉토리에는 프로젝트의 모든 문서가 포함되어 있습니다.
 

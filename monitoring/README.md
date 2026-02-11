@@ -1,4 +1,4 @@
-# Crypto Quant System - Monitoring Stack
+# Crypto Lab - Monitoring Stack
 
 Production-grade monitoring infrastructure for the crypto trading system.
 

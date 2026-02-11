@@ -2,7 +2,7 @@
 
 **Last Updated**: 2026-01-16
 
-This document describes the performance optimizations applied to the Crypto Quant System web UI.
+This document describes the performance optimizations applied to the Crypto Lab web UI.
 
 ## Overview
 

@@ -42,13 +42,13 @@ def _patch_pyupbit_errors() -> None:
         content = errors_file.read_text(encoding="utf-8")
 
         # Check if already patched
-        if "# PATCHED BY crypto-quant-system" in content:
+        if "# PATCHED BY crypto-lab" in content:
             return
 
         # Add the fix: import Callable at runtime
         patched_content = content.replace(
             "from typing import TYPE_CHECKING, Any\n\nif TYPE_CHECKING:\n    from collections.abc import Callable",
-            "# PATCHED BY crypto-quant-system\n"
+            "# PATCHED BY crypto-lab\n"
             "from typing import TYPE_CHECKING, Any\n"
             "from collections.abc import Callable\n\n"
             "if TYPE_CHECKING:",
@@ -86,14 +86,14 @@ def _patch_pyjwt_utils() -> None:
         content = utils_file.read_text(encoding="utf-8")
 
         # Check if already patched
-        if "# PATCHED BY crypto-quant-system" in content:
+        if "# PATCHED BY crypto-lab" in content:
             return
 
         # Read the file to find the TYPE_CHECKING block
         # We need to move the cryptography imports outside TYPE_CHECKING
         patched_content = content.replace(
             "if TYPE_CHECKING:",
-            "# PATCHED BY crypto-quant-system\n"
+            "# PATCHED BY crypto-lab\n"
             "# Move cryptography imports outside TYPE_CHECKING for Python 3.12+\n"
             "try:\n"
             "    from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve\n"
@@ -137,13 +137,13 @@ def _patch_pyjwt_jwks_client() -> None:
         content = jwks_file.read_text(encoding="utf-8")
 
         # Check if already patched
-        if "# PATCHED BY crypto-quant-system" in content:
+        if "# PATCHED BY crypto-lab" in content:
             return
 
         # Move SSLContext import outside TYPE_CHECKING
         patched_content = content.replace(
             "if TYPE_CHECKING:\n    from ssl import SSLContext",
-            "# PATCHED BY crypto-quant-system\n"
+            "# PATCHED BY crypto-lab\n"
             "from ssl import SSLContext\n\n"
             "if TYPE_CHECKING:\n    pass  # SSLContext moved above",
         )

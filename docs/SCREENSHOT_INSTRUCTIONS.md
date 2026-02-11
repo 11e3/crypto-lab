@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-You've provided 10 excellent screenshots of the Crypto Quant System. Here's how to prepare them for the README:
+You've provided 10 excellent screenshots of the Crypto Lab. Here's how to prepare them for the README:
 
 ## Screenshots Mapping
 
@@ -29,7 +29,7 @@ Based on the images you shared, here's the mapping:
 **Crop**:
 - Left: Remove sidebar (crop from ~150px)
 - Top: Keep title area
-- Result: Focus on "Welcome to Crypto Quant Backtest" and features
+- Result: Focus on "Welcome to Crypto Lab Backtest" and features
 
 ### Image 2 - Data Collection
 **Current**: Full data collection interface
@@ -138,7 +138,7 @@ magick input.png -crop 1200x800+150+50 output.png
 
 Since you already have the screenshots:
 
-1. **Save your 11 images** to `c:\Users\moons\dev\crypto-quant-system\docs\images\`
+1. **Save your 11 images** to `c:\Users\moons\dev\crypto-lab\docs\images\`
 2. **Rename them** according to the mapping table above
 3. **Crop if needed** (optional - they look good as-is)
 4. **Take the missing Monthly Heatmap** screenshot

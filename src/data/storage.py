@@ -1,12 +1,12 @@
 """
 GCS (Google Cloud Storage) Integration Module.
 
-Provides storage abstraction for the Crypto Quant Ecosystem:
+Provides storage abstraction for the Crypto Lab Ecosystem:
 - Bot log retrieval from GCS
 - Model storage and loading
 - Processed data sync
 
-Part of: crypto-quant-system -> crypto-bot -> crypto-regime-classifier-ml
+Part of: crypto-lab -> crypto-bot -> crypto-regime-classifier-ml
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ def _get_gcs_client() -> Client:
 
 class GCSStorage:
     """
-    Google Cloud Storage interface for the Crypto Quant Ecosystem.
+    Google Cloud Storage interface for the Crypto Lab Ecosystem.
 
     Bucket structure:
         gs://{bucket}/

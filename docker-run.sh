@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# Crypto Quant System - Docker Helper Script (Linux/Mac)
+# Crypto Lab - Docker Helper Script (Linux/Mac)
 # ============================================================================
 # Usage:
 #   ./docker-run.sh web        - Start web UI only

@@ -1,7 +1,7 @@
 version: '3.8'
 
 # ============================================================================
-# Crypto Quant System - Multi-Service Docker Compose Configuration
+# Crypto Lab - Multi-Service Docker Compose Configuration
 # ============================================================================
 # Services:
 #   1. web-ui: Streamlit web interface for backtesting and visualization

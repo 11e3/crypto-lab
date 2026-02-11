@@ -1,9 +1,9 @@
-# Crypto Quant System
+# Crypto Lab
 
 Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
 백테스팅, 전략 개발, 포트폴리오 최적화, 라이브 트레이딩 모니터링을 하나의 시스템으로 통합.
 
-**[crypto-quant-system](https://github.com/11e3/crypto-quant-system)** / [crypto-bot](https://github.com/11e3/crypto-bot) / [crypto-regime-classifier-ml](https://github.com/11e3/crypto-regime-classifier-ml)
+**[crypto-lab](https://github.com/11e3/crypto-lab)** / [crypto-bot](https://github.com/11e3/crypto-bot) / [crypto-regime-classifier-ml](https://github.com/11e3/crypto-regime-classifier-ml)
 
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-1644%20passed-brightgreen.svg)]()
@@ -59,7 +59,7 @@ Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
                      └──┬──────────┬──────────┬─┘
                         │          │          │
   ┌─────────────────────┼──────────┼──────────┼────────────────────┐
-  │  crypto-quant-system │          │          │  (this repo)       │
+  │  crypto-lab          │          │          │  (this repo)       │
   │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
   │  Backtesting Engine  │  읽기 ◄─┤  읽기 ◄──┤  Dashboard         │
   │  Strategy Library    │          │          │  Bot Monitor       │
@@ -92,7 +92,7 @@ Upbit 거래소 기반 암호화폐 퀀트 트레이딩 플랫폼.
 
 | Repo | 역할 | LOC | 상태 |
 |------|------|-----|------|
-| **crypto-quant-system** | 백테스트, 대시보드, 데이터 파이프라인 | ~7,500 | Active |
+| **crypto-lab** | 백테스트, 대시보드, 데이터 파이프라인 | ~7,500 | Active |
 | **[crypto-bot](https://github.com/11e3/crypto-bot)** | Upbit 실매매 봇 (VBO) | ~720 | Active (독립 배포) |
 | **[crypto-regime-classifier-ml](https://github.com/11e3/crypto-regime-classifier-ml)** | ML 시장 국면 분류기 | ~6,100 | Active (모델 학습) |
 | **bt** | 이전 백테스트 프레임워크 | ~17K | Archived (CQS에 흡수) |
@@ -199,7 +199,7 @@ result = engine.run(strategy, data_files)
 
 ```bash
 git clone <repository-url>
-cd crypto-quant-system
+cd crypto-lab
 
 # uv (recommended)
 uv sync --all-extras
@@ -230,7 +230,7 @@ python -m mypy src/ --strict
 ## Project Structure
 
 ```
-crypto-quant-system/
+crypto-lab/
 ├── src/
 │   ├── backtester/                 # Backtest engines
 │   │   ├── engine/                 # Vectorized + Event-driven
@@ -262,14 +262,8 @@ crypto-quant-system/
 │   │   ├── collector.py            # Upbit OHLCV 수집
 │   │   └── storage.py              # GCS 통합
 │   │
-│   ├── exchange/                   # Exchange abstraction
-│   │   ├── upbit.py                # Upbit API wrapper
-│   │   └── protocols.py            # Protocol interfaces
-│   │
-│   ├── execution/                  # Live trading
-│   │   ├── bot/                    # Trading bot (이벤트 기반)
-│   │   ├── handlers/               # Signal, Notification, Error
-│   │   └── orders/                 # Order management
+│   ├── orders/                     # Advanced order types
+│   │   └── advanced_orders.py      # Stop loss, take profit, trailing stop
 │   │
 │   ├── risk/                       # Risk management
 │   │   ├── portfolio_optimization.py

@@ -3,14 +3,14 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "crypto-quant-system"
+name = "crypto-lab"
 version = "0.1.0"
-description = "Automated trading system for multiple cryptocurrency exchanges using volatility breakout strategy"
+description = "Crypto backtesting & analysis platform for Upbit exchange (KRW pairs)"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
-    {name = "Crypto Quant System"}
+    {name = "Crypto Lab"}
 ]
 keywords = ["trading", "cryptocurrency", "quantitative", "backtesting", "exchange"]
 classifiers = [
@@ -215,8 +215,6 @@ ignore_errors = true
 
 # ✅ SUCCESSFULLY PASSING STRICT MODE (2026-01-08)
 # These modules now pass 100% strict type checking:
-# - src.exchange.*: Exchange API implementations
-# - src.execution.*: Trading execution logic
 # - src.strategies.*: Trading strategies
 # - src.config.*: Configuration management
 # - src.risk.*: Risk management

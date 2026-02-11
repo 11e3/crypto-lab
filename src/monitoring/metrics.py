@@ -1,5 +1,5 @@
 """
-Prometheus metrics exporter for crypto-quant-system.
+Prometheus metrics exporter for crypto-lab.
 
 Provides metrics for trading, ML, and pipeline operations with support for:
 - Counter, Gauge, Histogram, Summary metrics

@@ -1,4 +1,4 @@
-# Docker Deployment Guide for Crypto Quant System
+# Docker Deployment Guide for Crypto Lab
 
 Production-grade Docker setup for cryptocurrency trading system with Python 3.12.7 and automatic monkeypatch support.
 
@@ -618,7 +618,7 @@ newgrp docker
 ```bash
 # Clone repository
 git clone <your-repo-url>
-cd crypto-quant-system
+cd crypto-lab
 
 # Setup environment
 cp .env.example .env
@@ -676,14 +676,14 @@ sudo nano /etc/systemd/system/crypto-quant.service
 
 ```ini
 [Unit]
-Description=Crypto Quant Trading System
+Description=Crypto Lab Trading System
 Requires=docker.service
 After=docker.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/home/ubuntu/crypto-quant-system
+WorkingDirectory=/home/ubuntu/crypto-lab
 ExecStart=/usr/bin/docker-compose up -d
 ExecStop=/usr/bin/docker-compose down
 TimeoutStartSec=0
@@ -705,7 +705,7 @@ sudo systemctl start crypto-quant.service
 crontab -e
 
 # Add:
-0 0 * * * find /home/ubuntu/crypto-quant-system/logs -name "*.log" -mtime +7 -delete
+0 0 * * * find /home/ubuntu/crypto-lab/logs -name "*.log" -mtime +7 -delete
 ```
 
 **Setup alerts:**

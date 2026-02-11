@@ -1,4 +1,4 @@
-# Crypto Quant System — Claude Code Guide
+# Crypto Lab — Claude Code Guide
 
 ## Project Overview
 

@@ -1,3 +1,3 @@
-"""Version information for crypto-quant-system."""
+"""Version information for crypto-lab."""
 
 __version__ = "0.1.0"

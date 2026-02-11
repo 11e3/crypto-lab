@@ -11,7 +11,7 @@ from src.backtester.analysis.bootstrap_analysis import BootstrapAnalyzer
 from src.backtester.engine import BacktestConfig
 from src.strategies.volatility_breakout.vbo import VanillaVBO
 
-data_path = Path("c:/workspace/dev/crypto-quant-system/data/raw/KRW-BTC_day.parquet")
+data_path = Path("c:/workspace/dev/crypto-lab/data/raw/KRW-BTC_day.parquet")
 df = pd.read_parquet(data_path)
 if "date" in df.columns:
     df["date"] = pd.to_datetime(df["date"])

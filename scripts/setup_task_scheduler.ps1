@@ -7,8 +7,8 @@
     
     # Create action
     $action = New-ScheduledTaskAction -Execute 'C:\Users\moons\AppData\Local\Programs\Python\Python314\python.exe' `
-        -Argument '-m scripts.real_time_monitor --tickers KRW-BTC KRW-ETH --output "C:\workspace\dev\crypto-quant-system\reports"' `
-        -WorkingDirectory 'C:\workspace\dev\crypto-quant-system'
+        -Argument '-m scripts.real_time_monitor --tickers KRW-BTC KRW-ETH --output "C:\workspace\dev\crypto-lab\reports"' `
+        -WorkingDirectory 'C:\workspace\dev\crypto-lab'
     
     # Create task settings
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable

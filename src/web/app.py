@@ -25,21 +25,21 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="Crypto Quant Backtest",
+    page_title="Crypto Lab Backtest",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="collapsed",
     menu_items={
-        "Get Help": "https://github.com/11e3/crypto-quant-system",
-        "Report a bug": "https://github.com/11e3/crypto-quant-system/issues",
-        "About": "# Crypto Quant Backtest UI\nEvent-driven backtesting engine based web interface",
+        "Get Help": "https://github.com/11e3/crypto-lab",
+        "Report a bug": "https://github.com/11e3/crypto-lab/issues",
+        "About": "# Crypto Lab Backtest UI\nEvent-driven backtesting engine based web interface",
     },
 )
 
 
 def main() -> None:
     """Main application entry point."""
-    st.title("📊 Crypto Quant Backtest System")
+    st.title("📊 Crypto Lab Backtest System")
 
     # Tab-based navigation
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
@@ -74,7 +74,7 @@ def main() -> None:
 
 def show_home() -> None:
     """Home page."""
-    st.header("🏠 Welcome to Crypto Quant Backtest")
+    st.header("🏠 Welcome to Crypto Lab Backtest")
 
     st.markdown(
         """

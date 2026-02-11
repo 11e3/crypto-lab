@@ -2,7 +2,7 @@
 
 ## 개요
 
-이 문서는 Crypto Quant System에서 거래 데이터, 시장 데이터, 그리고 사용자 정보를 어떻게 수집, 저장, 사용하는지 설명합니다.
+이 문서는 Crypto Lab에서 거래 데이터, 시장 데이터, 그리고 사용자 정보를 어떻게 수집, 저장, 사용하는지 설명합니다.
 
 ---
 
@@ -443,7 +443,7 @@ df.to_parquet('trades.parquet')
 
 이 시스템을 사용함으로써 당신은 이 정책에 동의합니다.
 
-**최신 버전:** [GitHub 저장소](https://github.com/11e3/crypto-quant-system)
+**최신 버전:** [GitHub 저장소](https://github.com/11e3/crypto-lab)
 
 ---
 
@@ -451,8 +451,8 @@ df.to_parquet('trades.parquet')
 
 데이터 정책에 대한 질문:
 
-- 📧 Issues: https://github.com/11e3/crypto-quant-system/issues
-- 💬 Discussions: https://github.com/11e3/crypto-quant-system/discussions
+- 📧 Issues: https://github.com/11e3/crypto-lab/issues
+- 💬 Discussions: https://github.com/11e3/crypto-lab/discussions
 
 ---
 

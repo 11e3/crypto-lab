@@ -1,5 +1,5 @@
 """
-Monitoring module for crypto-quant-system.
+Monitoring module for crypto-lab.
 
 Provides structured logging and Prometheus metrics for all services.
 """

@@ -4,7 +4,7 @@ description: Weekly code quality review — simplification opportunities, dead c
 disable-model-invocation: true
 ---
 
-Perform a weekly code quality review of crypto-quant-system. This is a READ-ONLY analysis — do NOT implement changes automatically.
+Perform a weekly code quality review of crypto-lab. This is a READ-ONLY analysis — do NOT implement changes automatically.
 
 ## Review Steps
 

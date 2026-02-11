@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================================
-REM Crypto Quant System - Docker Helper Script (Windows)
+REM Crypto Lab - Docker Helper Script (Windows)
 REM ============================================================================
 REM Usage:
 REM   docker-run.bat web        - Start web UI only

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide documents performance profiling results and optimization recommendations for the Crypto Quant System. The system is designed to handle backtesting, portfolio optimization, and live trading with minimal latency and memory overhead.
+This guide documents performance profiling results and optimization recommendations for the Crypto Lab. The system is designed to handle backtesting, portfolio optimization, and live trading with minimal latency and memory overhead.
 
 ---
 
@@ -426,4 +426,4 @@ print(f"Memory usage: {mem_peak - mem_start:.2f} MB")
 
 **Last Updated:** 2024
 **Profiling Date:** Current session
-**Author:** Crypto Quant System Development Team
+**Author:** Crypto Lab Development Team

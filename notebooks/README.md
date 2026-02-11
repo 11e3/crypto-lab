@@ -1,8 +1,8 @@
-# 📚 Jupyter Notebooks - Crypto Quant System 실습 가이드
+# 📚 Jupyter Notebooks - Crypto Lab 실습 가이드
 
 ## 개요
 
-이 디렉토리에는 Crypto Quant System의 **실제 사용 사례를 분석하는 Jupyter 노트북**이 포함되어 있습니다.
+이 디렉토리에는 Crypto Lab의 **실제 사용 사례를 분석하는 Jupyter 노트북**이 포함되어 있습니다.
 
 각 노트북은 **구체적인 시나리오**를 통해 시스템의 역량을 보여줍니다.
 
@@ -313,7 +313,7 @@ config = BacktestConfig(ohlcv_data=ohlcv, ...)
 ## 🤝 기여하기
 
 노트북 개선 제안:
-1. [GitHub Issues](https://github.com/11e3/crypto-quant-system/issues) 제출
+1. [GitHub Issues](https://github.com/11e3/crypto-lab/issues) 제출
 2. Pull Request로 개선안 제시
 3. Discussions에서 질문 및 공유
 
@@ -321,7 +321,7 @@ config = BacktestConfig(ohlcv_data=ohlcv, ...)
 
 **마지막 업데이트**: 2025년 1월
 **버전**: 1.0
-**작성자**: Crypto Quant System 개발팀
+**작성자**: Crypto Lab 개발팀
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## ⚠️ 중요 알림
 
-이 문서를 읽고 Crypto Quant System을 사용하기 전에 신중하게 검토하세요.
+이 문서를 읽고 Crypto Lab을 사용하기 전에 신중하게 검토하세요.
 
 ---
 
@@ -277,7 +277,7 @@
 
 이 면책조항에 대한 질문이나 피드백은:
 
-- 📧 [Issues](https://github.com/11e3/crypto-quant-system/issues) 제출
+- 📧 [Issues](https://github.com/11e3/crypto-lab/issues) 제출
 - 💬 Discussions에서 토론
 
 ---

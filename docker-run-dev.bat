@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================================
-REM Crypto Quant System - Docker Development Helper Script (Windows)
+REM Crypto Lab - Docker Development Helper Script (Windows)
 REM ============================================================================
 REM Development mode: Mounts source code for live reloading without rebuild
 REM Usage:

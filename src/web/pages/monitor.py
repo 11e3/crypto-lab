@@ -1,7 +1,7 @@
 """Bot Monitor page.
 
 Real-time monitoring of crypto-bot via GCS logs.
-Part of the Crypto Quant Ecosystem.
+Part of the Crypto Lab Ecosystem.
 
 Features:
 - Live positions display

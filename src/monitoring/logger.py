@@ -1,5 +1,5 @@
 """
-Structured JSON logging for crypto-quant-system.
+Structured JSON logging for crypto-lab.
 
 Provides consistent, structured logging across all services with support for:
 - JSON output format

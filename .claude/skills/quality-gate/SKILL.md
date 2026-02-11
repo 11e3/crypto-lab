@@ -3,7 +3,7 @@ name: quality-gate
 description: Run full quality checks — ruff format, lint, mypy, pytest with coverage
 ---
 
-Run the complete quality gate for crypto-quant-system. Execute each step sequentially and report results.
+Run the complete quality gate for crypto-lab. Execute each step sequentially and report results.
 
 **IMPORTANT**: Use `python -m pytest` (not `uv run pytest`) — uv has path issues on Windows.
 

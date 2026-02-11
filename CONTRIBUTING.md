@@ -1,4 +1,4 @@
-# Crypto Quant System에 기여하기
+# Crypto Lab에 기여하기
 
 기여에 관심을 가져주셔서 감사합니다! 이 문서는 이 프로젝트에 기여하기 위한 가이드라인과 지침을 제공합니다.
 
@@ -13,7 +13,7 @@
 
 ### 버그 신고
 
-1. [Issues](https://github.com/your-username/crypto-quant-system/issues)에서 버그가 이미 신고되었는지 확인
+1. [Issues](https://github.com/your-username/crypto-lab/issues)에서 버그가 이미 신고되었는지 확인
 2. 그렇지 않은 경우, 다음을 포함하여 새 이슈 생성:
    - 명확한 제목과 설명
    - 재현 단계
@@ -97,8 +97,8 @@
 
 ```bash
 # 포크 클론
-git clone https://github.com/your-username/crypto-quant-system.git
-cd crypto-quant-system
+git clone https://github.com/your-username/crypto-lab.git
+cd crypto-lab
 
 # 가상 환경 생성 (선택사항, 권장)
 python -m venv .venv
@@ -248,7 +248,7 @@ def test_volatility_breakout_calculate_signals(sample_data):
 ## 프로젝트 구조
 
 ```
-crypto-quant-system/
+crypto-lab/
 ├── src/              # 소스 코드
 ├── tests/            # 테스트 파일
 ├── docs/             # 문서

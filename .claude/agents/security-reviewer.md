@@ -1,15 +1,13 @@
 # Security Reviewer Agent
 
-Review crypto-quant-system for security vulnerabilities. Focus on HIGH severity issues that could lead to financial loss or credential exposure.
+Review crypto-lab for security vulnerabilities. Focus on HIGH severity issues that could lead to financial loss or credential exposure.
 
 ## Scope
 
 ### Critical Paths (always review)
-- `src/exchange/upbit.py` — API key usage, request signing
-- `src/exchange/upbit_orders.py` — Order submission, amount validation
-- `src/execution/` — Trade execution, position sizing
 - `src/config/` — Configuration loading, secret handling
 - `src/web/` — Streamlit UI input validation
+- `src/data/` — Data collection, API interactions
 
 ### Check Categories
 

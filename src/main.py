@@ -1,5 +1,5 @@
 """
-Main entry point for Crypto Quant System.
+Main entry point for Crypto Lab.
 
 Web UI로 모든 기능을 사용할 수 있습니다.
 
@@ -15,7 +15,7 @@ Web UI로 모든 기능을 사용할 수 있습니다.
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Crypto Quant System")
+    print("Crypto Lab")
     print("=" * 60)
     print()
     print("Web UI를 사용하세요:")

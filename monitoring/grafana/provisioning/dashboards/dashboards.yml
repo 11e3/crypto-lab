@@ -4,9 +4,9 @@
 apiVersion: 1
 
 providers:
-  - name: 'Crypto Quant Dashboards'
+  - name: 'Crypto Lab Dashboards'
     orgId: 1
-    folder: 'Crypto Quant System'
+    folder: 'Crypto Lab'
     folderUid: 'crypto-quant'
     type: file
     disableDeletion: false

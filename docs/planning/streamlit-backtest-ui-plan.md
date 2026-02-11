@@ -204,7 +204,7 @@ src/
 import streamlit as st
 
 st.set_page_config(
-    page_title="Crypto Quant Backtest",
+    page_title="Crypto Lab Backtest",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",

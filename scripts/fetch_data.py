@@ -2,7 +2,7 @@
 """
 Data Fetcher CLI - Download OHLCV data from exchanges.
 
-Part of the Crypto Quant Ecosystem.
+Part of the Crypto Lab Ecosystem.
 
 Usage:
     # Download specific symbols

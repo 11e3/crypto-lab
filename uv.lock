@@ -527,7 +527,7 @@ wheels = [
 ]
 
 [[package]]
-name = "crypto-quant-system"
+name = "crypto-lab"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

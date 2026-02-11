@@ -1,4 +1,4 @@
-# Prometheus Configuration for Crypto Quant System
+# Prometheus Configuration for Crypto Lab
 # =================================================
 
 global:
@@ -6,7 +6,7 @@ global:
   evaluation_interval: 15s
   external_labels:
     environment: 'development'
-    project: 'crypto-quant-system'
+    project: 'crypto-lab'
 
 # Alertmanager configuration
 alerting:
