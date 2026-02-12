@@ -31,6 +31,7 @@ def _prepare_data(
         Tuple of (dates, equity, benchmark) after optional downsampling.
     """
     if len(dates) > max_points:
+        original_dates = dates
         downsampled_dates, downsampled_equity = downsample_timeseries(
             dates, equity, max_points=max_points
         )
@@ -38,7 +39,7 @@ def _prepare_data(
         equity = downsampled_equity
         if benchmark is not None:
             _, downsampled_benchmark = downsample_timeseries(
-                dates, benchmark, max_points=max_points
+                original_dates, benchmark, max_points=max_points
             )
             benchmark = downsampled_benchmark
     return dates, equity, benchmark

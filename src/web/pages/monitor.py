@@ -245,6 +245,75 @@ def _calculate_pnl_summary(
     return pd.DataFrame(summary_data)
 
 
+def _prepare_pnl_data(
+    pnl_df: pd.DataFrame, initial_capital: float
+) -> tuple[pd.DataFrame, float, float, int, float]:
+    """Prepare PnL data for rendering.
+
+    Calculates cumulative equity, returns, and summary statistics.
+
+    Args:
+        pnl_df: Raw PnL DataFrame with 'date', 'pnl', 'trades' columns.
+        initial_capital: Initial capital amount.
+
+    Returns:
+        Tuple of (enriched_df, current_equity, total_return_pct, total_trades, avg_daily_return).
+    """
+    pnl_df = pnl_df.sort_values("date").reset_index(drop=True)
+
+    pnl_df["cumulative_pnl"] = pnl_df["pnl"].cumsum()
+    pnl_df["equity"] = initial_capital + pnl_df["cumulative_pnl"]
+    pnl_df["return_pct"] = (pnl_df["equity"] / initial_capital - 1) * 100
+
+    current_equity = float(pnl_df["equity"].iloc[-1])
+    total_return_pct = float(pnl_df["return_pct"].iloc[-1])
+    total_trades = int(pnl_df["trades"].sum())
+
+    trading_days = pnl_df[pnl_df["trades"] > 0]
+    if not trading_days.empty:
+        daily_returns = trading_days["pnl"] / initial_capital * 100
+        avg_daily_return = float(daily_returns.mean())
+    else:
+        avg_daily_return = 0.0
+
+    return pnl_df, current_equity, total_return_pct, total_trades, avg_daily_return
+
+
+def _build_return_chart(pnl_df: pd.DataFrame) -> None:
+    """Build and render cumulative return chart.
+
+    Args:
+        pnl_df: DataFrame with 'date' and 'return_pct' columns.
+    """
+    import plotly.graph_objects as go
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=pnl_df["date"],
+            y=pnl_df["return_pct"],
+            mode="lines",
+            name="Cumulative Return",
+            line={"color": "#00C853", "width": 2},
+            fill="tozeroy",
+            fillcolor="rgba(0,200,83,0.1)",
+        )
+    )
+    fig.update_layout(
+        yaxis_title="Return (%)",
+        xaxis_title="",
+        height=350,
+        margin={"l": 50, "r": 20, "t": 20, "b": 50},
+        xaxis={
+            "tickangle": 0,
+            "dtick": max(1, len(pnl_df) // 8) * 86400000,
+            "tickformat": "%m/%d",
+        },
+        yaxis={"ticksuffix": "%"},
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
 def _render_pnl_summary(pnl_df: pd.DataFrame, initial_capital: float = 10_000_000) -> None:
     """Render return summary with metrics and return chart."""
     st.subheader("Return Summary")
@@ -253,80 +322,22 @@ def _render_pnl_summary(pnl_df: pd.DataFrame, initial_capital: float = 10_000_00
         st.info("No return data available")
         return
 
-    # Sort by date ascending for cumulative calc
-    pnl_df = pnl_df.sort_values("date").reset_index(drop=True)
+    pnl_df, current_equity, total_return_pct, total_trades, avg_daily_return = _prepare_pnl_data(
+        pnl_df, initial_capital
+    )
 
-    # Calculate cumulative equity and returns
-    pnl_df["cumulative_pnl"] = pnl_df["pnl"].cumsum()
-    pnl_df["equity"] = initial_capital + pnl_df["cumulative_pnl"]
-    pnl_df["return_pct"] = (pnl_df["equity"] / initial_capital - 1) * 100
-
-    # Current values
-    current_equity = pnl_df["equity"].iloc[-1]
-    total_return_pct = pnl_df["return_pct"].iloc[-1]
-    total_trades = int(pnl_df["trades"].sum())
-
-    # Daily avg return (trading days only)
-    trading_days = pnl_df[pnl_df["trades"] > 0]
-    if not trading_days.empty:
-        daily_returns = trading_days["pnl"] / initial_capital * 100
-        avg_daily_return = daily_returns.mean()
-    else:
-        avg_daily_return = 0
-
-    # Summary metrics: 현재 평가금액, 총수익률, 일평균수익률, 거래수
     col1, col2, col3, col4 = st.columns(4)
-
     with col1:
-        st.metric(
-            "Current Equity",
-            f"{current_equity:,.0f} KRW",
-        )
-
+        st.metric("Current Equity", f"{current_equity:,.0f} KRW")
     with col2:
-        st.metric(
-            "Total Return",
-            f"{total_return_pct:+.2f}%",
-        )
-
+        st.metric("Total Return", f"{total_return_pct:+.2f}%")
     with col3:
-        st.metric(
-            "Daily Avg Return",
-            f"{avg_daily_return:+.4f}%",
-        )
-
+        st.metric("Daily Avg Return", f"{avg_daily_return:+.4f}%")
     with col4:
         st.metric("Total Trades", f"{total_trades:,}")
 
-    # Return % chart (not PnL KRW)
     if len(pnl_df) > 1:
-        import plotly.graph_objects as go
-
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x=pnl_df["date"],
-                y=pnl_df["return_pct"],
-                mode="lines",
-                name="Cumulative Return",
-                line={"color": "#00C853", "width": 2},
-                fill="tozeroy",
-                fillcolor="rgba(0,200,83,0.1)",
-            )
-        )
-        fig.update_layout(
-            yaxis_title="Return (%)",
-            xaxis_title="",
-            height=350,
-            margin={"l": 50, "r": 20, "t": 20, "b": 50},
-            xaxis={
-                "tickangle": 0,
-                "dtick": max(1, len(pnl_df) // 8) * 86400000,
-                "tickformat": "%m/%d",
-            },
-            yaxis={"ticksuffix": "%"},
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        _build_return_chart(pnl_df)
 
 
 def render_monitor_page() -> None:

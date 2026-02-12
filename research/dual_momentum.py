@@ -71,19 +71,23 @@ def compute_momentum(closes: pd.DataFrame, lookback: int) -> pd.DataFrame:
 
 def generate_signals(
     closes: pd.DataFrame,
-    lookback_short: int = 20,
-    lookback_long: int = 60,
+    lookback_fast: int = 20,
+    lookback_slow: int = 60,
     top_n: int = 3,
     rebal_days: int = 7,
+    direction: str = "both",
 ) -> pd.DataFrame:
     """듀얼 모멘텀 시그널 생성.
+
+    Args:
+        direction: "both" (롱+숏), "long" (롱만), "short" (숏만)
 
     Returns:
         DataFrame with same shape as closes.
         값: +1 (롱), -1 (숏), 0 (플랫)
     """
-    mom_short = compute_momentum(closes, lookback_short)
-    mom_long = compute_momentum(closes, lookback_long)
+    mom_fast = compute_momentum(closes, lookback_fast)
+    mom_slow = compute_momentum(closes, lookback_slow)
 
     signals = pd.DataFrame(0.0, index=closes.index, columns=closes.columns)
 
@@ -91,11 +95,11 @@ def generate_signals(
     rebal_dates = closes.index[::rebal_days]
 
     for date in rebal_dates:
-        if date not in mom_short.index or date not in mom_long.index:
+        if date not in mom_fast.index or date not in mom_slow.index:
             continue
 
-        ms = mom_short.loc[date]
-        ml = mom_long.loc[date]
+        ms = mom_fast.loc[date]
+        ml = mom_slow.loc[date]
 
         # 절대 모멘텀: 두 룩백 모두 양수 → 롱 후보
         long_candidates = (ms > 0) & (ml > 0)
@@ -105,16 +109,18 @@ def generate_signals(
         combined_score = ms + ml
 
         # 롱 상위 N개
-        long_scores = combined_score.where(long_candidates).dropna()
-        if len(long_scores) > 0:
-            top_longs = long_scores.nlargest(min(top_n, len(long_scores))).index
-            signals.loc[date, top_longs] = 1.0
+        if direction in ("both", "long"):
+            long_scores = combined_score.where(long_candidates).dropna()
+            if len(long_scores) > 0:
+                top_longs = long_scores.nlargest(min(top_n, len(long_scores))).index
+                signals.loc[date, top_longs] = 1.0
 
         # 숏 하위 N개
-        short_scores = combined_score.where(short_candidates).dropna()
-        if len(short_scores) > 0:
-            top_shorts = short_scores.nsmallest(min(top_n, len(short_scores))).index
-            signals.loc[date, top_shorts] = -1.0
+        if direction in ("both", "short"):
+            short_scores = combined_score.where(short_candidates).dropna()
+            if len(short_scores) > 0:
+                top_shorts = short_scores.nsmallest(min(top_n, len(short_scores))).index
+                signals.loc[date, top_shorts] = -1.0
 
     # 리밸런싱 사이에는 이전 시그널 유지
     signals = signals.replace(0, np.nan)
@@ -197,7 +203,8 @@ def compute_metrics(returns: pd.Series, equity: pd.Series) -> dict[str, float]:
     years = days / 365
 
     total_return = equity.iloc[-1] / equity.iloc[0] - 1
-    cagr = (1 + total_return) ** (1 / max(years, 0.01)) - 1
+    growth = max(1 + total_return, 1e-8)  # 파산 시 음수 방지
+    cagr = growth ** (1 / max(years, 0.01)) - 1
 
     vol = returns.std() * np.sqrt(365)
     sharpe = (returns.mean() * 365) / max(vol, 1e-8)
@@ -335,33 +342,38 @@ def plot_equity(result: BacktestResult, title: str = "Dual Momentum") -> None:
 
     plt.tight_layout()
     plt.savefig(Path(__file__).parent / "dual_momentum_result.png", dpi=120, bbox_inches="tight")
-    plt.show()
+    plt.close(fig)
     print("Saved: research/dual_momentum_result.png")
 
 
-def print_metrics(result: BacktestResult, params: dict) -> None:
+def print_metrics(result: BacktestResult, params: dict, capacity: dict | None = None) -> None:
     """결과 출력."""
+    m = result.metrics
+    sharpe = m["Sharpe"]
+    mdd = m["MDD"]
+
     print("\n" + "=" * 60)
     print("DUAL MOMENTUM BACKTEST RESULT")
     print("=" * 60)
     print(f"Parameters: {params}")
-    print(f"Trades: {result.trades}")
     print("-" * 40)
-    for k, v in result.metrics.items():
-        if isinstance(v, float):
-            if k in ("CAGR", "Volatility", "MDD", "Win Rate", "Total Return"):
-                print(f"  {k:20s}: {v:+.2%}")
-            else:
-                print(f"  {k:20s}: {v:.4f}")
-        else:
-            print(f"  {k:20s}: {v}")
-    print("=" * 60)
+    print(f"  CAGR   : {m['CAGR']:+.2%}")
+    print(f"  Sharpe : {sharpe:.4f}  {'PASS' if sharpe >= 1.0 else 'FAIL'}")
+    print(f"  MDD    : {mdd:+.2%}    {'PASS' if mdd >= -0.30 else 'FAIL'}")
+    print(f"  Calmar : {m['Calmar']:.4f}")
 
-    # 통과 기준 체크
-    sharpe = result.metrics["Sharpe"]
-    mdd = result.metrics["MDD"]
-    print(f"\n  Sharpe >= 1.0 ? {'PASS' if sharpe >= 1.0 else 'FAIL'} ({sharpe:.2f})")
-    print(f"  MDD >= -30%   ? {'PASS' if mdd >= -0.30 else 'FAIL'} ({mdd:.2%})")
+    # 연도별 수익률
+    yearly = result.returns.groupby(result.returns.index.year).apply(lambda r: (1 + r).prod() - 1)  # type: ignore[attr-defined]
+    print("\n--- Yearly Returns ---")
+    for year, ret in yearly.items():
+        print(f"  {year}: {ret:+.2%}")
+
+    # Capacity
+    if capacity:
+        print(f"\n  Capacity (median): ${capacity['capacity_median_usd']:,.0f}")
+        print(f"  Bottleneck:        {capacity['bottleneck_asset']}")
+
+    print("=" * 60)
 
 
 # === 파라미터 스윕 ===
@@ -370,41 +382,47 @@ def print_metrics(result: BacktestResult, params: dict) -> None:
 def parameter_sweep(closes: pd.DataFrame) -> pd.DataFrame:
     """주요 파라미터 조합 스윕."""
     results = []
-    lookbacks = [(10, 30), (20, 60), (30, 90), (20, 120)]
-    top_ns = [2, 3, 5]
-    rebal_days_list = [3, 7, 14]
-    vol_targets = [None, 0.15, 0.25, 0.40]
+    lookbacks = [(20, 30)]  # [(a, b) for a in range(1, 31, 3) for b in range(1, 31, 3) if a< b]
+    top_ns = [1]  # range(1, 5, 1)
+    rebal_days_list = [2]  # range(1, 5, 1)
+    vol_targets = [0.3]  # [a/100 for a in range(5, 100, 5)]
+    leverages = [1.0]  # [1.0, 1.5, 2.0]
+    directions = ["long"]  # ["both", "long", "short"]
 
-    total = len(lookbacks) * len(top_ns) * len(rebal_days_list) * len(vol_targets)
+    total = len(lookbacks) * len(top_ns) * len(rebal_days_list) * len(directions) * len(vol_targets) * len(leverages)
     print(f"\nRunning parameter sweep: {total} combinations")
 
     for lb_s, lb_l in lookbacks:
         for top_n in top_ns:
             for rebal in rebal_days_list:
-                sigs = generate_signals(closes, lb_s, lb_l, top_n, rebal)
-                for vt in vol_targets:
-                    res = backtest(closes, sigs, vol_target=vt)
-                    results.append(
-                        {
-                            "lb_s": lb_s,
-                            "lb_l": lb_l,
-                            "top_n": top_n,
-                            "rebal": rebal,
-                            "vol_target": vt or 0,
-                            "Sharpe": res.metrics["Sharpe"],
-                            "CAGR": res.metrics["CAGR"],
-                            "MDD": res.metrics["MDD"],
-                            "Calmar": res.metrics["Calmar"],
-                            "Trades": res.trades,
-                        }
-                    )
+                for d in directions:
+                    sigs = generate_signals(closes, lb_s, lb_l, top_n, rebal, direction=d)
+                    for vt in vol_targets:
+                        for lev in leverages:
+                            res = backtest(closes, sigs, leverage=lev, vol_target=vt)
+                            results.append(
+                                {
+                                    "lb_f": lb_s,
+                                    "lb_s": lb_l,
+                                    "top_n": top_n,
+                                    "rebal": rebal,
+                                    "direction": d,
+                                    "vol_target": vt or 0,
+                                    "leverage": lev,
+                                    "Sharpe": res.metrics["Sharpe"],
+                                    "CAGR": res.metrics["CAGR"],
+                                    "MDD": res.metrics["MDD"],
+                                    "Calmar": res.metrics["Calmar"],
+                                    "Trades": res.trades,
+                                }
+                            )
 
     df = pd.DataFrame(results).sort_values("Sharpe", ascending=False)
-    print("\n--- Top 15 by Sharpe ---")
-    print(df.head(15).to_string(index=False, float_format="{:.4f}".format))
-    print("\n--- Top 15 by Calmar (Sharpe >= 0.8) ---")
+    print("\n--- Top 5 by Sharpe ---")
+    print(df.head(5).to_string(index=False, float_format="{:.4f}".format))
+    print("\n--- Top 5 by Calmar (Sharpe >= 0.8) ---")
     filtered = df[df["Sharpe"] >= 0.8].sort_values("Calmar", ascending=False)
-    print(filtered.head(15).to_string(index=False, float_format="{:.4f}".format))
+    print(filtered.head(5).to_string(index=False, float_format="{:.4f}".format))
     return df
 
 
@@ -420,40 +438,50 @@ def main() -> None:
     parser.add_argument("--vol-target", type=float, default=None, help="Annualized vol target (e.g., 0.15)")
     parser.add_argument("--sweep", action="store_true", help="Run parameter sweep")
     parser.add_argument("--interval", default="1d", help="Data interval")
+    parser.add_argument("--direction", choices=["both", "long", "short"], default="both", help="Trade direction")
+    parser.add_argument("--symbols", nargs="+", default=None, help="Symbols to include (e.g., BTCUSDT ETHUSDT)")
+    parser.add_argument("--exclude", nargs="+", default=None, help="Symbols to exclude")
     parser.add_argument("--no-plot", action="store_true", help="Skip plot")
     args = parser.parse_args()
 
     closes, volumes = load_data(args.interval)
 
+    # 유니버스 필터링
+    if args.symbols:
+        valid = [s for s in args.symbols if s in closes.columns]
+        if not valid:
+            print(f"No matching symbols. Available: {list(closes.columns)}")
+            return
+        closes = pd.DataFrame(closes[valid])
+        volumes = pd.DataFrame(volumes[valid])
+    if args.exclude:
+        keep = [c for c in closes.columns if c not in args.exclude]
+        closes = pd.DataFrame(closes[keep])
+        volumes = pd.DataFrame(volumes[keep])
+    print(f"Universe: {list(closes.columns)}")
+
     if args.sweep:
         parameter_sweep(closes)
         return
 
-    lb_short, lb_long = args.lookback
+    lb_fast, lb_slow = args.lookback
     params = {
-        "lookback_short": lb_short,
-        "lookback_long": lb_long,
+        "lookback_fast": lb_fast,
+        "lookback_slow": lb_slow,
         "top_n": args.top_n,
         "rebal_days": args.rebal_days,
         "leverage": args.leverage,
+        "direction": args.direction,
     }
 
-    signals = generate_signals(closes, lb_short, lb_long, args.top_n, args.rebal_days)
+    signals = generate_signals(closes, lb_fast, lb_slow, args.top_n, args.rebal_days, direction=args.direction)
     result = backtest(closes, signals, args.leverage, vol_target=args.vol_target)
     params["vol_target"] = args.vol_target
-    print_metrics(result, params)
-
-    # Capacity 분석
     cap = estimate_capacity(result.positions, volumes)
-    print("\n--- CAPACITY ANALYSIS (1% participation) ---")
-    print(f"  Conservative (5th pct): ${cap['capacity_conservative_usd']:,.0f}")
-    print(f"  Median estimate:        ${cap['capacity_median_usd']:,.0f}")
-    print(f"  Bottleneck asset:       {cap['bottleneck_asset']}")
-    print(f"  Min daily vol (rebal):  ${cap['min_total_daily_vol_usd']:,.0f}")
-    print(f"  Median daily vol:       ${cap['median_total_daily_vol_usd']:,.0f}")
+    print_metrics(result, params, cap)
 
     if not args.no_plot:
-        plot_equity(result, f"Dual Momentum (lb={lb_short}/{lb_long}, top={args.top_n}, rebal={args.rebal_days}d)")
+        plot_equity(result, f"Dual Momentum (lb={lb_fast}/{lb_slow}, top={args.top_n}, rebal={args.rebal_days}d)")
 
 
 if __name__ == "__main__":

@@ -18,7 +18,8 @@
       "Bash(git add:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(python:*)"
     ]
   },
   "hooks": {
@@ -28,8 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -Command \"if ($env:CLAUDE_FILE_PATH -match '\\.env$') { exit 1 } else { exit 0 }\"",
-            "description": "Block .env file edits to protect API keys"
+            "command": "powershell -Command \"if ($env:CLAUDE_FILE_PATH -match '\\.env$') { exit 1 } else { exit 0 }\""
           }
         ]
       }
@@ -40,8 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -Command \"if ($env:CLAUDE_FILE_PATH -match '\\.py$') { ruff format --quiet $env:CLAUDE_FILE_PATH; ruff check --fix --quiet $env:CLAUDE_FILE_PATH }\"",
-            "description": "Auto-format and lint Python files on edit"
+            "command": "powershell -Command \"if ($env:CLAUDE_FILE_PATH -match '\\.py$') { ruff format --quiet $env:CLAUDE_FILE_PATH; ruff check --fix --quiet $env:CLAUDE_FILE_PATH }\""
           }
         ]
       }

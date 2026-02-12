@@ -286,8 +286,6 @@ omit = [
     "src/backtester/analysis/bootstrap_analysis.py",
     "src/backtester/analysis/permutation_test.py",
     "src/backtester/analysis/robustness_analysis.py",
-    # Web UI modules (tested via integration tests)
-    "src/web/*",
 ]
 
 [tool.coverage.report]
@@ -301,7 +299,7 @@ exclude_lines = [
     "@abstractmethod",
 ]
 # Coverage threshold (will be enabled gradually)
-fail_under = 80  # Branch coverage target: 80%+ (line coverage 80.85%)
+fail_under = 80  # Including web/* — target reached via web service+component tests
 precision = 2
 show_missing = true
 skip_covered = false

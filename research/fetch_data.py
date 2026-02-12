@@ -31,18 +31,20 @@ DEFAULT_SYMBOLS = [
     "ADA/USDT:USDT",
     "AVAX/USDT:USDT",
     "LINK/USDT:USDT",
-    "DOT/USDT:USDT",
 ]
 
 
 def fetch_ohlcv(
     symbol: str,
     interval: str = "1d",
-    days: int = 1095,
+    days: int | None = 1095,
     limit_per_call: int = 1500,
 ) -> pd.DataFrame:
     """바이낸스 선물 OHLCV를 페이지네이션으로 수집."""
-    since = exchange.milliseconds() - days * 24 * 60 * 60 * 1000
+    if days is None:
+        since = 0  # 상장일부터
+    else:
+        since = exchange.milliseconds() - days * 24 * 60 * 60 * 1000
     all_rows: list[list] = []
 
     while True:
@@ -82,6 +84,7 @@ def main() -> None:
     )
     parser.add_argument("--interval", default="1d", help="Candle interval (1d, 4h, 1h)")
     parser.add_argument("--days", type=int, default=1095, help="Days of history")
+    parser.add_argument("--all", action="store_true", help="Fetch from listing date")
     args = parser.parse_args()
 
     # 사용자 입력 형태 → ccxt 형태 변환 (e.g., BTCUSDT → BTC/USDT:USDT)
@@ -95,12 +98,13 @@ def main() -> None:
             base = s.replace("USDT", "")
             symbols.append(f"{base}/USDT:USDT")
 
-    print(f"Fetching {len(symbols)} symbols, interval={args.interval}, days={args.days}")
+    days = None if args.all else args.days
+    print(f"Fetching {len(symbols)} symbols, interval={args.interval}, days={'all' if days is None else days}")
 
     for symbol in symbols:
         print(f"\n[{symbol}]")
         try:
-            df = fetch_ohlcv(symbol, args.interval, args.days)
+            df = fetch_ohlcv(symbol, args.interval, days)
             save_ohlcv(df, symbol, args.interval)
         except Exception as e:
             print(f"  ERROR: {e}")
