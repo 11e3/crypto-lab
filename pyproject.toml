@@ -93,7 +93,7 @@ notebooks = [
 ]
 web = [
     "streamlit>=1.30.0,<1.52",  # Pin for Python 3.12 compatibility
-    "tornado<6.5",  # Pin for Python 3.12 compatibility
+    "tornado<6.6",  # Pin for Python 3.12 compatibility
     "packaging<25",  # Pin for Python 3.12 compatibility
     "plotly>=5.18.0",
     "watchdog>=3.0.0",  # Streamlit hot reload
