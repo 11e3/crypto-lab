@@ -20,10 +20,9 @@ Crypto backtesting & analysis platform for Upbit exchange (KRW pairs). Backtesti
 
 ## Windows/Environment Gotchas
 
-- **`uv run` broken**: Fails with "canonicalize script path" — use `python -m pytest` directly
 - **PowerShell**: No `&&` support — use `;` or use git bash
-- **Test runner**: `python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80`
-- **Ruff/MyPy**: Run directly (`ruff check src/`, `mypy src/`), not through uv
+- **Test runner**: `uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=80`
+- **Ruff/MyPy**: `uv run ruff check src/`, `uv run mypy src/`
 
 ## Quality Standards
 
