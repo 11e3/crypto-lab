@@ -81,6 +81,9 @@ reports/*.json
 logs/
 *.log
 
+# Research data (Binance futures OHLCV, funding rates)
+research/data/
+
 # Build artifacts
 *.egg-info/
 dist/

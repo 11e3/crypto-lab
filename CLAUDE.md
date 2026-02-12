@@ -96,6 +96,30 @@ python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 3. Implement, then `/quality-gate`
 4. `/code-review` for self-review before push
 
+### Strategy Research (Binance Futures)
+바이낸스 선물 전략은 `research/` 폴더에서 스크립트로 검증. `src/strategies/`와 별개 — 실거래는 crypto-bot 레포로 이관.
+
+**구조**:
+```
+research/
+├── fetch_data.py       # 바이낸스 선물 데이터 수집 (ccxt)
+├── dual_momentum.py    # 단일 파일, pandas 백테스트 + 시각화
+├── data/               # OHLCV parquet (.gitignore)
+└── notebooks/          # 선택
+```
+
+**워크플로우**:
+1. `research/` 스크립트에 `backtest()` + `plot_equity()` + `parameter_sweep()` 구현
+2. 핵심 메트릭 확인: Sharpe ≥ 1.0, MDD ≤ 30%, capacity 분석
+3. 통과 → crypto-bot 레포에 실거래 구현 (이 레포의 src/strategies/와 무관)
+4. 탈락 → 스크립트에 결과 코멘트 남기고 보관
+
+**규칙**:
+- `research/` 코드는 quality-gate 대상 아님 (ruff/mypy/coverage 제외)
+- `research/data/`는 `.gitignore` 등록, 커밋 금지
+- 비용 모델: taker 0.05% + slippage 0.03% = 0.08% per leg
+- `src/` 하위의 업비트 현물 전략과 혼합하지 않음
+
 ### Periodic Maintenance
 - `/weekly-review` — code simplification, dead code, coverage gaps
 - `/claude-md-improver` — keep this file current
