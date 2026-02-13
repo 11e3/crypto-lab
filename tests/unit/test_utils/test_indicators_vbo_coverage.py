@@ -2,7 +2,7 @@
 
 Targets: calculate_volatility_regime, calculate_adaptive_noise,
 add_improved_indicators (from indicators_vbo.py) and
-calculate_noise_ratio, calculate_adaptive_k_value (from indicators_vbo_adaptive.py).
+calculate_noise_ratio, calculate_adaptive_k_value (from indicators_vbo.py).
 """
 
 from __future__ import annotations
@@ -13,12 +13,10 @@ import pytest
 
 from src.utils.indicators_vbo import (
     add_improved_indicators,
-    calculate_adaptive_noise,
-    calculate_volatility_regime,
-)
-from src.utils.indicators_vbo_adaptive import (
     calculate_adaptive_k_value,
+    calculate_adaptive_noise,
     calculate_noise_ratio,
+    calculate_volatility_regime,
 )
 
 

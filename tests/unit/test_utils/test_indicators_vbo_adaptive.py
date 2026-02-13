@@ -5,7 +5,7 @@ Tests for adaptive VBO indicators.
 import pandas as pd
 import pytest
 
-from src.utils.indicators_vbo_adaptive import (
+from src.utils.indicators_vbo import (
     calculate_adaptive_noise,
     calculate_volatility_regime,
 )
