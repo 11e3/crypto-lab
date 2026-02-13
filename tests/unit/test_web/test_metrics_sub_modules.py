@@ -1,4 +1,4 @@
-"""Tests for web metrics sub-modules: RiskMetrics, RatioMetrics, StatisticalMetrics, TradeMetrics."""
+"""Tests for web metrics sub-modules: RiskMetrics, StatisticalMetrics, TradeMetrics."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from src.web.services.metrics import (
-    RatioMetrics,
     RiskMetrics,
     StatisticalMetrics,
     TradeMetrics,
@@ -79,59 +78,6 @@ class TestRiskMetrics:
 
     def test_cvar_insufficient_data(self) -> None:
         assert RiskMetrics.calculate_cvar(np.array([0.01])) == 0.0
-
-
-# =========================================================================
-# RatioMetrics
-# =========================================================================
-
-
-class TestRatioMetrics:
-    """Tests for RatioMetrics calculator."""
-
-    @pytest.fixture()
-    def returns_positive_mean(self) -> np.ndarray:
-        np.random.seed(42)
-        return np.random.normal(0.002, 0.01, 365)
-
-    def test_sharpe_ratio_positive(self, returns_positive_mean: np.ndarray) -> None:
-        sharpe = RatioMetrics.calculate_sharpe_ratio(returns_positive_mean)
-        assert sharpe > 0.0
-
-    def test_sharpe_ratio_insufficient_data(self) -> None:
-        assert RatioMetrics.calculate_sharpe_ratio(np.array([0.01])) == 0.0
-
-    def test_sharpe_ratio_zero_std(self) -> None:
-        # All-zero returns → zero std after subtracting risk-free rate
-        returns = np.zeros(100)
-        assert RatioMetrics.calculate_sharpe_ratio(returns) == 0.0
-
-    def test_sortino_ratio_positive(self, returns_positive_mean: np.ndarray) -> None:
-        sortino = RatioMetrics.calculate_sortino_ratio(returns_positive_mean)
-        assert sortino > 0.0
-
-    def test_sortino_ratio_insufficient_data(self) -> None:
-        assert RatioMetrics.calculate_sortino_ratio(np.array([0.01])) == 0.0
-
-    def test_sortino_no_downside(self) -> None:
-        # All positive returns → infinite sortino
-        returns = np.array([0.01, 0.02, 0.03, 0.04])
-        sortino = RatioMetrics.calculate_sortino_ratio(returns, risk_free_rate=0.0)
-        assert sortino == float("inf")
-
-    def test_sortino_all_negative_no_excess(self) -> None:
-        """All returns negative with high rf → mean excess < 0 → 0."""
-        returns = np.array([-0.01, -0.02, -0.03, -0.04])
-        sortino = RatioMetrics.calculate_sortino_ratio(returns, risk_free_rate=0.5)
-        # All excess returns negative, but enough downside data, so ratio is negative or 0
-        assert isinstance(sortino, float)
-
-    def test_calmar_ratio(self) -> None:
-        calmar = RatioMetrics.calculate_calmar_ratio(cagr=20.0, max_dd=10.0)
-        assert calmar == pytest.approx(2.0)
-
-    def test_calmar_ratio_zero_dd(self) -> None:
-        assert RatioMetrics.calculate_calmar_ratio(cagr=20.0, max_dd=0.0) == 0.0
 
 
 # =========================================================================

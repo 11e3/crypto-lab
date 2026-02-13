@@ -17,9 +17,10 @@ from src.utils.metrics_core import (
     calculate_calmar_ratio,
     calculate_daily_returns,
     calculate_mdd,
+    calculate_sharpe_ratio,
+    calculate_sortino_ratio,
 )
 from src.web.services.metrics import (
-    RatioMetrics,
     RiskMetrics,
     StatisticalMetrics,
     TradeMetrics,
@@ -30,7 +31,6 @@ __all__ = [
     "calculate_extended_metrics",
     # Re-export metric calculators
     "RiskMetrics",
-    "RatioMetrics",
     "StatisticalMetrics",
     "TradeMetrics",
 ]
@@ -133,8 +133,8 @@ def calculate_extended_metrics(
     cvar_99 = RiskMetrics.calculate_cvar(returns, 0.99)
 
     # Risk-adjusted returns
-    sharpe = RatioMetrics.calculate_sharpe_ratio(returns, risk_free_rate)
-    sortino = RatioMetrics.calculate_sortino_ratio(returns, risk_free_rate)
+    sharpe = calculate_sharpe_ratio(returns, risk_free_rate=risk_free_rate)
+    sortino = calculate_sortino_ratio(returns, risk_free_rate=risk_free_rate)
     calmar = calculate_calmar_ratio(cagr, max_dd)
 
     # Statistical metrics

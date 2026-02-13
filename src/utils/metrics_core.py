@@ -84,22 +84,29 @@ def calculate_daily_returns(
 def calculate_sharpe_ratio(
     returns: np.ndarray,
     annualization_factor: float = ANNUALIZATION_FACTOR,
+    *,
+    risk_free_rate: float = RISK_FREE_RATE,
 ) -> float:
     """Calculate annualized Sharpe ratio.
+
+    Uses excess returns (returns - daily risk-free rate) and sample std (ddof=1).
 
     Args:
         returns: Array of period returns.
         annualization_factor: Trading days per year (365 for crypto, 252 for stocks).
+        risk_free_rate: Annual risk-free rate (converted to daily internally).
 
     Returns:
-        Annualized Sharpe ratio. Returns 0.0 if empty or zero std.
+        Annualized Sharpe ratio. Returns 0.0 if fewer than 2 data points or zero std.
     """
-    if len(returns) == 0:
+    if len(returns) < 2:
         return 0.0
-    std = float(np.std(returns))
+    daily_rf = (1 + risk_free_rate) ** (1 / annualization_factor) - 1
+    excess_returns = returns - daily_rf
+    std = float(np.std(excess_returns, ddof=1))
     if std <= 0:
         return 0.0
-    return float(np.mean(returns) / std * np.sqrt(annualization_factor))
+    return float(np.mean(excess_returns) / std * np.sqrt(annualization_factor))
 
 
 def calculate_cagr(
@@ -155,21 +162,25 @@ def calculate_sortino_ratio(
     risk_free_rate: float = RISK_FREE_RATE,
     annualization_factor: float = ANNUALIZATION_FACTOR,
 ) -> float:
-    """Calculate Sortino ratio using downside deviation.
+    """Calculate Sortino ratio using downside semi-deviation.
+
+    Uses excess returns (returns - daily risk-free rate), sample std (ddof=1),
+    and semi-deviation (all returns clamped to min(excess, 0)).
 
     Args:
         returns: Array of period returns.
-        risk_free_rate: Risk-free rate (daily).
+        risk_free_rate: Annual risk-free rate (converted to daily internally).
         annualization_factor: Annualization factor.
 
     Returns:
-        Sortino ratio. Returns 0.0 if no downside deviation.
+        Sortino ratio. Returns 0.0 if fewer than 2 data points or no downside deviation.
     """
-    if len(returns) == 0:
+    if len(returns) < 2:
         return 0.0
-    excess_returns = returns - risk_free_rate
+    daily_rf = (1 + risk_free_rate) ** (1 / annualization_factor) - 1
+    excess_returns = returns - daily_rf
     downside_returns = np.minimum(excess_returns, 0)
-    downside_std = float(np.std(downside_returns))
+    downside_std = float(np.std(downside_returns, ddof=1))
     if downside_std <= 0:
         return 0.0
     return float(np.mean(excess_returns) / downside_std * np.sqrt(annualization_factor))

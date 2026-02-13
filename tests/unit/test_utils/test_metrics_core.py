@@ -88,6 +88,16 @@ class TestCalculateSharpeRatio:
     def test_empty(self) -> None:
         assert calculate_sharpe_ratio(np.array([])) == 0.0
 
+    def test_single_element(self) -> None:
+        assert calculate_sharpe_ratio(np.array([0.01])) == 0.0
+
+    def test_risk_free_rate(self) -> None:
+        returns = np.array([0.01, 0.02, -0.005, 0.015, 0.005])
+        sharpe_no_rf = calculate_sharpe_ratio(returns)
+        sharpe_with_rf = calculate_sharpe_ratio(returns, risk_free_rate=0.05)
+        # Higher RF reduces excess returns → lower Sharpe
+        assert sharpe_with_rf < sharpe_no_rf
+
     def test_annualization_factor(self) -> None:
         returns = np.array([0.01, 0.02, -0.005, 0.015])
         sharpe_252 = calculate_sharpe_ratio(returns, annualization_factor=252)
@@ -140,3 +150,6 @@ class TestCalculateSortinoRatio:
 
     def test_empty(self) -> None:
         assert calculate_sortino_ratio(np.array([])) == 0.0
+
+    def test_single_element(self) -> None:
+        assert calculate_sortino_ratio(np.array([0.01])) == 0.0
