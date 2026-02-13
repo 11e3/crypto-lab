@@ -138,14 +138,16 @@ def show_home() -> None:
 
         registry = StrategyRegistry()
         strategy_count = len(registry.list_strategies())
-    except Exception:
+    except (ImportError, AttributeError) as e:
+        logger.debug(f"Strategy registry unavailable: {e}")
         strategy_count = 0
 
     try:
         from src.web.config.constants import DATA_COLLECT_TICKERS
 
         asset_count = len(DATA_COLLECT_TICKERS)
-    except Exception:
+    except (ImportError, AttributeError) as e:
+        logger.debug(f"Data collect constants unavailable: {e}")
         asset_count = 0
 
     col1, col2, col3 = st.columns(3)

@@ -38,19 +38,21 @@ UPBIT_SECRET_KEY=your_secret_key_here
 
 ### 2. Start Services
 
-**Windows:**
-```cmd
-docker-run.bat web       # Web UI only
-docker-run.bat bot       # Trading bot (LIVE TRADING!)
-docker-run.bat all       # All services
-```
-
-**Linux/Mac:**
 ```bash
-chmod +x docker-run.sh
-./docker-run.sh web      # Web UI only
-./docker-run.sh bot      # Trading bot (LIVE TRADING!)
-./docker-run.sh all      # All services
+# Web UI only
+docker-compose up -d web-ui
+
+# All services
+docker-compose up -d
+
+# Development mode (auto-reload)
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d web-ui
+
+# Stop all
+docker-compose down
+
+# View logs
+docker-compose logs -f web-ui
 ```
 
 ### 3. Access Web UI

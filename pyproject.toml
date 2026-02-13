@@ -179,7 +179,6 @@ module = [
     "streamlit.*",
     "plotly.*",
     "yaml.*",
-    "requests.*",
     "ccxt.*",
     "prometheus_client.*",
     "google.cloud.*",

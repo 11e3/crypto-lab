@@ -76,7 +76,9 @@ def cache_get(
         logger.debug(f"Cache hit: {cache_key}")
         return df
     except Exception as e:
-        logger.warning(f"Failed to load cache {cache_key}: {e}")
+        logger.warning(f"Corrupted cache {cache_key}, removing: {e}")
+        cache_path.unlink(missing_ok=True)
+        metadata.pop(cache_key, None)
         access_times.pop(cache_key, None)
         return None
 

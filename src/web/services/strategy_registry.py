@@ -46,7 +46,7 @@ def map_strategy_to_internal_type(strategy_name: str) -> str:
     return "vbov1"
 
 
-def create_analysis_strategy(strategy_type: str) -> Any:
+def create_analysis_strategy(strategy_type: str) -> Strategy:
     """Create strategy instance for Monte Carlo / Walk-Forward analysis."""
     from src.strategies.volatility_breakout.vbo_v1 import VBOV1
 
@@ -261,20 +261,15 @@ class StrategyRegistry:
             },
         ]
 
-        try:
-            for defn in vbo_strategy_defs:
-                info = StrategyInfo(
-                    name=defn["name"],
-                    class_name=defn["name"],
-                    module_path=defn["module_path"],
-                    strategy_class=None,
-                    parameters=defn["parameters"],
-                    description=defn["description"],
-                )
-                self._strategies[defn["name"]] = info
-
-            logger.info(
-                "Registered VBO strategies: " + ", ".join(d["name"] for d in vbo_strategy_defs)
+        for defn in vbo_strategy_defs:
+            info = StrategyInfo(
+                name=defn["name"],
+                class_name=defn["name"],
+                module_path=defn["module_path"],
+                strategy_class=None,
+                parameters=defn["parameters"],
+                description=defn["description"],
             )
-        except Exception as e:
-            logger.warning(f"Failed to register VBO strategies: {e}")
+            self._strategies[defn["name"]] = info
+
+        logger.info("Registered VBO strategies: " + ", ".join(d["name"] for d in vbo_strategy_defs))

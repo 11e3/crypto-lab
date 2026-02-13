@@ -71,13 +71,8 @@ dmypy.json
 .env.*.local
 
 # Project specific
-data/raw/*.parquet
-data/processed/*.parquet
-data/processed/_cache_metadata.json
-reports/*.html
-reports/*.png
-reports/*.csv
-reports/*.json
+/data/
+/reports/
 logs/
 *.log
 

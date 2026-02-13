@@ -259,6 +259,9 @@ def _prepare_pnl_data(
     Returns:
         Tuple of (enriched_df, current_equity, total_return_pct, total_trades, avg_daily_return).
     """
+    if pnl_df.empty:
+        return pnl_df, initial_capital, 0.0, 0, 0.0
+
     pnl_df = pnl_df.sort_values("date").reset_index(drop=True)
 
     pnl_df["cumulative_pnl"] = pnl_df["pnl"].cumsum()
