@@ -147,7 +147,10 @@ def calculate_daily_equity(
     state.equity_curve[d_idx] = state.cash + positions_value
 
     if (np.isnan(state.equity_curve[d_idx]) or state.equity_curve[d_idx] < 0) and d_idx > 0:
-        state.equity_curve[d_idx] = state.equity_curve[d_idx - 1]
+        last_valid = d_idx - 1
+        while last_valid >= 0 and np.isnan(state.equity_curve[last_valid]):
+            last_valid -= 1
+        state.equity_curve[d_idx] = state.equity_curve[last_valid] if last_valid >= 0 else 0.0
 
 
 def _get_current_price(

@@ -157,10 +157,12 @@ def _calculate_trade_statistics(result: BacktestResult, trades_df: pd.DataFrame)
         return
 
     result.winning_trades = int((closed["pnl"] > 0).sum())
-    result.losing_trades = int((closed["pnl"] <= 0).sum())
+    result.losing_trades = int((closed["pnl"] < 0).sum())
     result.win_rate = (result.winning_trades / len(closed)) * 100
     result.avg_trade_return = float(closed["pnl_pct"].mean())
 
     total_profit = closed.loc[closed["pnl"] > 0, "pnl"].sum()
-    total_loss = abs(closed.loc[closed["pnl"] <= 0, "pnl"].sum())
-    result.profit_factor = total_profit / total_loss if total_loss > 0 else 999.99
+    total_loss = abs(closed.loc[closed["pnl"] < 0, "pnl"].sum())
+    result.profit_factor = (
+        total_profit / total_loss if total_loss > 0 else float("inf") if total_profit > 0 else 0.0
+    )

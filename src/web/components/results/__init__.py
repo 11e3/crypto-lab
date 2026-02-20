@@ -1,1 +1,0 @@
-"""Backtest results display components."""

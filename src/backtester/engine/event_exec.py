@@ -91,9 +91,14 @@ def execute_exit(
     exit_price = exit_price * (1 - config.slippage_rate)
 
     revenue = position.amount * exit_price * (1 - config.fee_rate)
-    # Match the actual cost deducted from cash during entry:
-    # execute_entry: cost = amount * entry_price * (1 + fee_rate)
-    cost = position.amount * position.entry_price * (1 + config.fee_rate)
+    # Recover original investment: amount already has entry fee deducted,
+    # so original_investment = amount * entry_price / (1 - fee_rate)
+    fee_rate = config.fee_rate
+    cost = (
+        position.amount * position.entry_price / (1 - fee_rate)
+        if fee_rate < 1
+        else position.amount * position.entry_price
+    )
     pnl = revenue - cost
     pnl_pct = (exit_price / position.entry_price - 1) * 100
 
@@ -150,7 +155,7 @@ def execute_entry(
 
     allocation = cash / remaining_slots
     amount = (allocation / entry_price) * (1 - config.fee_rate)
-    cost = amount * entry_price * (1 + config.fee_rate)
+    cost = allocation  # actual cash deducted: fee is already embedded in amount
 
     if cost > cash:
         logger.debug(f"Insufficient cash for {ticker}: need {cost:.0f}, have {cash:.0f}")
