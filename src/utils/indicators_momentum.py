@@ -1,7 +1,7 @@
 """
-모멘텀 및 오실레이터 기반 기술적 지표.
+Momentum and oscillator-based technical indicators.
 
-RSI, Bollinger Bands, MACD, Stochastic 등의 모멘텀 지표.
+Includes RSI, Bollinger Bands, MACD, and Stochastic.
 """
 
 import pandas as pd

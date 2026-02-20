@@ -1,4 +1,4 @@
-"""Robustness Analysis HTML 리포트 생성."""
+"""HTML report generation for Robustness Analysis."""
 
 from __future__ import annotations
 
@@ -10,17 +10,16 @@ if TYPE_CHECKING:
 
 def generate_robustness_html(report: RobustnessReport) -> str:
     """
-    Robustness Analysis 결과를 HTML로 렌더링.
+    Render a RobustnessReport as an HTML string.
 
     Args:
-        report: RobustnessReport 객체
+        report: RobustnessReport object
 
     Returns:
-        HTML 문자열
+        HTML string
     """
     html_parts: list[str] = []
 
-    # 헤더
     html_parts.append("""<!DOCTYPE html>
 <html>
 <head>
@@ -41,7 +40,6 @@ def generate_robustness_html(report: RobustnessReport) -> str:
     <h1>Robustness Analysis Report</h1>
 """)
 
-    # 요약 통계
     profit_class = "success" if report.mean_return > 0 else "danger"
     profit_text = "Profitable" if report.mean_return > 0 else "Loss"
     stable_class = "success" if report.std_return < 0.30 else "warning"
@@ -93,7 +91,6 @@ def generate_robustness_html(report: RobustnessReport) -> str:
     </table>
 """)
 
-    # 파라미터 민감도
     html_parts.append("""
     <h2>Parameter Sensitivity (0.0 = Insensitive, 1.0 = Highly Sensitive)</h2>
     <table>

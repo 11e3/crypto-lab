@@ -11,7 +11,7 @@ import pandas as pd
 
 from src.backtester.engine.vectorized import VectorizedBacktestEngine
 from src.backtester.models import BacktestConfig, BacktestResult
-from src.config import RAW_DATA_DIR, parquet_filename
+from src.config import UPBIT_DATA_DIR, parquet_filename
 from src.data.collector import Interval
 from src.data.collector_factory import DataCollectorFactory
 from src.strategies.base import Strategy
@@ -44,7 +44,7 @@ def run_backtest(
     Returns:
         BacktestResult
     """
-    data_dir = data_dir or RAW_DATA_DIR
+    data_dir = data_dir or UPBIT_DATA_DIR
     data_dir.mkdir(parents=True, exist_ok=True)
 
     data_files = {ticker: data_dir / parquet_filename(ticker, interval) for ticker in tickers}

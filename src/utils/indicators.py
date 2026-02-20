@@ -3,15 +3,15 @@ Technical indicators for trading strategies.
 
 Provides vectorized indicator calculations using pandas/numpy.
 
-기본 지표 (이 모듈):
+Core indicators (this module):
     - sma, ema, atr, volatility_range, noise_ratio, noise_ratio_sma, target_price
 
-VBO 지표 (indicators_vbo):
+VBO indicators (indicators_vbo):
     - add_vbo_indicators, calculate_natr, calculate_volatility_regime
     - calculate_adaptive_noise, calculate_noise_ratio, calculate_adaptive_k_value
     - add_improved_indicators
 
-모멘텀 지표 (indicators_momentum):
+Momentum indicators (indicators_momentum):
     - rsi, bollinger_bands, macd, stochastic
 """
 
@@ -38,7 +38,7 @@ from src.utils.indicators_vbo import (
 )
 
 __all__ = [
-    # 기본 지표
+    # Core indicators
     "sma",
     "ema",
     "atr",
@@ -46,12 +46,12 @@ __all__ = [
     "noise_ratio",
     "noise_ratio_sma",
     "target_price",
-    # 모멘텀 지표 (re-exported)
+    # Momentum indicators (re-exported)
     "rsi",
     "bollinger_bands",
     "macd",
     "stochastic",
-    # VBO 지표 (re-exported)
+    # VBO indicators (re-exported)
     "add_vbo_indicators",
     "calculate_natr",
     "calculate_volatility_regime",
@@ -59,7 +59,7 @@ __all__ = [
     "calculate_noise_ratio",
     "calculate_adaptive_k_value",
     "add_improved_indicators",
-    # 편의 함수
+    # Convenience aliases
     "calculate_atr",
     "calculate_noise",
     "calculate_sma",

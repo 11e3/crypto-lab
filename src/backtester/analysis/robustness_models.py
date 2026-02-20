@@ -1,7 +1,7 @@
 """
-Robustness Analysis 데이터 모델.
+Data models for Robustness Analysis.
 
-RobustnessResult, RobustnessReport 데이터클래스 정의.
+Defines RobustnessResult and RobustnessReport dataclasses.
 """
 
 from dataclasses import dataclass
@@ -10,7 +10,7 @@ from typing import Any
 
 @dataclass
 class RobustnessResult:
-    """단일 파라미터 조합의 성과."""
+    """Performance result for a single parameter combination."""
 
     params: dict[str, Any]
     total_return: float
@@ -20,7 +20,7 @@ class RobustnessResult:
     trade_count: int
 
     def to_dict(self) -> dict[str, Any]:
-        """딕셔너리로 변환."""
+        """Convert to a flat dictionary (params merged with metrics)."""
         return {
             **self.params,
             "total_return": self.total_return,
@@ -33,21 +33,21 @@ class RobustnessResult:
 
 @dataclass
 class RobustnessReport:
-    """Robustness Analysis 종합 리포트."""
+    """Aggregate robustness analysis report."""
 
     optimal_params: dict[str, Any]
     results: list[RobustnessResult]
 
-    # 통계
+    # Return distribution statistics
     mean_return: float = 0.0
     std_return: float = 0.0
     min_return: float = 0.0
     max_return: float = 0.0
 
-    # 최적값 주변 안정성 (±20% 범위)
-    neighbor_success_rate: float = 0.0  # 0.0-1.0
+    # Fraction of ±20% neighbors achieving ≥80% of optimal return
+    neighbor_success_rate: float = 0.0  # 0.0–1.0
 
-    # 파라미터 민감도 (각 파라미터별)
+    # Per-parameter sensitivity scores
     sensitivity_scores: dict[str, float] | None = None
 
     def __post_init__(self) -> None:

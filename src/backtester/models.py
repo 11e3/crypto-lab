@@ -16,6 +16,7 @@ from src.config import (
     DEFAULT_SLIPPAGE_RATE,
 )
 from src.risk.metrics import PortfolioRiskMetrics
+from src.risk.position_sizing import PositionSizingMethod
 
 
 @dataclass
@@ -26,7 +27,7 @@ class BacktestConfig:
     fee_rate: float = DEFAULT_FEE_RATE
     slippage_rate: float = DEFAULT_SLIPPAGE_RATE
     max_slots: int = DEFAULT_MAX_SLOTS
-    position_sizing: str = "equal"  # "equal", "volatility", "fixed-risk", "inverse-volatility", "mpt", "risk_parity", "kelly"
+    position_sizing: PositionSizingMethod = PositionSizingMethod.EQUAL
     position_sizing_risk_pct: float = 0.02  # Target risk per position (for fixed-risk method)
     position_sizing_lookback: int = 20  # Lookback period for volatility calculation
     use_cache: bool = True  # Cache indicator calculations
@@ -102,58 +103,30 @@ class BacktestResult:
     risk_metrics: PortfolioRiskMetrics | None = None
 
     def summary(self) -> str:
-        """Generate summary string.
+        """Generate a human-readable summary of backtest results.
 
-        백테스트 결과를 읽기 쉬운 형식으로 표시:
+        Metric interpretation guides:
 
-        [CAGR (연율수익률)]
-        의미: 매년 복리로 받은 평균 수익률
-        해석:
-        - 10% = 우수 (S&P 500 평균)
-        - 20% = 매우 우수
-        - 50% 이상 = 과적합 가능성 검토
+        CAGR: annualized compound return
+          10% = good (S&P 500 average), 20% = excellent, >50% = check for overfitting
 
-        [MDD (최대낙폭)]
-        의미: 최악의 상황에서 본 최대 손실률
-        해석:
-        - 20% = 정상 수준
-        - 40% = 높은 위험
-        - 60% 이상 = 매우 위험한 전략
+        MDD: worst peak-to-trough drawdown
+          20% = normal, 40% = high risk, >60% = very dangerous strategy
 
-        [Calmar Ratio]
-        의미: CAGR / MDD (수익대비리스크)
-        해석:
-        - < 0.5 = 리스크 크다 (좋지 않음)
-        - 0.5 ~ 1.0 = 중간 수준
-        - 1.0 ~ 2.0 = 양호
-        - 2.0 이상 = 우수 (높은 샤프비)
+        Calmar Ratio: CAGR / MDD
+          <0.5 = poor, 0.5-1.0 = average, 1.0-2.0 = good, >2.0 = excellent
 
-        [Sharpe Ratio]
-        의미: 변동성 대비 초과수익
-        해석:
-        - 0.5 미만 = 낮음
-        - 0.5 ~ 1.0 = 중간
-        - 1.0 ~ 2.0 = 양호
-        - 2.0 이상 = 우수
+        Sharpe Ratio: excess return per unit of volatility
+          <0.5 = low, 0.5-1.0 = average, 1.0-2.0 = good, >2.0 = excellent
 
-        [승률(Win Rate)]
-        의미: 수익이 나는 거래의 비율
-        해석:
-        - 50% = 손익분기
-        - 55% ~ 60% = 양호
-        - 60% 이상 = 우수
-        - 40% 이하 = 전략 재검토 필요
+        Win Rate: fraction of profitable trades
+          50% = break-even, 55-60% = good, >60% = excellent, <40% = review strategy
 
-        [총 거래수]
-        의미: 전체 기간동안의 총 거래 횟수
-        해석:
-        - 적음 (< 10) = 신호 부족, 데이터 부족 가능
-        - 보통 (10~50) = 정상적인 거래빈도
-        - 많음 (> 50) = 높은 거래빈도 → 수수료 영향 확인
+        Total Trades: trade count over the full period
+          <10 = too few signals, 10-50 = normal frequency, >50 = check fee drag
 
-        [최종 자본(Final Equity)]
-        의미: 백테스트 마지막 날의 포트폴리오 가치
-        계산: 초기자본 × (1 + total_return/100)
+        Final Equity: portfolio value on the last day
+          Calculated as initial_capital * (1 + total_return / 100)
         """
         final_equity = self.equity_curve[-1] if len(self.equity_curve) > 0 else 0
         summary = (

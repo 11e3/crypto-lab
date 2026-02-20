@@ -117,3 +117,6 @@ class CompositeCondition(Condition):
         """Remove a condition and return self for chaining."""
         self.conditions.remove(condition)
         return self
+
+
+__all__ = ["Condition", "CompositeCondition"]

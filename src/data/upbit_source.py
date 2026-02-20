@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import pyupbit
 
-from src.config.constants import RAW_DATA_DIR, parquet_filename
+from src.config.constants import UPBIT_DATA_DIR, parquet_filename
 from src.data.base import DataSource
 from src.data.upbit_source_utils import calculate_update_count, merge_ohlcv_data
 from src.exceptions.data import (
@@ -37,9 +37,9 @@ class UpbitDataSource(DataSource):
         Initialize Upbit data source.
 
         Args:
-            data_dir: Directory for storing data files (defaults to RAW_DATA_DIR)
+            data_dir: Directory for storing data files (defaults to UPBIT_DATA_DIR)
         """
-        self.data_dir = data_dir or RAW_DATA_DIR
+        self.data_dir = data_dir or UPBIT_DATA_DIR
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_filepath(self, symbol: str, interval: str) -> Path:
@@ -192,6 +192,34 @@ class UpbitDataSource(DataSource):
             logger.error(f"Error loading OHLCV data: {e}", exc_info=True)
             return None
 
+    def _fetch_new_candles(
+        self,
+        symbol: str,
+        interval: str,
+        existing_df: pd.DataFrame,
+        filepath: str | None,
+    ) -> pd.DataFrame:
+        """Fetch candles since last update, merge with existing data, and save."""
+        latest_timestamp = existing_df.index.max()
+        count = calculate_update_count(latest_timestamp, interval)
+
+        logger.info(f"Fetching new data for {symbol} {interval} (since {latest_timestamp})")
+        new_df = self.get_ohlcv(symbol, interval, count=count)
+
+        if new_df is None or len(new_df) == 0:
+            logger.warning(f"No new data for {symbol} {interval}")
+            return existing_df
+
+        updated_df, new_count = merge_ohlcv_data(existing_df, new_df, latest_timestamp)
+
+        if new_count == 0:
+            logger.info(f"No new data to add for {symbol} {interval}")
+            return existing_df
+
+        self.save_ohlcv(symbol, interval, updated_df, filepath)
+        logger.info(f"Updated {symbol} {interval}: +{new_count} new, {len(updated_df)} total")
+        return updated_df
+
     def update_ohlcv(
         self,
         symbol: str,
@@ -212,41 +240,16 @@ class UpbitDataSource(DataSource):
             Updated DataFrame with OHLCV data or None on error
         """
         try:
-            # Load existing data
             existing_df = self.load_ohlcv(symbol, interval, filepath)
 
             if existing_df is None or len(existing_df) == 0:
-                # No existing data, fetch full dataset
                 logger.info(f"No existing data for {symbol} {interval}, fetching full dataset")
                 df = self.get_ohlcv(symbol, interval, count=200)
                 if df is not None:
                     self.save_ohlcv(symbol, interval, df, filepath)
                 return df
 
-            # Get latest timestamp and calculate fetch count
-            latest_timestamp = existing_df.index.max()
-            count = calculate_update_count(latest_timestamp, interval)
-
-            # Fetch new data
-            logger.info(f"Fetching new data for {symbol} {interval} (since {latest_timestamp})")
-            new_df = self.get_ohlcv(symbol, interval, count=count)
-
-            if new_df is None or len(new_df) == 0:
-                logger.warning(f"No new data for {symbol} {interval}")
-                return existing_df
-
-            # Merge data
-            updated_df, new_count = merge_ohlcv_data(existing_df, new_df, latest_timestamp)
-
-            if new_count == 0:
-                logger.info(f"No new data to add for {symbol} {interval}")
-                return existing_df
-
-            # Save updated data
-            self.save_ohlcv(symbol, interval, updated_df, filepath)
-            logger.info(f"Updated {symbol} {interval}: +{new_count} new, {len(updated_df)} total")
-
-            return updated_df
+            return self._fetch_new_candles(symbol, interval, existing_df, filepath)
         except Exception as e:
             logger.error(f"Error updating OHLCV data for {symbol}: {e}", exc_info=True)
             return None

@@ -52,6 +52,32 @@ class BinanceDataSource(DataSource):
         """
         return self.data_dir / parquet_filename(symbol, interval)
 
+    def _parse_candles_to_dataframe(
+        self,
+        ohlcv: list[list[float]],
+        symbol: str,
+        interval: str,
+        start_date: datetime | None,
+        end_date: datetime | None,
+    ) -> pd.DataFrame | None:
+        """Convert raw OHLCV candles to a filtered, datetime-indexed DataFrame."""
+        if not ohlcv:
+            logger.warning(f"No OHLCV data for {symbol} {interval}")
+            return None
+
+        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
+        df["timestamp"] = df["timestamp"].dt.tz_localize(None)
+        df = df.set_index("timestamp")
+        df.index.name = "datetime"
+
+        if start_date:
+            df = df[df.index >= start_date]
+        if end_date:
+            df = df[df.index <= end_date]
+
+        return df if len(df) > 0 else None
+
     def get_ohlcv(
         self,
         symbol: str,
@@ -74,40 +100,14 @@ class BinanceDataSource(DataSource):
         """
         try:
             exchange = self._get_exchange()
-
-            since_ms: int | None = None
-            if start_date:
-                since_ms = int(start_date.timestamp() * 1000)
-
+            since_ms: int | None = int(start_date.timestamp() * 1000) if start_date else None
             ohlcv: list[list[float]] = exchange.fetch_ohlcv(
                 symbol=symbol,
                 timeframe=interval,
                 since=since_ms,
                 limit=min(count, BINANCE_MAX_CANDLES_PER_REQUEST),
             )
-
-            if not ohlcv:
-                logger.warning(f"No OHLCV data for {symbol} {interval}")
-                return None
-
-            df = pd.DataFrame(
-                ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
-            )
-            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
-            df["timestamp"] = df["timestamp"].dt.tz_localize(None)
-            df = df.set_index("timestamp")
-            df.index.name = "datetime"
-
-            # Filter to date range
-            if start_date:
-                df = df[df.index >= start_date]
-            if end_date:
-                df = df[df.index <= end_date]
-
-            if len(df) == 0:
-                return None
-
-            return df
+            return self._parse_candles_to_dataframe(ohlcv, symbol, interval, start_date, end_date)
         except Exception as e:
             logger.error(f"Error fetching OHLCV for {symbol}: {e}", exc_info=True)
             raise DataSourceConnectionError(f"Failed to fetch data: {e}") from e
@@ -202,6 +202,34 @@ class BinanceDataSource(DataSource):
             logger.error(f"Error loading OHLCV data: {e}", exc_info=True)
             return None
 
+    def _fetch_incremental_candles(
+        self,
+        symbol: str,
+        interval: str,
+        existing_df: pd.DataFrame,
+        filepath: str | None,
+    ) -> pd.DataFrame:
+        """Fetch candles since last update, merge with existing data, and save."""
+        latest_timestamp = existing_df.index.max()
+        count = calculate_binance_update_count(latest_timestamp, interval)
+
+        logger.info(f"Fetching new data for {symbol} {interval} (since {latest_timestamp})")
+        new_df = self.get_ohlcv(symbol, interval, count=count)
+
+        if new_df is None or len(new_df) == 0:
+            logger.warning(f"No new data for {symbol} {interval}")
+            return existing_df
+
+        updated_df, new_count = merge_ohlcv_data(existing_df, new_df, latest_timestamp)
+
+        if new_count == 0:
+            logger.info(f"No new data to add for {symbol} {interval}")
+            return existing_df
+
+        self.save_ohlcv(symbol, interval, updated_df, filepath)
+        logger.info(f"Updated {symbol} {interval}: +{new_count} new, {len(updated_df)} total")
+        return updated_df
+
     def update_ohlcv(
         self,
         symbol: str,
@@ -219,7 +247,6 @@ class BinanceDataSource(DataSource):
             Updated DataFrame with OHLCV data or None on error
         """
         try:
-            # Load existing data
             existing_df = self.load_ohlcv(symbol, interval, filepath)
 
             if existing_df is None or len(existing_df) == 0:
@@ -229,30 +256,7 @@ class BinanceDataSource(DataSource):
                     self.save_ohlcv(symbol, interval, df, filepath)
                 return df
 
-            # Get latest timestamp and calculate fetch count
-            latest_timestamp = existing_df.index.max()
-            count = calculate_binance_update_count(latest_timestamp, interval)
-
-            # Fetch new data
-            logger.info(f"Fetching new data for {symbol} {interval} (since {latest_timestamp})")
-            new_df = self.get_ohlcv(symbol, interval, count=count)
-
-            if new_df is None or len(new_df) == 0:
-                logger.warning(f"No new data for {symbol} {interval}")
-                return existing_df
-
-            # Merge data
-            updated_df, new_count = merge_ohlcv_data(existing_df, new_df, latest_timestamp)
-
-            if new_count == 0:
-                logger.info(f"No new data to add for {symbol} {interval}")
-                return existing_df
-
-            # Save updated data
-            self.save_ohlcv(symbol, interval, updated_df, filepath)
-            logger.info(f"Updated {symbol} {interval}: +{new_count} new, {len(updated_df)} total")
-
-            return updated_df
+            return self._fetch_incremental_candles(symbol, interval, existing_df, filepath)
         except Exception as e:
             logger.error(f"Error updating OHLCV data for {symbol}: {e}", exc_info=True)
             return None

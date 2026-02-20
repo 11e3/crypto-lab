@@ -1,4 +1,4 @@
-"""Permutation Test HTML 리포트 생성."""
+"""HTML report generation for Permutation Test."""
 
 from __future__ import annotations
 
@@ -10,19 +10,19 @@ if TYPE_CHECKING:
 
 def generate_permutation_html(result: PermutationTestResult) -> str:
     """
-    Permutation Test 결과를 HTML로 렌더링.
+    Render a PermutationTestResult as an HTML string.
 
     Args:
-        result: PermutationTestResult 객체
+        result: PermutationTestResult object
 
     Returns:
-        HTML 문자열
+        HTML string
     """
     sig_class = "significant" if result.is_statistically_significant else "danger"
     decision = (
-        "✅ 전략에 통계적으로 유의한 신호가 있습니다."
+        "Strategy shows statistically significant signal."
         if result.is_statistically_significant
-        else "❌ 전략의 성과가 우연일 가능성이 높습니다."
+        else "Strategy performance is likely due to chance — overfitting suspected."
     )
 
     html = f"""<!DOCTYPE html>

@@ -1,11 +1,10 @@
 """
-Phase 2.3: 거래 비용 재계산 (Trade Cost Recalculation)
+Trade cost calculation with accurate Upbit fee structure.
 
-기존 문제:
-- 수수료 미반영, 슬리피지 고정값, 시장 조건 무시
-
-개선:
-- Upbit 정확한 수수료 구조, 변동성 기반 슬리피지, 포지션 크기 영향
+Improves on naive cost models by incorporating:
+- Exact Upbit fee tiers instead of a flat rate
+- Volatility-regime-based slippage instead of a fixed value
+- Position-size market impact
 """
 
 import pandas as pd
@@ -15,23 +14,21 @@ from src.backtester.trade_cost_models import TradeExecution, UpbitFeeStructure
 
 class TradeCostCalculator:
     """
-    정확한 거래 비용 계산.
-
-    항목: Slippage, Fee, Spread, Market Impact
+    Accurate trade cost calculator covering slippage, fees, and market impact.
     """
 
     def __init__(self, vip_tier: int = 0, volatility_regime: str = "medium"):
         """
         Args:
-            vip_tier: Upbit VIP 등급
-            volatility_regime: 'low', 'medium', 'high'
+            vip_tier: Upbit VIP tier (0-4)
+            volatility_regime: 'low', 'medium', or 'high'
         """
         self.fees = UpbitFeeStructure.get_fees(vip_tier)
         self.volatility_regime = volatility_regime
         self.slippage_base = {"low": 0.01, "medium": 0.02, "high": 0.05}
 
     def calculate_trade_cost_pct(self, order_side: str, slippage_pct: float | None = None) -> float:
-        """거래 당 비용 계산 (단방향). 비용 = 슬리피지 + 수수료."""
+        """One-way trade cost as a percentage: cost = slippage + fee."""
         _ = order_side  # Available for future Maker/Taker differentiation
         if slippage_pct is None:
             slippage_pct = self.slippage_base[self.volatility_regime]
@@ -41,7 +38,7 @@ class TradeCostCalculator:
     def calculate_roundtrip_cost_pct(
         self, entry_slippage: float | None = None, exit_slippage: float | None = None
     ) -> float:
-        """왕복 거래 비용 (Entry + Exit)."""
+        """Round-trip trade cost as a percentage (entry + exit)."""
         if entry_slippage is None:
             entry_slippage = self.slippage_base[self.volatility_regime]
         if exit_slippage is None:
@@ -58,7 +55,7 @@ class TradeCostCalculator:
         entry_slippage: float | None = None,
         exit_slippage: float | None = None,
     ) -> dict[str, float]:
-        """순이익률 계산 (슬리피지 + 수수료 반영)."""
+        """Calculate net P&L after slippage and fees."""
         if entry_slippage is None:
             entry_slippage = self.slippage_base[self.volatility_regime]
         if exit_slippage is None:
@@ -94,7 +91,7 @@ class TradeCostCalculator:
         exit_slippage: float | None = None,
         target_pnl: float = 0.5,
     ) -> float:
-        """목표 순수익을 달성하기 위한 최소 청산가."""
+        """Minimum exit price required to achieve the target net P&L."""
         if entry_slippage is None:
             entry_slippage = self.slippage_base[self.volatility_regime]
         if exit_slippage is None:
@@ -105,7 +102,7 @@ class TradeCostCalculator:
 
 
 class TradeAnalyzer:
-    """거래 시뮬레이션 분석."""
+    """Batch trade simulation analysis."""
 
     def __init__(self, vip_tier: int = 0, volatility_regime: str = "medium"):
         self.calculator = TradeCostCalculator(vip_tier, volatility_regime)
@@ -113,7 +110,7 @@ class TradeAnalyzer:
     def analyze_trades(
         self, trades: list[dict[str, float]]
     ) -> tuple[pd.DataFrame, dict[str, float]]:
-        """거래 목록 분석."""
+        """Analyze a list of trades and return per-trade DataFrame and summary stats."""
         results = []
         for trade in trades:
             analysis = self.calculator.calculate_net_pnl(
@@ -140,7 +137,7 @@ class TradeAnalyzer:
 
 
 class CostBreakdownAnalysis:
-    """비용 분해 분석."""
+    """Decompose trade losses into slippage vs fee components."""
 
     @staticmethod
     def analyze_loss_breakdown(
@@ -149,7 +146,7 @@ class CostBreakdownAnalysis:
         exit_slippage: float = 0.02,
         taker_fee: float = 0.05,
     ) -> dict[str, float]:
-        """손실 요인별 분석."""
+        """Break down gross P&L into net P&L vs cost components."""
         total_cost = entry_slippage + exit_slippage + taker_fee * 2
         net_pnl = gross_pnl_pct - total_cost
         return {

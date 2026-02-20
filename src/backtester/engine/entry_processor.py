@@ -124,7 +124,7 @@ def calculate_invest_amount(
             return state.cash / available_slots
         hist_up_to_date = hist_df.iloc[:d_idx]
         return calculate_position_size(
-            method=config.position_sizing,  # type: ignore[arg-type]
+            method=config.position_sizing,
             available_cash=state.cash,
             available_slots=available_slots,
             ticker=ticker,

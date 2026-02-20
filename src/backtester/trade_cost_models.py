@@ -11,7 +11,7 @@ import pandas as pd
 
 @dataclass
 class TradeExecution:
-    """거래 체결 정보."""
+    """Trade execution record."""
 
     timestamp: pd.Timestamp
     side: str  # 'buy' or 'sell'
@@ -21,13 +21,13 @@ class TradeExecution:
     exit_size: float = 0.0
     exit_time: pd.Timestamp | None = None
 
-    # 비용 관련
+    # Cost components
     entry_slippage_pct: float = 0.0
     exit_slippage_pct: float = 0.0
     maker_fee_pct: float = 0.0
     taker_fee_pct: float = 0.05
 
-    # 계산 결과
+    # Computed results
     gross_pnl: float = 0.0
     slippage_cost: float = 0.0
     fee_cost: float = 0.0
@@ -37,28 +37,28 @@ class TradeExecution:
 
 class UpbitFeeStructure:
     """
-    Upbit 거래소 수수료 구조.
+    Upbit exchange fee structure.
 
-    출처: Upbit 공식 문서
+    Source: Upbit official documentation
 
-    현물 거래:
-    - Maker (지정가): 0.05% (일부 0%)
-    - Taker (시장가): 0.05%
+    Spot trading:
+    - Maker (limit order): 0.05% (0% for some pairs)
+    - Taker (market order): 0.05%
 
-    주요 특징:
-    - KRW 수수료 지원 (KRW로 수수료 직접 차감)
-    - VIP 프로그램 (거래량 기반 할인)
-    - 마지막 분 거래 수수료 환급
+    Key features:
+    - KRW fee support (fees deducted directly in KRW)
+    - VIP program (volume-based discounts)
+    - Last-minute trade fee rebate
     """
 
-    # 기본 수수료율
+    # Default fee rates
     DEFAULT_MAKER_FEE = 0.05  # %
     DEFAULT_TAKER_FEE = 0.05  # %
 
-    # VIP 등급별 수수료 (volume-based)
+    # Fee tiers by monthly trading volume (volume-based)
     VIP_TIERS = {
         0: {"maker": 0.05, "taker": 0.05},  # Default
-        1: {"maker": 0.04, "taker": 0.05},  # 월 거래량 >= 100 BTC
+        1: {"maker": 0.04, "taker": 0.05},  # monthly volume >= 100 BTC
         2: {"maker": 0.03, "taker": 0.04},  # >= 500 BTC
         3: {"maker": 0.02, "taker": 0.03},  # >= 1000 BTC
         4: {"maker": 0.01, "taker": 0.02},  # >= 5000 BTC
@@ -67,10 +67,10 @@ class UpbitFeeStructure:
     @staticmethod
     def get_fees(tier: int = 0) -> dict[str, float]:
         """
-        VIP 등급에 따른 수수료 조회.
+        Get fee rates for a given VIP tier.
 
         Args:
-            tier: VIP 등급 (0-4)
+            tier: VIP tier (0-4)
 
         Returns:
             {'maker': 0.XX%, 'taker': 0.XX%}

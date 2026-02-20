@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.config import RAW_DATA_DIR, parquet_filename
+from src.config import UPBIT_DATA_DIR, parquet_filename
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -65,7 +65,7 @@ def csv_to_parquet(
     Raises:
         ValueError: If interval cannot be determined
     """
-    output_dir = output_dir or RAW_DATA_DIR
+    output_dir = output_dir or UPBIT_DATA_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Convert ticker format
@@ -118,7 +118,7 @@ def convert_csv_directory(
     Returns:
         Number of files converted
     """
-    output_dir = output_dir or RAW_DATA_DIR
+    output_dir = output_dir or UPBIT_DATA_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
 
     processed_count = 0

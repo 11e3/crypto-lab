@@ -1,7 +1,7 @@
 """
-VBO (Volatility Breakout) 전략용 지표.
+Indicators for the VBO (Volatility Breakout) strategy.
 
-노이즈 비율, 적응형 K값, 변동성 레짐 등 VBO 전략에 필요한 지표.
+Provides noise ratio, adaptive K value, volatility regime, and related helpers.
 """
 
 from __future__ import annotations
@@ -58,18 +58,18 @@ def add_vbo_indicators(
     exclude_current: bool = False,
 ) -> pd.DataFrame:
     """
-    VBO 전략에 필요한 지표를 추가.
+    Add standard VBO indicators to the DataFrame.
 
     Args:
-        df: OHLCV 데이터프레임
-        sma_period: Exit SMA 기간
-        trend_sma_period: Trend SMA 기간
-        short_noise_period: 단기 노이즈 기간 (K 값용)
-        long_noise_period: 장기 노이즈 기간
-        exclude_current: 현재 바 제외 여부
+        df: OHLCV DataFrame.
+        sma_period: Exit SMA window.
+        trend_sma_period: Long-term trend SMA window.
+        short_noise_period: Short noise window (used as adaptive K).
+        long_noise_period: Long noise window.
+        exclude_current: Shift series by 1 before rolling (avoids look-ahead).
 
     Returns:
-        지표가 추가된 DataFrame
+        Copy of df with added indicator columns.
     """
     df = df.copy()
 
@@ -102,13 +102,13 @@ def calculate_natr(
     NATR = (ATR / Close) * 100
 
     Args:
-        high: High prices
-        low: Low prices
-        close: Close prices
-        period: ATR 기간
+        high: High prices.
+        low: Low prices.
+        close: Close prices.
+        period: ATR window.
 
     Returns:
-        NATR series (%)
+        NATR series (%).
     """
     atr_values = _atr_local(high, low, close, period)
     return (atr_values / close) * 100
@@ -122,21 +122,21 @@ def calculate_volatility_regime(
     window: int = 100,
 ) -> pd.Series[int]:
     """
-    변동성 레짐 분류.
+    Classify volatility regime using rolling NATR percentiles.
 
-    - 0 (Low): NATR < 33rd percentile
-    - 1 (Medium): 33rd <= NATR < 67th percentile
-    - 2 (High): NATR >= 67th percentile
+    - 0 (Low): NATR < 33rd percentile.
+    - 1 (Medium): 33rd <= NATR < 67th percentile.
+    - 2 (High): NATR >= 67th percentile.
 
     Args:
-        high: High prices
-        low: Low prices
-        close: Close prices
-        period: ATR 기간
-        window: 퍼센타일 계산 윈도우
+        high: High prices.
+        low: Low prices.
+        close: Close prices.
+        period: ATR window.
+        window: Rolling window for percentile calculation.
 
     Returns:
-        Volatility regime series (0/1/2)
+        Integer series of regime labels (0/1/2).
     """
     natr = calculate_natr(high, low, close, period)
 
@@ -160,18 +160,20 @@ def calculate_adaptive_noise(
     atr_period: int = 14,
 ) -> tuple[pd.Series[float], pd.Series[float]]:
     """
-    ATR로 정규화된 적응형 노이즈 계산.
+    Compute ATR-normalised adaptive noise for short and long windows.
+
+    Dividing raw range by ATR makes the noise scale-invariant across assets.
 
     Args:
-        high: High prices
-        low: Low prices
-        close: Close prices
-        short_period: 단기 노이즈 윈도우
-        long_period: 장기 노이즈 윈도우
-        atr_period: ATR 기간
+        high: High prices.
+        low: Low prices.
+        close: Close prices.
+        short_period: Short noise window.
+        long_period: Long noise window.
+        atr_period: ATR window.
 
     Returns:
-        (short_noise_adaptive, long_noise_adaptive)
+        Tuple of (short_noise_adaptive, long_noise_adaptive).
     """
     atr_values = _atr_local(high, low, close, atr_period)
 
@@ -240,22 +242,22 @@ def add_improved_indicators(
     base_k: float = 0.5,
 ) -> pd.DataFrame:
     """
-    Phase 2 개선된 지표를 DataFrame에 추가.
+    Add advanced VBO indicators (ATR, adaptive noise, regime, adaptive K).
 
-    추가되는 컬럼:
+    Columns added:
     - atr, natr, volatility_regime
     - short_noise_adaptive, long_noise_adaptive, noise_ratio
     - k_value_adaptive
 
     Args:
-        df: OHLC 데이터프레임
-        short_period: 단기 기간
-        long_period: 장기 기간
-        atr_period: ATR 기간
-        base_k: 기본 K 값
+        df: OHLCV DataFrame.
+        short_period: Short noise window.
+        long_period: Long noise window.
+        atr_period: ATR window.
+        base_k: Baseline K multiplier scaled by regime.
 
     Returns:
-        지표가 추가된 DataFrame
+        Copy of df with added indicator columns.
     """
     result = df.copy()
 
@@ -282,14 +284,9 @@ def add_improved_indicators(
 
 
 __all__ = [
-    # Core VBO functions
     "add_vbo_indicators",
-    "calculate_natr",
     "add_improved_indicators",
-    # Local functions (for internal use)
-    "_sma_local",
-    "_noise_ratio_local",
-    "_atr_local",
+    "calculate_natr",
     "calculate_volatility_regime",
     "calculate_adaptive_noise",
     "calculate_noise_ratio",

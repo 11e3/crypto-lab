@@ -242,3 +242,6 @@ def get_config(config_path: Path | None = None) -> ConfigLoader:
             if _config is None:
                 _config = ConfigLoader(config_path)
     return _config
+
+
+__all__ = ["ConfigLoader", "get_config"]

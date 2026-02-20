@@ -1,18 +1,18 @@
 """
-Permutation Test: 과적합 통계적 검증.
+Permutation Test for statistical overfitting detection.
 
-원리:
-1. 원본 데이터로 전략을 백테스트 → 성과 S_original
-2. 데이터를 무작위로 섞어서 1000번 백테스트 → 성과들 S_shuffled
-3. S_original이 우연에 비해 통계적으로 유의한가?
+Method:
+1. Backtest the strategy on original data → performance S_original
+2. Shuffle data randomly 1000 times and backtest each → S_shuffled
+3. Is S_original statistically better than random chance?
 
-가설 검정:
-- H0 (귀무가설): "성과는 우연" (전략이 작동하지 않음)
-- H1 (대립가설): "성과는 의미 있음" (전략이 실제로 작동함)
+Hypothesis test:
+- H0 (null): "performance is due to luck" (strategy does not work)
+- H1 (alternative): "performance is meaningful" (strategy captures real signal)
 
-판단:
-- Z-score > 2.0 (5% 유의수준) → H1 채택: 유의한 성과
-- Z-score < 1.0 → H0 채택: 우연일 가능성 높음 (과적합 의심)
+Decision rule:
+- Z-score > 2.0 (5% significance) → reject H0: significant performance
+- Z-score < 1.0 → fail to reject H0: likely due to chance (overfitting suspected)
 """
 
 from collections.abc import Callable
@@ -33,7 +33,7 @@ logger = get_logger(__name__)
 
 @dataclass
 class PermutationTestResult:
-    """Permutation Test 결과."""
+    """Results of a permutation test run."""
 
     original_return: float
     original_sharpe: float
@@ -50,31 +50,30 @@ class PermutationTestResult:
     p_value: float = 0.0
 
     is_statistically_significant: bool = False
-    confidence_level: str = ""  # "5%", "1%", "not significant"
+    confidence_level: str = ""  # "5%", "1%", or "not significant"
 
     interpretation: str = ""
 
 
 class PermutationTester:
     """
-    Permutation Test를 통한 과적합 검증.
+    Overfitting detector via permutation test.
 
-    사용 예:
-    ```python
-    tester = PermutationTester(
-        data=ohlcv_df,
-        strategy_factory=lambda: VBOV1()
-    )
+    Usage::
 
-    result = tester.run(
-        num_shuffles=1000,
-        shuffle_columns=['close', 'volume']  # 섞을 컬럼
-    )
+        tester = PermutationTester(
+            data=ohlcv_df,
+            strategy_factory=lambda: VBOV1()
+        )
 
-    print(f"Z-score: {result.z_score:.2f}")
-    print(f"P-value: {result.p_value:.4f}")
-    print(result.interpretation)
-    ```
+        result = tester.run(
+            num_shuffles=1000,
+            shuffle_columns=['close', 'volume']
+        )
+
+        print(f"Z-score: {result.z_score:.2f}")
+        print(f"P-value: {result.p_value:.4f}")
+        print(result.interpretation)
     """
 
     def __init__(
@@ -87,9 +86,9 @@ class PermutationTester:
         Initialize Permutation Tester.
 
         Args:
-            data: OHLCV 데이터
-            strategy_factory: Strategy 객체 생성 함수 (파라미터 없음)
-            backtest_config: 백테스트 설정
+            data: OHLCV DataFrame
+            strategy_factory: Zero-argument callable that creates a Strategy instance
+            backtest_config: Backtest configuration
         """
         self.data = data
         self.strategy_factory = strategy_factory
@@ -103,20 +102,19 @@ class PermutationTester:
         verbose: bool = True,
     ) -> PermutationTestResult:
         """
-        Permutation Test 실행.
+        Execute the permutation test.
 
         Args:
-            num_shuffles: 셔플 횟수
-            shuffle_columns: 섞을 컬럼 (기본: 'close')
-            verbose: 진행 상황 로깅
+            num_shuffles: Number of shuffle iterations
+            shuffle_columns: Columns to shuffle (default: ['close'])
+            verbose: Log progress
 
         Returns:
-            PermutationTestResult: 검증 결과
+            PermutationTestResult with statistical significance metrics
         """
         if shuffle_columns is None:
             shuffle_columns = ["close"]
 
-        # 1. 원본 데이터로 백테스트
         if verbose:
             logger.info("Step 1: Testing with original data")
 
@@ -140,7 +138,6 @@ class PermutationTester:
                 f"Win rate: {original_win_rate:.1%}"
             )
 
-        # 2. 셔플 데이터로 여러 번 백테스트
         if verbose:
             logger.info(f"Step 2: Running {num_shuffles} permutations")
 
@@ -153,7 +150,6 @@ class PermutationTester:
             verbose=verbose,
         )
 
-        # 3. 통계 계산
         if verbose:
             logger.info("Step 3: Computing statistics")
 
@@ -178,7 +174,7 @@ class PermutationTester:
         return result
 
     def export_report_html(self, result: PermutationTestResult, output_path: str) -> None:
-        """HTML 리포트 생성 및 저장."""
+        """Generate and save an HTML permutation test report."""
         from src.backtester.analysis.permutation_html import generate_permutation_html
 
         html = generate_permutation_html(result)

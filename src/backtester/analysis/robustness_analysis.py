@@ -1,17 +1,17 @@
 """
-파라미터 안정성(Robustness) 분석 엔진.
+Parameter robustness analysis engine.
 
-최적 파라미터 주변에서 성과 변화를 분석하여,
-전략의 파라미터 변화에 얼마나 민감한지 검증합니다.
+Measures how sensitive a strategy's performance is to parameter changes by
+sweeping a range around the optimal values.
 
-분석 내용:
-1. Parameter Sweep: 각 파라미터를 ±30% 범위에서 변경
-2. Sensitivity Analysis: 파라미터 조합별 성과 매트릭스
-3. Performance Distribution: 성과 값의 분포 (완만함 vs 뾰족함)
+Analysis steps:
+1. Parameter Sweep: vary each parameter over ±30% of the optimal value
+2. Sensitivity Analysis: performance matrix across all parameter combinations
+3. Performance Distribution: flat (robust) vs peaked (overfitted) distributions
 
-과적합 신호:
-- 최적값에서 조금만 벗어나도 성과가 급격히 하락 → 과적합
-- 넓은 범위에서 안정적인 성과 → 건강한 전략
+Overfitting signals:
+- Performance collapses with small deviations from the optimal → overfitting
+- Stable performance across a wide range → healthy, generalizable strategy
 """
 
 from collections.abc import Callable
@@ -37,23 +37,22 @@ __all__ = ["RobustnessAnalyzer", "RobustnessReport", "RobustnessResult"]
 
 class RobustnessAnalyzer:
     """
-    ?�라미터 ?�정??분석�?
+    Parameter robustness analyzer.
 
-    ?�용 ??
-    ```python
-    analyzer = RobustnessAnalyzer(
-        data=ohlcv_df,
-        strategy_factory=lambda p: VBOV1(**p)
-    )
+    Usage::
 
-    report = analyzer.analyze(
-        optimal_params={'sma_period': 4, 'noise_period': 8},
-        parameter_ranges={
-            'sma_period': [2, 3, 4, 5, 6],
-            'noise_period': [6, 7, 8, 9, 10]
-        }
-    )
-    ```
+        analyzer = RobustnessAnalyzer(
+            data=ohlcv_df,
+            strategy_factory=lambda p: VBOV1(**p)
+        )
+
+        report = analyzer.analyze(
+            optimal_params={'sma_period': 4, 'noise_period': 8},
+            parameter_ranges={
+                'sma_period': [2, 3, 4, 5, 6],
+                'noise_period': [6, 7, 8, 9, 10]
+            }
+        )
     """
 
     def __init__(
@@ -66,9 +65,9 @@ class RobustnessAnalyzer:
         Initialize Robustness Analyzer.
 
         Args:
-            data: OHLCV ?�이??
-            strategy_factory: ?�라미터�?받아 Strategy ?�성
-            backtest_config: 백테?�트 ?�정
+            data: OHLCV DataFrame
+            strategy_factory: Callable that creates a Strategy from a parameter dict
+            backtest_config: Backtest configuration
         """
         self.data = data
         self.strategy_factory = strategy_factory
@@ -82,19 +81,18 @@ class RobustnessAnalyzer:
         verbose: bool = True,
     ) -> RobustnessReport:
         """
-        ?�라미터 ?�정??분석 ?�행.
+        Run parameter robustness analysis.
 
         Args:
-            optimal_params: 최적?�로 간주?�는 ?�라미터
-            parameter_ranges: ?�스?�할 �??�라미터??�?리스??
-            verbose: 진행 ?�황 로깅
+            optimal_params: Parameter values considered optimal
+            parameter_ranges: Each parameter and its candidate values to test
+            verbose: Log progress
 
         Returns:
-            RobustnessReport: 분석 결과
+            RobustnessReport with aggregated statistics
         """
         results = []
 
-        # ?�라미터 조합 ?�성
         param_keys = list(parameter_ranges.keys())
         param_values = [parameter_ranges[key] for key in param_keys]
         total_combinations = np.prod([len(v) for v in param_values])
@@ -102,7 +100,6 @@ class RobustnessAnalyzer:
         if verbose:
             logger.info(f"Testing {total_combinations} parameter combinations for robustness")
 
-        # 각 조합 테스트
         for idx, param_combo in enumerate(product(*param_values)):
             params = dict(zip(param_keys, param_combo, strict=False))
 
@@ -130,7 +127,6 @@ class RobustnessAnalyzer:
                 logger.warning(f"Parameter combination {params} failed: {e}")
                 continue
 
-        # 결과 집계
         report = self._aggregate_results(optimal_params, results)
 
         if verbose:
@@ -145,21 +141,20 @@ class RobustnessAnalyzer:
     def _aggregate_results(
         self, optimal_params: dict[str, Any], results: list[RobustnessResult]
     ) -> RobustnessReport:
-        """결과 집계 및 통계 계산."""
+        """Aggregate backtest results into a RobustnessReport."""
         report = RobustnessReport(optimal_params=optimal_params, results=results)
 
         if not results:
             logger.error("No valid results from robustness analysis")
             return report
 
-        # 수익률 통계
         returns = [r.total_return for r in results]
         report.mean_return = float(np.mean(returns))
         report.std_return = float(np.std(returns))
         report.min_return = float(np.min(returns))
         report.max_return = float(np.max(returns))
 
-        # 최적값 주변 안정성 (±20% 범위)
+        # Neighbor stability: how many ±20% neighbors achieve ≥80% of optimal return
         neighbor_results = find_neighbors(optimal_params, results, tolerance=0.20)
 
         if neighbor_results:
@@ -170,13 +165,12 @@ class RobustnessAnalyzer:
                 successful = sum(1 for r in neighbor_results if r.total_return >= threshold)
                 report.neighbor_success_rate = successful / len(neighbor_results)
 
-        # 파라미터별 민감도
         report.sensitivity_scores = calculate_sensitivity(results)
 
         return report
 
     def export_to_csv(self, report: RobustnessReport, output_path: str | Path) -> None:
-        """결과를 CSV로 저장."""
+        """Export robustness results to CSV."""
         records = [r.to_dict() for r in report.results]
         df = pd.DataFrame(records)
 
@@ -184,7 +178,7 @@ class RobustnessAnalyzer:
         logger.info(f"Robustness results saved to {output_path}")
 
     def export_report_html(self, report: RobustnessReport, output_path: str | Path) -> None:
-        """HTML 리포트 생성 및 저장."""
+        """Generate and save an HTML robustness report."""
         from src.backtester.analysis.robustness_html import generate_robustness_html
 
         html = generate_robustness_html(report)

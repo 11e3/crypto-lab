@@ -174,3 +174,13 @@ class MemoryProfiler:
             )
         except ImportError:
             pass
+
+
+__all__ = [
+    "get_memory_usage_mb",
+    "optimize_dtypes",
+    "use_float32_for_arrays",
+    "get_float_dtype",
+    "log_memory_usage",
+    "MemoryProfiler",
+]

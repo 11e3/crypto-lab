@@ -65,3 +65,6 @@ class OHLCV:
     def body(self) -> float:
         """Candle body size."""
         return abs(self.close - self.open)
+
+
+__all__ = ["SignalType", "Signal", "Position", "OHLCV"]

@@ -1,4 +1,4 @@
-"""Permutation Test 통계 유틸리티."""
+"""Statistical utilities for Permutation Test."""
 
 from __future__ import annotations
 
@@ -18,24 +18,25 @@ logger = get_logger(__name__)
 
 def shuffle_data(data: pd.DataFrame, columns_to_shuffle: list[str]) -> pd.DataFrame:
     """
-    Returns 기반 블록 부트스트랩으로 데이터 셔플.
+    Block-bootstrap shuffle preserving OHLC consistency.
 
-    OHLC 관계를 유지하면서 시계열 순서를 재배열.
-    Index (날짜)는 유지하고, 수익률을 블록 단위로 섞어 재구성.
+    Resamples returns in blocks of 5 bars so autocorrelation structure is
+    partially preserved, then reconstructs prices from the resampled returns.
+    The date index is kept intact; only the price sequence changes.
 
     Args:
-        data: OHLCV 데이터
-        columns_to_shuffle: 셔플할 컬럼 리스트
+        data: OHLCV DataFrame
+        columns_to_shuffle: Columns to shuffle (e.g. ['close', 'volume'])
 
     Returns:
-        셔플된 데이터프레임
+        Shuffled DataFrame with the same index
     """
     shuffled = data.copy()
 
-    # close 기반 수익률 계산
+    # Compute daily returns from close prices
     returns = shuffled["close"].pct_change().fillna(0).values
 
-    # 블록 부트스트랩으로 수익률 재배열 (block_size=5)
+    # Block-bootstrap: resample returns in blocks of 5 to preserve short-term structure
     block_size = 5
     n = len(returns)
     resampled_returns: list[float] = []
@@ -47,7 +48,7 @@ def shuffle_data(data: pd.DataFrame, columns_to_shuffle: list[str]) -> pd.DataFr
         i += block_size
     resampled_array = np.array(resampled_returns[:n])
 
-    # 재구성된 수익률로 가격 재생성
+    # Reconstruct close prices from resampled returns
     base_price = float(shuffled["close"].iloc[0])
     new_close: list[float] = [base_price]
     for r in resampled_array[1:]:
@@ -55,12 +56,11 @@ def shuffle_data(data: pd.DataFrame, columns_to_shuffle: list[str]) -> pd.DataFr
 
     shuffled["close"] = new_close
 
-    # OHLC 일관성 유지
+    # Rebuild OHLC to maintain internal consistency
     shuffled["open"] = shuffled["close"].shift(1).fillna(shuffled["close"].iloc[0])
     shuffled["high"] = shuffled[["open", "close"]].max(axis=1) * 1.002
     shuffled["low"] = shuffled[["open", "close"]].min(axis=1) * 0.998
 
-    # volume 셔플
     if "volume" in columns_to_shuffle and "volume" in shuffled.columns:
         volume_values = shuffled["volume"].values
         volume_array = np.array(volume_values, dtype=np.float64).copy()
@@ -80,19 +80,19 @@ def compute_statistics(
     result_class: type[PermutationTestResult],
 ) -> PermutationTestResult:
     """
-    Z-score와 p-value 계산.
+    Compute Z-score and p-value comparing original vs shuffled performance.
 
     Args:
-        original_return: 원본 수익률
-        original_sharpe: 원본 샤프 비율
-        original_win_rate: 원본 승률
-        shuffled_returns: 셔플된 수익률 리스트
-        shuffled_sharpes: 셔플된 샤프 비율 리스트
-        shuffled_win_rates: 셔플된 승률 리스트
-        result_class: PermutationTestResult 클래스
+        original_return: Return on original data
+        original_sharpe: Sharpe ratio on original data
+        original_win_rate: Win rate on original data
+        shuffled_returns: Returns from each shuffled run
+        shuffled_sharpes: Sharpe ratios from each shuffled run
+        shuffled_win_rates: Win rates from each shuffled run
+        result_class: PermutationTestResult class to instantiate
 
     Returns:
-        PermutationTestResult 객체
+        PermutationTestResult with statistical significance metrics
     """
     result = result_class(
         original_return=original_return,
@@ -107,7 +107,6 @@ def compute_statistics(
         logger.error("No valid shuffled results")
         return result
 
-    # Return 기반 Z-score 계산
     mean_shuffled = float(np.mean(shuffled_returns))
     std_shuffled = float(np.std(shuffled_returns))
 
@@ -120,10 +119,9 @@ def compute_statistics(
     else:
         result.z_score = 0.0
 
-    # P-value: 우연에 의해 original만큼 좋은 성과가 나올 확률 (양측 검정)
+    # Two-tailed p-value: probability of achieving original performance by chance
     result.p_value = float(2 * (1 - stats.norm.cdf(abs(result.z_score))))
 
-    # 통계적 유의성 판정
     if result.p_value < 0.01:
         result.confidence_level = "1%"
         result.is_statistically_significant = True
@@ -134,39 +132,35 @@ def compute_statistics(
         result.confidence_level = "not significant"
         result.is_statistically_significant = False
 
-    # 해석
     result.interpretation = interpret_results(result)
 
     return result
 
 
 def interpret_results(result: PermutationTestResult) -> str:
-    """결과 해석 문자열 생성."""
+    """Build a human-readable interpretation string for the permutation test result."""
     if result.z_score < 0:
         return (
-            f"⚠️ 원본 성과({result.original_return:.2%})가 "
-            f"무작위 셔플 평균({result.mean_shuffled_return:.2%})보다 낮음. "
-            f"전략이 실제 신호를 캡처하지 못하는 것으로 보임."
+            f"Original return ({result.original_return:.2%}) is below the shuffled mean "
+            f"({result.mean_shuffled_return:.2%}). Strategy does not appear to capture real signal."
         )
     elif result.z_score < 1.0:
         return (
-            f"❌ Z-score={result.z_score:.2f} < 1.0: "
-            f"통계적으로 유의하지 않음 (p-value={result.p_value:.4f}). "
-            f"이 성과는 우연일 가능성이 높음. 과적합 의심."
+            f"Z-score={result.z_score:.2f} < 1.0: not statistically significant "
+            f"(p-value={result.p_value:.4f}). Performance is likely due to chance — possible overfitting."
         )
     elif result.z_score < 2.0:
         return (
-            f"⚠️ Z-score={result.z_score:.2f}: "
-            f"약하게 유의함 (p-value={result.p_value:.4f}). "
-            f"어느 정도 신호가 있으나 과적합 우려."
+            f"Z-score={result.z_score:.2f}: weakly significant (p-value={result.p_value:.4f}). "
+            f"Some signal present, but overfitting risk remains."
         )
     elif result.z_score < 3.0:
         return (
-            f"✅ Z-score={result.z_score:.2f} ({result.confidence_level} 유의수준): "
-            f"통계적으로 유의한 성과. 전략에 실제 신호가 있을 가능성 높음."
+            f"Z-score={result.z_score:.2f} ({result.confidence_level} significance level): "
+            f"statistically significant — strategy likely captures real signal."
         )
     else:
         return (
-            f"🎯 Z-score={result.z_score:.2f} ({result.confidence_level} 유의수준): "
-            f"매우 강한 통계적 유의성. 전략의 신호 품질이 우수함."
+            f"Z-score={result.z_score:.2f} ({result.confidence_level} significance level): "
+            f"very strong statistical significance — high signal quality."
         )

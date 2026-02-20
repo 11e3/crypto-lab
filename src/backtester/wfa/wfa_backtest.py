@@ -1,7 +1,8 @@
 """
-WFA용 간단한 백테스트 실행기.
+Lightweight vectorized backtest runner for Walk-Forward Analysis.
 
-Walk-Forward Analysis에서 사용하는 가벼운 벡터화 백테스트.
+Used inside WalkForwardAnalyzer to evaluate each fold cheaply without
+spinning up the full BacktestEngine.
 """
 
 import numpy as np
@@ -21,32 +22,27 @@ def simple_backtest(
     initial_capital: float = 10000000,
 ) -> BacktestResult:
     """
-    간단한 벡터화 백테스트 (BacktestEngine 대신 직접 구현).
+    Vectorized backtest (lightweight alternative to BacktestEngine).
 
     Args:
-        data: OHLCV 데이터
-        strategy: 트레이딩 전략
-        initial_capital: 초기 자본금
+        data: OHLCV DataFrame
+        strategy: Trading strategy
+        initial_capital: Starting capital
 
     Returns:
-        BacktestResult 객체
+        BacktestResult object
     """
     try:
-        # 데이터 복사
         df = data.copy()
 
-        # 지표 계산 및 신호 생성
         df = strategy.calculate_indicators(df)
         df = strategy.generate_signals(df)
 
-        # 신호 확인
         if "signal" not in df.columns:
             return _create_empty_result()
 
-        # 포지션 시뮬레이션
         trades, equity = _simulate_positions(df, initial_capital)
 
-        # 메트릭 계산
         return _calculate_metrics(trades, equity, initial_capital)
 
     except Exception as e:
@@ -58,8 +54,8 @@ def _simulate_positions(
     df: pd.DataFrame,
     initial_capital: float,
 ) -> tuple[list[float], list[float]]:
-    """포지션 시뮬레이션 및 거래 기록."""
-    position = 0  # 0: 없음, 1: 롱, -1: 숏
+    """Simulate positions and record trade returns."""
+    position = 0  # 0: flat, 1: long, -1: short
     entry_price = 0.0
     trades: list[float] = []
     equity: list[float] = [initial_capital]
@@ -69,11 +65,11 @@ def _simulate_positions(
         close = float(row.get("close", 0))
 
         if signal != 0 and position == 0:
-            # 엔트리
+            # Entry
             entry_price = close
             position = int(signal)
         elif signal * position < 0:
-            # 엑싯 (반대 신호)
+            # Exit on opposing signal
             if position != 0:
                 pnl = (close - entry_price) * position / entry_price
                 trades.append(pnl)
@@ -86,7 +82,7 @@ def _simulate_positions(
         if position == 0 and len(equity) > 1:
             equity.append(equity[-1])
 
-    # 보유 중인 포지션 정리
+    # Close any open position at the final price
     if position != 0 and len(df) > 0:
         last_close = float(df.iloc[-1].get("close", entry_price))
         pnl = (last_close - entry_price) * position / entry_price
@@ -101,19 +97,14 @@ def _calculate_metrics(
     equity: list[float],
     initial_capital: float,
 ) -> BacktestResult:
-    """거래 결과에서 메트릭 계산."""
-    # 총 수익률
+    """Compute performance metrics from trade returns and equity curve."""
     total_return = (equity[-1] - initial_capital) / initial_capital if equity else 0.0
 
-    # Sharpe 비율
     equity_arr = np.array(equity)
     returns = calculate_daily_returns(equity_arr)
     sharpe = calculate_sharpe_ratio(returns, 252)
-
-    # Max Drawdown
     max_drawdown = calculate_mdd(equity_arr)
 
-    # 승률
     winning_trades, win_rate = _calculate_win_rate(trades)
 
     result = BacktestResult()
@@ -129,7 +120,7 @@ def _calculate_metrics(
 
 
 def _calculate_win_rate(trades: list[float]) -> tuple[int, float]:
-    """승률 계산."""
+    """Return (winning_count, win_rate) for a list of trade returns."""
     if not trades:
         return 0, 0.0
 
@@ -138,7 +129,7 @@ def _calculate_win_rate(trades: list[float]) -> tuple[int, float]:
 
 
 def _create_empty_result() -> BacktestResult:
-    """빈 결과 생성."""
+    """Return a zeroed-out BacktestResult for error/empty cases."""
     result = BacktestResult()
     result.total_return = 0.0
     result.sharpe_ratio = 0.0

@@ -35,3 +35,6 @@ class TradingSystemError(Exception):
     def __repr__(self) -> str:
         """Return detailed error representation."""
         return f"{self.__class__.__name__}(message={self.message!r}, details={self.details!r})"
+
+
+__all__ = ["TradingSystemError"]

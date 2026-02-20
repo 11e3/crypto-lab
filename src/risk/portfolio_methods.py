@@ -19,6 +19,82 @@ logger = get_logger(__name__)
 _MIN_VOLATILITY = 1e-8
 
 
+def _maximize_sharpe(
+    weights: np.ndarray,
+    mean_returns: np.ndarray,
+    cov_matrix: np.ndarray,
+    risk_free_rate: float,
+) -> float:
+    """Negative Sharpe ratio — used as scipy.minimize objective for MPT."""
+    port_ret = float(np.dot(weights, mean_returns))
+    port_vol = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))
+    if port_vol == 0:
+        return float("inf")
+    return -(port_ret - risk_free_rate) / port_vol
+
+
+def _mpt_constraints(
+    mean_returns: np.ndarray,
+    target_return: float | None,
+) -> list[dict[str, Any]] | dict[str, Any]:
+    """Build scipy constraint list: weights sum to 1, optional target return."""
+    eq_sum: dict[str, Any] = {"type": "eq", "fun": lambda w: np.sum(w) - 1.0}
+    if target_return is not None:
+        return [eq_sum, {"type": "eq", "fun": lambda w: np.dot(w, mean_returns) - target_return}]
+    return eq_sum
+
+
+def _build_mpt_result(
+    opt_weights: np.ndarray,
+    mean_returns: np.ndarray,
+    cov_matrix: np.ndarray,
+    risk_free_rate: float,
+    tickers: list[str],
+) -> PortfolioWeights:
+    """Compute portfolio metrics and package as PortfolioWeights."""
+    port_ret = float(np.dot(opt_weights, mean_returns))
+    port_vol = float(np.sqrt(np.dot(opt_weights, np.dot(cov_matrix, opt_weights))))
+    sharpe = (port_ret - risk_free_rate) / port_vol if port_vol > 0 else 0.0
+    return PortfolioWeights(
+        weights={t: float(w) for t, w in zip(tickers, opt_weights, strict=False)},
+        method="mpt",
+        expected_return=port_ret,
+        portfolio_volatility=port_vol,
+        sharpe_ratio=sharpe,
+    )
+
+
+def _risk_parity_objective(weights: np.ndarray, cov_matrix: np.ndarray, n_assets: int) -> float:
+    """Sum of squared deviations from equal risk contribution — scipy minimize objective."""
+    port_vol = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))
+    if port_vol == 0:
+        return float("inf")
+    marginal = np.dot(cov_matrix, weights) / port_vol
+    risk_contrib = weights * marginal
+    target = port_vol / n_assets
+    return float(np.sum((risk_contrib - target) ** 2))
+
+
+def _build_risk_parity_result(
+    opt_weights: np.ndarray,
+    returns: pd.DataFrame,
+    cov_matrix: np.ndarray,
+    tickers: list[str],
+) -> PortfolioWeights:
+    """Compute portfolio metrics for risk parity and package as PortfolioWeights."""
+    mean_returns = returns.mean() * 252
+    port_ret = float(np.dot(opt_weights, mean_returns))
+    port_vol = float(np.sqrt(np.dot(opt_weights, np.dot(cov_matrix, opt_weights))))
+    sharpe = port_ret / port_vol if port_vol > 0 else 0.0
+    return PortfolioWeights(
+        weights={t: float(w) for t, w in zip(tickers, opt_weights, strict=False)},
+        method="risk_parity",
+        expected_return=port_ret,
+        portfolio_volatility=port_vol,
+        sharpe_ratio=sharpe,
+    )
+
+
 def _validate_covariance(
     cov_matrix: pd.DataFrame,
     tickers: list[str],
@@ -48,58 +124,31 @@ def optimize_mpt(
 
     tickers = list(returns.columns)
     n_assets = len(tickers)
-
-    mean_returns = returns.mean() * 252
     cov_matrix = returns.cov() * 252
 
     fallback = _validate_covariance(cov_matrix, tickers, "mpt")
     if fallback is not None:
         return fallback
 
-    def objective(weights: np.ndarray) -> float:
-        port_ret: float = float(np.dot(weights, mean_returns))
-        port_vol: float = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))
-        if port_vol == 0:
-            return float("inf")
-        return -(port_ret - risk_free_rate) / port_vol
-
-    constraints: list[dict[str, Any]] | dict[str, Any] = {
-        "type": "eq",
-        "fun": lambda w: np.sum(w) - 1.0,
-    }
+    mean_ret_np: np.ndarray = (returns.mean() * 252).to_numpy()
+    cov_mat_np: np.ndarray = cov_matrix.to_numpy()
     bounds = tuple((min_weight, max_weight) for _ in range(n_assets))
     initial_weights = np.array([1.0 / n_assets] * n_assets)
-
-    if target_return is not None:
-        constraints = [
-            {"type": "eq", "fun": lambda w: np.sum(w) - 1.0},
-            {"type": "eq", "fun": lambda w: np.dot(w, mean_returns) - target_return},
-        ]
+    constraints = _mpt_constraints(mean_ret_np, target_return)
 
     try:
         result = minimize(
-            objective,
+            _maximize_sharpe,
             initial_weights,
+            args=(mean_ret_np, cov_mat_np, risk_free_rate),
             method="SLSQP",
             bounds=bounds,
             constraints=constraints,
             options={"maxiter": 1000},
         )
-        weights = result.x if result.success else np.array([1.0 / n_assets] * n_assets)
+        weights = result.x if result.success else initial_weights
         weights = weights / np.sum(weights)
-
-        port_ret = np.dot(weights, mean_returns)
-        port_vol = np.sqrt(np.dot(weights, np.dot(cov_matrix, weights)))
-        sharpe = (port_ret - risk_free_rate) / port_vol if port_vol > 0 else 0.0
-
-        weights_dict = {t: float(w) for t, w in zip(tickers, weights, strict=False)}
-        return PortfolioWeights(
-            weights=weights_dict,
-            method="mpt",
-            expected_return=float(port_ret),
-            portfolio_volatility=float(port_vol),
-            sharpe_ratio=float(sharpe),
-        )
+        return _build_mpt_result(weights, mean_ret_np, cov_mat_np, risk_free_rate, tickers)
     except Exception as e:
         logger.error(f"MPT optimization error: {e}")
         return PortfolioWeights(weights=dict.fromkeys(tickers, 1.0 / n_assets), method="mpt")
@@ -122,25 +171,18 @@ def optimize_risk_parity(
     if fallback is not None:
         return fallback
 
-    def objective(weights: np.ndarray) -> float:
-        port_vol = float(np.sqrt(np.dot(weights, np.dot(cov_matrix, weights))))
-        if port_vol == 0:
-            return float("inf")
-        marginal = np.dot(cov_matrix, weights) / port_vol
-        risk_contrib = weights * marginal
-        target = port_vol / n_assets
-        return float(np.sum((risk_contrib - target) ** 2))
-
+    cov_mat_np: np.ndarray = cov_matrix.to_numpy()
     constraints = {"type": "eq", "fun": lambda w: np.sum(w) - 1.0}
     bounds = tuple((min_weight, max_weight) for _ in range(n_assets))
-    vols = np.sqrt(np.diag(cov_matrix))
+    vols = np.sqrt(np.diag(cov_mat_np))
     inv_vols = 1.0 / (vols + _MIN_VOLATILITY)
     initial_weights = inv_vols / np.sum(inv_vols)
 
     try:
         result = minimize(
-            objective,
+            _risk_parity_objective,
             initial_weights,
+            args=(cov_mat_np, n_assets),
             method="SLSQP",
             bounds=bounds,
             constraints=constraints,
@@ -148,23 +190,10 @@ def optimize_risk_parity(
         )
         weights = result.x if result.success else initial_weights
         weights = weights / np.sum(weights)
-
-        mean_returns = returns.mean() * 252
-        port_ret = np.dot(weights, mean_returns)
-        port_vol = np.sqrt(np.dot(weights, np.dot(cov_matrix, weights)))
-        sharpe = port_ret / port_vol if port_vol > 0 else 0.0
-
-        weights_dict = {t: float(w) for t, w in zip(tickers, weights, strict=False)}
-        return PortfolioWeights(
-            weights=weights_dict,
-            method="risk_parity",
-            expected_return=float(port_ret),
-            portfolio_volatility=float(port_vol),
-            sharpe_ratio=float(sharpe),
-        )
+        return _build_risk_parity_result(weights, returns, cov_mat_np, tickers)
     except Exception as e:
         logger.error(f"Risk parity optimization error: {e}")
-        vols = np.sqrt(np.diag(cov_matrix))
+        vols = np.sqrt(np.diag(cov_mat_np))
         inv_vols = 1.0 / (vols + _MIN_VOLATILITY)
         weights = inv_vols / np.sum(inv_vols)
         return PortfolioWeights(

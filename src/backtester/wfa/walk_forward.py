@@ -63,6 +63,31 @@ class WalkForwardAnalyzer:
         self.interval = interval
         self.config = config
 
+    def _load_date_range(
+        self,
+        start_date: date | None,
+        end_date: date | None,
+    ) -> tuple[date, date]:
+        """Load OHLCV data for all tickers to determine the valid date range."""
+        from src.data.upbit_source import UpbitDataSource
+
+        data_source = UpbitDataSource()
+        all_dates: list[date] = []
+
+        for ticker in self.tickers:
+            df = data_source.load_ohlcv(ticker, self.interval)
+            if df is not None and len(df) > 0:
+                ticker_dates = [d.date() if isinstance(d, datetime) else d for d in df.index]
+                all_dates.extend(ticker_dates)
+
+        if not all_dates:
+            raise ValueError("No data available for walk-forward analysis")
+
+        return (
+            start_date if start_date is not None else min(all_dates),
+            end_date if end_date is not None else max(all_dates),
+        )
+
     def analyze(
         self,
         param_grid: dict[str, list[Any]],
@@ -90,31 +115,8 @@ class WalkForwardAnalyzer:
         Returns:
             WalkForwardResult with analysis results
         """
-        # Load data to determine date range
-        from src.data.upbit_source import UpbitDataSource
+        start_date, end_date = self._load_date_range(start_date, end_date)
 
-        data_source = UpbitDataSource()
-        all_dates: list[date] = []
-
-        for ticker in self.tickers:
-            df = data_source.load_ohlcv(ticker, self.interval)
-            if df is not None and len(df) > 0:
-                ticker_dates = [d.date() if isinstance(d, datetime) else d for d in df.index]
-                all_dates.extend(ticker_dates)
-
-        if not all_dates:
-            raise ValueError("No data available for walk-forward analysis")
-
-        # Determine date range
-        min_date = min(all_dates)
-        max_date = max(all_dates)
-
-        if start_date is None:
-            start_date = min_date
-        if end_date is None:
-            end_date = max_date
-
-        # Generate periods
         periods = generate_periods(
             start_date=start_date,
             end_date=end_date,
@@ -129,7 +131,6 @@ class WalkForwardAnalyzer:
             f"(optimization: {optimization_days}d, test: {test_days}d, step: {step_days}d)"
         )
 
-        # Process each period
         for period in periods:
             self._process_period(period, param_grid, metric, n_workers)
 
