@@ -44,6 +44,9 @@ dependencies = [
 # Web app 진입점 (streamlit run으로 실행)
 # 실행: uv run streamlit run src/web/app.py
 
+[project.scripts]
+crypto-lab = "src.main:main"
+
 # 선택적 의존성 그룹
 [project.optional-dependencies]
 # 분석 및 최적화 기능 (백테스팅, 포트폴리오 최적화)
@@ -123,23 +126,6 @@ line-ending = "auto"
 [tool.mypy]
 # Nox 세션 환경과 동일하게 3.14로 설정
 python_version = "3.14"
-
-# 제외할 패턴 (glob 형식)
-exclude = [
-    "legacy/",
-    "examples/",
-    "tests/",
-    "scripts/backtest/",
-    "scripts/tools/",
-    "scripts/archive/",
-    "scripts/test_",
-    "scripts/run_phase",
-    "create_notebooks.py",
-    "noxfile.py",
-    "build/",
-    "dist/",
-    "docs/archive/",
-]
 
 # Namespace 패키지 허용
 namespace_packages = true
@@ -279,12 +265,6 @@ omit = [
     "*/tests/*",
     "*/test_*.py",
     "*/__init__.py",
-    # Advanced analysis modules (statistical tests, not core logic)
-    "src/backtester/analysis/bootstrap_analysis.py",
-    "src/backtester/analysis/permutation_test.py",
-    "src/backtester/analysis/robustness_analysis.py",
-    # Research scripts — not quality-gated (see CLAUDE.md)
-    "src/research/*",
 ]
 
 [tool.coverage.report]
