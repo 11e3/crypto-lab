@@ -39,9 +39,10 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers.required = True
 
     # Lazy imports keep startup fast when heavy deps (pyupbit, ccxt) are not needed
-    from src.cli import cmd_backtest, cmd_data, cmd_wfa
+    from src.cli import cmd_analyze, cmd_backtest, cmd_data, cmd_wfa
 
     cmd_backtest.register(subparsers)
+    cmd_analyze.register(subparsers)
     cmd_data.register(subparsers)
     cmd_wfa.register(subparsers)
 
