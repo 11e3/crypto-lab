@@ -67,10 +67,10 @@ def _print_wfa_result(result: Any, metric: str) -> None:
     print("\n=== Walk-Forward Analysis ===")
     print(f"  Periods       : {result.total_periods}")
     print(f"  Positive      : {result.positive_periods}/{result.total_periods}")
-    print(f"  Consistency   : {result.consistency_rate:.1%}")
-    print(f"  Avg CAGR      : {result.avg_test_cagr:.2%}")
+    print(f"  Consistency   : {result.consistency_rate:.1f}%")
+    print(f"  Avg CAGR      : {result.avg_test_cagr:.2f}%")
     print(f"  Avg Sharpe    : {result.avg_test_sharpe:.2f}")
-    print(f"  Avg MDD       : {result.avg_test_mdd:.2%}")
+    print(f"  Avg MDD       : {result.avg_test_mdd:.2f}%")
     print()
     for period in result.periods:
         score = getattr(period.test_result, metric, 0.0) if period.test_result is not None else 0.0
