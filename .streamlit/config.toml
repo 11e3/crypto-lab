@@ -1,8 +1,0 @@
-[server]
-# Enable hot reload on save
-runOnSave = true
-
-[client]
-# Disable automatic page discovery
-# This prevents Streamlit from showing the src/web/pages/ files as separate pages
-showSidebarNavigation = false

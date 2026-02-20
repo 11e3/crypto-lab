@@ -1,6 +1,6 @@
 # crypto-lab
 
-Quantitative backtesting and strategy research platform for Upbit/Binance KRW-pair crypto markets.
+Quantitative backtesting and strategy research platform for Upbit/Binance.
 
 - **Vectorized backtester** — event-driven simulation with realistic cost modeling (fee + slippage)
 - **Parameter optimizer** — grid and random search with parallel execution
@@ -212,6 +212,7 @@ Entry rule (both conditions must hold):
 2. **BTC filter**: `prev BTC close > prev BTC MA(btc_ma)`
 
 Exit rule (VBOV1): previous `close < SMA(ma_short)` → exit at next open
+
 Exit rule (VBODayExit): always exit at the next day's open
 
 ### Best parameters (BTC+ETH, 2020–2024)
@@ -222,7 +223,7 @@ Exit rule (VBODayExit): always exit at the next day's open
 | Max return | 0.3 | 10 | 3 | 2.20 | +128% | −23.9% |
 | Min drawdown | 0.8 | 30 | 3 | 2.05 | +101% | −16.7% |
 
-Full sweep results: [`src/research/results/vb_upbit/`](src/research/results/vb_upbit/)
+Full sweep research results (Korean): [`src/research/results/vb_upbit/README.md`](src/research/results/vb_upbit/README.md)
 
 ---
 

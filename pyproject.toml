@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crypto-lab"
-version = "0.1.0"
-description = "Crypto backtesting & analysis platform for Upbit exchange (KRW pairs)"
+version = "0.2.0"
+description = "Crypto backtesting & analysis platform for quantitative trading strategies"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
@@ -78,29 +78,6 @@ test = [
     "pytest-mock>=3.11.0",
     "pytest-asyncio>=0.21.0",
     # Include analysis dependencies for testing backtester and risk modules
-    "scipy>=1.10.0",
-    "matplotlib>=3.7.0",
-    "seaborn>=0.12.0",
-    "pyparsing>=3.1.2,<3.3",  # Pin to avoid circular import bug in 3.3.1
-]
-docs = [
-    "sphinx>=7.1.0",
-    "sphinx-rtd-theme>=1.3.0",
-    "sphinx-autodoc-typehints>=1.24.0",
-    "myst-parser>=2.0.0",
-]
-notebooks = [
-    "jupyter>=1.0.0",
-    "ipykernel>=6.25.0",
-    "ipywidgets>=8.1.0",
-]
-web = [
-    "streamlit>=1.30.0,<1.52",  # Pin for Python 3.12 compatibility
-    "tornado<6.5",  # Pin for Python 3.12 compatibility
-    "packaging<25",  # Pin for Python 3.12 compatibility
-    "plotly>=5.18.0",
-    "watchdog>=3.0.0",  # Streamlit hot reload
-    # 백테스터가 필요로 하는 분석 의존성 포함
     "scipy>=1.10.0",
     "matplotlib>=3.7.0",
     "seaborn>=0.12.0",
