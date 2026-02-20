@@ -39,7 +39,14 @@ def simple_backtest(
         df = strategy.generate_signals(df)
 
         if "signal" not in df.columns:
-            return _create_empty_result()
+            if "entry_signal" in df.columns and "exit_signal" in df.columns:
+                # Synthesize signal column from entry/exit flags (for strategies like VBOV1)
+                # entry_signal=True → 1 (open long), exit_signal=True → -1 (close long)
+                df["signal"] = 0
+                df.loc[df["entry_signal"].astype(bool), "signal"] = 1
+                df.loc[df["exit_signal"].astype(bool), "signal"] = -1
+            else:
+                return _create_empty_result()
 
         trades, equity = _simulate_positions(df, initial_capital)
 
