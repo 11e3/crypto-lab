@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from scipy.optimize import OptimizeResult
 
-# 모듈 경로에 맞게 수정 (src.risk.portfolio_optimization)
+# Module path: src.risk.portfolio_optimization
 from src.risk.portfolio_optimization import (
     PortfolioOptimizer,
     PortfolioWeights,
@@ -129,7 +129,7 @@ class TestPortfolioOptimizer:
         min_w: float,
         mocker: pytest.MonkeyPatch,
     ) -> None:
-        # 가짜 최적화 결과 생성
+        # Build fake optimization result
         mock_weights = np.array([0.3, 0.3, 0.4])
         mock_result = OptimizeResult(
             x=mock_weights,
@@ -163,7 +163,7 @@ class TestPortfolioOptimizer:
         mocker.patch("src.risk.portfolio_methods.minimize", return_value=mock_result)
 
         weights = optimizer.optimize_mpt(sample_returns_df)
-        # 실패 시 균등 분배(1/N)로 fallback 되는지 확인
+        # Verify fallback to equal-weight (1/N) on failure
         assert weights.weights["ASSET1"] == pytest.approx(1.0 / len(sample_returns_df.columns))
 
     @pytest.mark.parametrize("error", [Exception("Mock error")])
@@ -185,7 +185,7 @@ class TestPortfolioOptimizer:
         assert weights.method == "risk_parity"
         assert sum(weights.weights.values()) == pytest.approx(1.0)
 
-    # ... (Kelly 관련 테스트는 기존 로직 유지, mocker가 없으므로 통과 예상) ...
+    # ... (Kelly-related tests retain existing logic; expected to pass without mocker) ...
 
     def test_optimize_kelly_portfolio(
         self, optimizer: PortfolioOptimizer, sample_trades_df: pd.DataFrame
@@ -339,7 +339,7 @@ class TestPortfolioOptimizer:
         self, sample_returns_df: pd.DataFrame, mocker: pytest.MonkeyPatch
     ) -> None:
         """Test optimize_portfolio wrapper calls the correct class method."""
-        # 문자열 경로 대신 객체를 직접 패치 (더 안전함)
+        # Patch the object directly rather than by string path (safer)
         mock_method = mocker.patch.object(
             PortfolioOptimizer,
             "optimize_mpt",

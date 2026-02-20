@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.config import UPBIT_DATA_DIR, UPBIT_API_RATE_LIMIT_DELAY, parquet_filename
+from src.config import UPBIT_API_RATE_LIMIT_DELAY, UPBIT_DATA_DIR, parquet_filename
 from src.data.collector_fetch import Interval, fetch_all_candles
 from src.utils.logger import get_logger
 

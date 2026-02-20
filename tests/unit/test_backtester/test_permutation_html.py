@@ -105,13 +105,13 @@ class TestGeneratePermutationHtml:
         """Test decision text for significant results."""
         html = generate_permutation_html(mock_significant_result)
 
-        assert "✅ 전략에 통계적으로 유의한 신호가 있습니다." in html
+        assert "Strategy shows statistically significant signal." in html
 
     def test_insignificant_decision(self, mock_insignificant_result: MagicMock) -> None:
         """Test decision text for insignificant results."""
         html = generate_permutation_html(mock_insignificant_result)
 
-        assert "❌ 전략의 성과가 우연일 가능성이 높습니다." in html
+        assert "Strategy performance is likely due to chance" in html
 
     def test_interpretation_section(self, mock_significant_result: MagicMock) -> None:
         """Test that interpretation is included."""

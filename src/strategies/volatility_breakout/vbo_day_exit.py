@@ -7,6 +7,8 @@ No MA-based exit — pure 1-day holding period.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pandas as pd
 
 from src.strategies.volatility_breakout.vbo_v1 import VBOV1
@@ -29,14 +31,16 @@ class VBODayExit(VBOV1):
         interval: Data interval for BTC file lookup
     """
 
-    def __init__(self, name: str = "VBODayExit", **kwargs: object) -> None:
+    def __init__(self, name: str = "VBODayExit", **kwargs: Any) -> None:
         super().__init__(name=name, **kwargs)
 
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
         df = super().generate_signals(df)
 
         # Override exit: always exit next day at open regardless of price
-        df["exit_signal"] = df["entry_signal"].shift(1).infer_objects(copy=False).fillna(value=False)
+        df["exit_signal"] = (
+            df["entry_signal"].shift(1).infer_objects(copy=False).fillna(value=False)
+        )
 
         return df
 

@@ -107,12 +107,13 @@ def calculate_trade_stats(trades: list[Trade]) -> dict[str, float]:
     losing_trades = len(losing)
     win_rate = winning_trades / total_trades * 100
 
+    _sentinel = 999.99  # Sentinel for "no losers" — avoids inf in JSON/display
     if winning and losing:
         total_profit = sum(t.pnl for t in winning)
         total_loss = abs(sum(t.pnl for t in losing))
-        profit_factor = total_profit / total_loss if total_loss > 0 else float("inf")
+        profit_factor = total_profit / total_loss if total_loss > 0 else _sentinel
     elif winning:
-        profit_factor = float("inf")  # All winning trades
+        profit_factor = _sentinel  # All winning trades
     else:
         profit_factor = 0.0
 
