@@ -199,7 +199,9 @@ def run_strategy_analysis(
                 logger.warning(f"Robustness analysis failed: {e}")
 
     # 7. Go-live checklist
-    go_live_checks = _compute_go_live_checks(backtest, permutation, bootstrap_result, robustness)
+    go_live_checks = _compute_go_live_checks(
+        backtest, permutation, bootstrap_result, robustness, performance
+    )
 
     return StrategyAnalysisResult(
         strategy_name=strategy_name,
@@ -310,6 +312,7 @@ def _compute_go_live_checks(
     permutation: PermutationTestResult | None,
     bootstrap: BootstrapResult | None,
     robustness: RobustnessReport | None,
+    performance: PerformanceMetrics | None = None,
 ) -> list[GoLiveCheck]:
     """Compute the 5 go-live readiness checks."""
     checks: list[GoLiveCheck] = []
@@ -332,13 +335,13 @@ def _compute_go_live_checks(
             level="WARN",
         ))
 
-    # 2. Sharpe ratio > 1.0
-    sr = backtest.sharpe_ratio
-    passed = sr > 1.0
+    # 2. Sortino ratio > 1.0 (uses downside deviation, more appropriate for trend-following)
+    sortino = performance.sortino_ratio if performance is not None else backtest.sharpe_ratio
+    passed = sortino > 1.0
     checks.append(GoLiveCheck(
-        description="Sharpe 비율",
+        description="Sortino 비율",
         passed=passed,
-        detail=f"{sr:.2f} {'>' if passed else '<='} 1.0",
+        detail=f"{sortino:.2f} {'>' if passed else '<='} 1.0",
         level="PASS" if passed else "FAIL",
     ))
 

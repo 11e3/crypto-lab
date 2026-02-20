@@ -85,6 +85,18 @@ def _bad_robustness() -> MagicMock:
     return rob
 
 
+def _good_performance() -> MagicMock:
+    perf = MagicMock()
+    perf.sortino_ratio = 2.5
+    return perf
+
+
+def _bad_performance() -> MagicMock:
+    perf = MagicMock()
+    perf.sortino_ratio = 0.3
+    return perf
+
+
 class TestGoLiveAllPass:
     def test_all_pass(self) -> None:
         checks = _compute_go_live_checks(
@@ -92,6 +104,7 @@ class TestGoLiveAllPass:
             permutation=_good_permutation(),
             bootstrap=_good_bootstrap(),
             robustness=_good_robustness(),
+            performance=_good_performance(),
         )
         assert len(checks) == 5
         assert all(c.passed for c in checks)
@@ -105,6 +118,7 @@ class TestGoLiveAllFail:
             permutation=_bad_permutation(),
             bootstrap=_bad_bootstrap(),
             robustness=_bad_robustness(),
+            performance=_bad_performance(),
         )
         assert len(checks) == 5
         assert all(not c.passed for c in checks)
