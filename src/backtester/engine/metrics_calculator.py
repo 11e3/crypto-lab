@@ -2,6 +2,10 @@
 Metrics calculation for vectorized backtesting.
 
 Handles performance metrics, trade statistics, and risk metrics.
+
+Metrics layer: Layer 3 — Vector Engine Aggregator.
+Wraps src/utils/metrics_core.py (Layer 1) directly (numpy arrays, no Trade models).
+Produces BacktestResult for the VectorizedBacktestEngine.
 """
 
 import numpy as np

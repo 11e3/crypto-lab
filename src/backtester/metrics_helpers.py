@@ -2,6 +2,10 @@
 Metrics calculation helpers.
 
 Helper functions for performance metrics calculation.
+
+Metrics layer: Layer 2 — Trade Statistics.
+Wraps src/utils/metrics_core.py (Layer 1) and adds pandas + Trade model support.
+Called by: src/backtester/metrics.py (event-driven engine aggregator).
 """
 
 import numpy as np

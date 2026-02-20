@@ -67,6 +67,20 @@ class VBOV1(Strategy):
             self._btc_data = _load_btc_data(self._data_dir, self._interval)
         return self._btc_data
 
+    @property
+    def exit_price_column(self) -> str:
+        """VBOV1 exits at next day's open price."""
+        return "exit_price_base"
+
+    @classmethod
+    def parameter_schema(cls) -> dict[str, object]:
+        """Parameter schema for optimization sweep."""
+        return {
+            "noise_ratio": {"type": "float", "min": 0.1, "max": 0.9, "step": 0.1},
+            "ma_short": {"type": "int", "min": 3, "max": 20, "step": 1},
+            "btc_ma": {"type": "int", "min": 5, "max": 50, "step": 5},
+        }
+
     def required_indicators(self) -> list[str]:
         return [
             "sma",

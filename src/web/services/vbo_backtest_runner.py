@@ -275,10 +275,10 @@ def run_vbo_backtest_service(
     Returns:
         VboBacktestResult or None on failure
     """
-    from src.strategies.volatility_breakout.vbo_v1 import VBOV1
+    from src.strategies.registry import registry
 
-    strategy = VBOV1(
-        name="VBOV1",
+    strategy = registry.create(
+        "VBO",
         ma_short=lookback,
         btc_ma=lookback * multiplier,
         data_dir=DATA_DIR,
@@ -346,17 +346,23 @@ def _create_strategy(
     interval: str = "day",
     **params: int | float | str,
 ) -> Strategy | None:
-    """Create a Strategy instance from strategy type string."""
-    from src.strategies.volatility_breakout.vbo_v1 import VBOV1
+    """Create a Strategy instance from strategy type string.
 
-    if strategy_type == "vbo":
-        return VBOV1(
-            name="VBOV1",
-            ma_short=int(params.get("ma_short", params.get("lookback", 5))),
-            btc_ma=int(params.get("btc_ma", 20)),
-            noise_ratio=float(params.get("noise_ratio", 0.5)),
-            data_dir=DATA_DIR,
-            interval=interval,
+    Looks up the strategy in the central registry. Falls back to VBO
+    for legacy "vbo" / "vbov1" inputs.
+    """
+    from src.strategies.registry import registry
+
+    canonical = strategy_type.upper()
+
+    # Normalise legacy aliases
+    if canonical == "VBOV1":
+        canonical = "VBO"
+
+    if canonical not in registry:
+        logger.error(
+            f"Unknown strategy type: '{strategy_type}'. Available: {registry.list_names()}"
         )
+        return None
 
-    return None
+    return registry.create(canonical, data_dir=DATA_DIR, interval=interval, **params)

@@ -2,6 +2,10 @@
 Backtesting metrics calculation.
 
 Performance metrics for strategy evaluation.
+
+Metrics layer: Layer 3 — Event Engine Aggregator.
+Wraps src/backtester/metrics_helpers.py (Layer 2).
+Produces BacktestResult for the EventDrivenBacktestEngine.
 """
 
 import numpy as np

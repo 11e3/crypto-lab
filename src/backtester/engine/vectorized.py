@@ -11,6 +11,7 @@ from src.backtester.engine.array_builder import (
     collect_valid_dates,
     filter_valid_dates,
 )
+from src.backtester.engine.base_engine import BaseBacktestEngine
 from src.backtester.engine.data_loader import (
     get_cache_params,
     load_parquet_data,
@@ -37,12 +38,12 @@ from src.utils.memory import optimize_dtypes
 logger = get_logger(__name__)
 
 
-class VectorizedBacktestEngine:
+class VectorizedBacktestEngine(BaseBacktestEngine):
     """Vectorized backtesting engine using pandas/numpy."""
 
     def __init__(self, config: BacktestConfig | None = None) -> None:
         """Initialize backtest engine with config."""
-        self.config = config or BacktestConfig()
+        super().__init__(config)
         self.advanced_order_manager = AdvancedOrderManager()
 
     def load_data(self, filepath: Path) -> pd.DataFrame:

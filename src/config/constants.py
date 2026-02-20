@@ -12,7 +12,7 @@ PROJECT_ROOT: Final[Path] = Path(__file__).parent.parent.parent
 
 # Data directories
 DATA_DIR: Final[Path] = PROJECT_ROOT / "data"
-RAW_DATA_DIR: Final[Path] = DATA_DIR / "raw"
+UPBIT_DATA_DIR: Final[Path] = DATA_DIR / "upbit"
 PROCESSED_DATA_DIR: Final[Path] = DATA_DIR / "processed"
 REPORTS_DIR: Final[Path] = PROJECT_ROOT / "reports"
 
@@ -23,7 +23,7 @@ UPBIT_API_RATE_LIMIT_DELAY: Final[float] = 0.1  # seconds
 # Binance API Configuration
 BINANCE_MAX_CANDLES_PER_REQUEST: Final[int] = 1000
 BINANCE_API_RATE_LIMIT_DELAY: Final[float] = 0.05  # seconds
-BINANCE_DATA_DIR: Final[Path] = DATA_DIR / "raw" / "binance"
+BINANCE_DATA_DIR: Final[Path] = DATA_DIR / "binance"
 
 # Backtest Defaults
 DEFAULT_INITIAL_CAPITAL: Final[float] = 1.0

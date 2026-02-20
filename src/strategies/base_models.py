@@ -42,6 +42,7 @@ class Position:
     amount: float
     entry_price: float
     entry_date: date
+    highest_price: float | None = None  # For trailing stop tracking (event-driven engine)
 
 
 @dataclass

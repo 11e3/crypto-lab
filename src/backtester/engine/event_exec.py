@@ -10,8 +10,8 @@ from datetime import date
 
 import pandas as pd
 
-from src.backtester.engine.event_data_loader import Position
 from src.backtester.models import BacktestConfig, Trade
+from src.strategies.base_models import Position
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -38,7 +38,7 @@ def check_exit_condition(
     close_price = float(row["close"])
 
     # Update highest price for trailing stop
-    if close_price > position.highest_price:
+    if position.highest_price is None or close_price > position.highest_price:
         position.highest_price = close_price
 
     # Signal exit

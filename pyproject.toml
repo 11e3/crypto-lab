@@ -283,6 +283,8 @@ omit = [
     "src/backtester/analysis/bootstrap_analysis.py",
     "src/backtester/analysis/permutation_test.py",
     "src/backtester/analysis/robustness_analysis.py",
+    # Research scripts — not quality-gated (see CLAUDE.md)
+    "src/research/*",
 ]
 
 [tool.coverage.report]

@@ -54,10 +54,14 @@ class TestGetVboStrategyType:
 class TestMapStrategyToInternalType:
     """Test strategy name to internal type mapping."""
 
-    def test_any_name_maps_to_vbov1(self) -> None:
+    def test_registered_strategy_maps_to_lowercase(self) -> None:
+        # VBO is in the registry → returns "vbo"
+        assert map_strategy_to_internal_type("VBO") == "vbo"
+
+    def test_unregistered_strategy_maps_to_lowercase_input(self) -> None:
+        # Unknown names → lowercased input (not hardcoded "vbov1" any more)
+        assert map_strategy_to_internal_type("SomeOther") == "someother"
         assert map_strategy_to_internal_type("VBOV1") == "vbov1"
-        assert map_strategy_to_internal_type("SomeOther") == "vbov1"
-        assert map_strategy_to_internal_type("") == "vbov1"
 
 
 # ── create_analysis_strategy ──

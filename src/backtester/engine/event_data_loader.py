@@ -4,27 +4,25 @@ Event-driven backtest data loader.
 Handles loading and preparation of data for event-driven backtesting.
 """
 
-from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
 import pandas as pd
 
+from src.backtester.engine.data_loader_base import (
+    apply_strategy_signals,
+    load_parquet_data,
+    validate_required_columns,
+)
 from src.strategies.base import Strategy
+from src.strategies.base_models import Position
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+__all__ = ["Position", "load_event_data"]
 
-@dataclass
-class Position:
-    """Active position in a trade."""
-
-    ticker: str
-    entry_date: date
-    entry_price: float
-    amount: float
-    highest_price: float  # For trailing stop tracking
+_REQUIRED_COLUMNS = ["open", "high", "low", "close", "entry_signal", "exit_signal"]
 
 
 def load_event_data(
@@ -38,13 +36,15 @@ def load_event_data(
 
     for ticker, filepath in data_files.items():
         try:
-            if not filepath.exists():
-                logger.warning(f"File not found: {filepath}")
-                continue
+            df = load_parquet_data(filepath)
+        except FileNotFoundError:
+            logger.warning(f"File not found: {filepath}")
+            continue
+        except Exception as e:
+            logger.error(f"Error loading {ticker} from {filepath}: {e}")
+            continue
 
-            df = pd.read_parquet(filepath)
-            df.index = pd.to_datetime(df.index)
-
+        try:
             # Filter by date range using DatetimeIndex directly
             if start_date is not None:
                 df = df[pd.to_datetime(df.index).date >= start_date]
@@ -55,17 +55,13 @@ def load_event_data(
                 logger.warning(f"No data for {ticker} after date filtering")
                 continue
 
-            df = strategy.calculate_indicators(df)
-            df = strategy.generate_signals(df)
+            df = apply_strategy_signals(df, strategy)
 
             # Store date part for type-safe filtering
             df = df.copy()
             df["index_date"] = pd.Series(pd.to_datetime(df.index).date, index=df.index)
 
-            required = ["open", "high", "low", "close", "entry_signal", "exit_signal"]
-            missing = [col for col in required if col not in df.columns]
-            if missing:
-                logger.error(f"{ticker}: Missing columns {missing}")
+            if not validate_required_columns(df, _REQUIRED_COLUMNS, ticker):
                 continue
 
             if "entry_price" not in df.columns:
@@ -79,7 +75,7 @@ def load_event_data(
             ticker_data[ticker] = df
 
         except Exception as e:
-            logger.error(f"Error loading {ticker} from {filepath}: {e}")
+            logger.error(f"Error processing {ticker}: {e}")
             continue
 
     return ticker_data

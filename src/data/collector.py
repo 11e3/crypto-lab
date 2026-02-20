@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.config import RAW_DATA_DIR, UPBIT_API_RATE_LIMIT_DELAY, parquet_filename
+from src.config import UPBIT_DATA_DIR, UPBIT_API_RATE_LIMIT_DELAY, parquet_filename
 from src.data.collector_fetch import Interval, fetch_all_candles
 from src.utils.logger import get_logger
 
@@ -29,9 +29,9 @@ class UpbitDataCollector:
         Initialize the data collector.
 
         Args:
-            data_dir: Directory to store parquet files. Defaults to data/raw/
+            data_dir: Directory to store parquet files. Defaults to data/upbit/
         """
-        self.data_dir = data_dir or RAW_DATA_DIR
+        self.data_dir = data_dir or UPBIT_DATA_DIR
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_parquet_path(self, ticker: str, interval: Interval) -> Path:

@@ -7,6 +7,11 @@ Provides comprehensive risk analysis including:
 - Portfolio volatility
 - Correlation analysis
 - Position concentration
+
+Metrics layer: Layer 4 — Portfolio Risk.
+Independent of the backtest engine layers.
+Used by both vectorized and event-driven engines via src/backtester/metrics.py
+and src/backtester/engine/metrics_calculator.py.
 """
 
 from dataclasses import dataclass

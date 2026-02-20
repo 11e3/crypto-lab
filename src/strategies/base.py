@@ -100,6 +100,45 @@ class Strategy(ABC):
         """
         return False
 
+    @property
+    def exit_price_column(self) -> str:
+        """Column name to use as exit price in backtesting.
+
+        Override in subclasses that use a non-close exit price.
+        For example, VBOV1 exits at the next day's open price:
+
+            @property
+            def exit_price_column(self) -> str:
+                return "exit_price_base"
+
+        The data loader will use df[exit_price_column] as 'exit_price'.
+        The column must be present in the DataFrame returned by generate_signals().
+
+        Returns:
+            Column name (default: "close")
+        """
+        return "close"
+
+    @classmethod
+    def parameter_schema(cls) -> dict[str, object]:
+        """Return the parameter schema for optimization.
+
+        Override in subclasses to expose tunable parameters.
+        Used by the web optimization layer to build the parameter sweep UI.
+
+        Returns:
+            Dict mapping parameter names to their range/type spec.
+            Example::
+
+                {
+                    "k": {"type": "float", "min": 0.1, "max": 0.9, "step": 0.1},
+                    "sma_period": {"type": "int", "min": 5, "max": 60, "step": 5},
+                }
+
+            Empty dict means no tunable parameters (default).
+        """
+        return {}
+
     @abstractmethod
     def required_indicators(self) -> list[str]:
         """

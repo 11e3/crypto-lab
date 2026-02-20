@@ -3,6 +3,28 @@ Core metric calculation functions.
 
 Single source of truth for MDD, Sharpe, CAGR, daily returns, Calmar, and Sortino.
 All functions are pure math (numpy + scalars), no pandas or domain model dependencies.
+
+Metrics layer architecture (use the lowest layer that meets your needs):
+
+  Layer 1 — Core Math (this file)
+    Pure numpy functions. No domain models. Use for all fundamental calculations.
+    → src/utils/metrics_core.py
+
+  Layer 2 — Trade Statistics
+    Wraps Layer 1. Adds pandas + Trade model support.
+    → src/backtester/metrics_helpers.py
+
+  Layer 3 — Event Engine Aggregator
+    Wraps Layer 2. Produces BacktestResult for the event-driven engine.
+    → src/backtester/metrics.py
+
+  Layer 3 — Vector Engine Aggregator
+    Wraps Layer 1 directly. Produces BacktestResult for the vectorized engine.
+    → src/backtester/engine/metrics_calculator.py
+
+  Layer 4 — Portfolio Risk
+    Independent of backtest layers. VaR, CVaR, correlation analysis.
+    → src/risk/metrics.py
 """
 
 from __future__ import annotations

@@ -78,6 +78,7 @@ logs/
 
 # Research data (Binance futures OHLCV, funding rates)
 research/data/
+research/results/
 
 # Build artifacts
 *.egg-info/

@@ -1,3 +1,0 @@
-Phase 3 Reliability Summary
-Monte Carlo: Mean CAGR 127.69% (CI 12.39%~342.22%), Mean MDD 48.01%
-Bootstrap: Mean Return 40552.47% (CI 956.89%~86213.34%), Mean Sharpe 0.42

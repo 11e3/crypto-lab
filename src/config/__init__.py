@@ -16,7 +16,7 @@ from src.config.constants import (
     PARQUET_EXTENSION,
     PROCESSED_DATA_DIR,
     PROJECT_ROOT,
-    RAW_DATA_DIR,
+    UPBIT_DATA_DIR,
     REPORTS_DIR,
     RISK_FREE_RATE,
     UPBIT_API_RATE_LIMIT_DELAY,

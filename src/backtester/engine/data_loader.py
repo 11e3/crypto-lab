@@ -9,38 +9,18 @@ from typing import Any
 
 import pandas as pd
 
+from src.backtester.engine.data_loader_base import (
+    apply_strategy_signals,
+    load_parquet_data,
+)
 from src.data.cache.cache import get_cache
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
 from src.utils.memory import optimize_dtypes
 
+__all__ = ["load_parquet_data", "get_cache_params", "load_ticker_data"]
+
 logger = get_logger(__name__)
-
-
-def load_parquet_data(filepath: Path) -> pd.DataFrame:
-    """
-    Load OHLCV data from parquet file.
-
-    Args:
-        filepath: Path to parquet file
-
-    Returns:
-        DataFrame with OHLCV data
-
-    Raises:
-        FileNotFoundError: If file doesn't exist
-        ValueError: If file is corrupted or invalid
-    """
-    if not filepath.exists():
-        raise FileNotFoundError(f"Data file not found: {filepath}")
-
-    try:
-        df = pd.read_parquet(filepath)
-        df.index = pd.to_datetime(df.index)
-        df.columns = df.columns.str.lower()
-        return df
-    except Exception as e:  # parquet/pyarrow raises diverse error types
-        raise ValueError(f"Error loading data from {filepath}: {e}") from e
 
 
 def get_cache_params(strategy: Strategy) -> dict[str, Any]:
@@ -111,8 +91,7 @@ def load_ticker_data(
         if position_sizing != "equal":
             historical_df = df.copy()
 
-        df = strategy.calculate_indicators(df)
-        df = strategy.generate_signals(df)
+        df = apply_strategy_signals(df, strategy)
 
         if cache is not None:
             cache.set(ticker, interval, cache_params, df, raw_mtime)

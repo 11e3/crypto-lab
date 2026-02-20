@@ -416,6 +416,57 @@ class TestStrategy:
         assert "exit_conditions=1" in repr_str
 
 
+class TestStrategyNewMethods:
+    """Tests for Strategy ABC methods added during refactoring."""
+
+    def test_exit_price_column_default_is_close(self) -> None:
+        """Default exit_price_column returns 'close'."""
+        strategy = MockStrategy()
+        assert strategy.exit_price_column == "close"
+
+    def test_parameter_schema_default_is_empty(self) -> None:
+        """Default parameter_schema returns empty dict."""
+        assert MockStrategy.parameter_schema() == {}
+
+    def test_exit_price_column_can_be_overridden(self) -> None:
+        """Subclasses can override exit_price_column."""
+
+        class CustomExitStrategy(MockStrategy):
+            @property
+            def exit_price_column(self) -> str:
+                return "exit_price_base"
+
+        strategy = CustomExitStrategy()
+        assert strategy.exit_price_column == "exit_price_base"
+
+    def test_parameter_schema_can_be_overridden(self) -> None:
+        """Subclasses can override parameter_schema."""
+
+        class ParametricStrategy(MockStrategy):
+            @classmethod
+            def parameter_schema(cls) -> dict[str, object]:
+                return {"k": {"type": "float", "min": 0.1, "max": 0.9}}
+
+        schema = ParametricStrategy.parameter_schema()
+        assert "k" in schema
+
+    def test_vbov1_exit_price_column(self) -> None:
+        """VBOV1 overrides exit_price_column to 'exit_price_base'."""
+        from src.strategies.volatility_breakout.vbo_v1 import VBOV1
+
+        strategy = VBOV1()
+        assert strategy.exit_price_column == "exit_price_base"
+
+    def test_vbov1_parameter_schema(self) -> None:
+        """VBOV1 exposes noise_ratio, ma_short, btc_ma in schema."""
+        from src.strategies.volatility_breakout.vbo_v1 import VBOV1
+
+        schema = VBOV1.parameter_schema()
+        assert "noise_ratio" in schema
+        assert "ma_short" in schema
+        assert "btc_ma" in schema
+
+
 class TestPosition:
     """Tests for Position dataclass."""
 
@@ -431,3 +482,24 @@ class TestPosition:
         assert position.amount == 0.001
         assert position.entry_price == 50000.0
         assert position.entry_date == date(2024, 1, 1)
+
+    def test_position_highest_price_defaults_to_none(self) -> None:
+        """Position.highest_price defaults to None."""
+        position = Position(
+            ticker="KRW-BTC",
+            amount=0.001,
+            entry_price=50000.0,
+            entry_date=date(2024, 1, 1),
+        )
+        assert position.highest_price is None
+
+    def test_position_highest_price_can_be_set(self) -> None:
+        """Position.highest_price can be set for trailing stop tracking."""
+        position = Position(
+            ticker="KRW-BTC",
+            amount=0.001,
+            entry_price=50000.0,
+            entry_date=date(2024, 1, 1),
+            highest_price=55000.0,
+        )
+        assert position.highest_price == 55000.0

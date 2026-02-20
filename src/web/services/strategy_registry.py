@@ -42,15 +42,36 @@ def map_strategy_to_internal_type(strategy_name: str) -> str:
     """Map registered strategy name to internal engine type.
 
     Used by analysis page for Monte Carlo / Walk-Forward.
+    Returns the lowercased canonical strategy name for internal routing.
     """
-    return "vbov1"
+    from src.strategies.registry import registry
+
+    canonical = strategy_name.upper()
+    if canonical in registry:
+        return canonical.lower()
+    return strategy_name.lower()
 
 
-def create_analysis_strategy(strategy_type: str) -> Strategy:
-    """Create strategy instance for Monte Carlo / Walk-Forward analysis."""
-    from src.strategies.volatility_breakout.vbo_v1 import VBOV1
+def create_analysis_strategy(strategy_type: str, **kwargs: Any) -> Strategy:
+    """Create strategy instance for Monte Carlo / Walk-Forward analysis.
 
-    return VBOV1(name="VBOV1")
+    Looks up the strategy in the central registry by name.
+    Falls back to VBO if the name is not recognised.
+
+    Args:
+        strategy_type: Strategy name (e.g. "VBO", "vbo", "vbov1")
+        **kwargs: Optional constructor overrides (e.g. noise_ratio=0.3)
+    """
+    from src.strategies.registry import registry
+
+    # Normalise: registry uses upper-case canonical names (e.g. "VBO")
+    canonical = strategy_type.upper()
+    if canonical in registry:
+        return registry.create(canonical, **kwargs)
+
+    # Legacy fallback — keeps existing behaviour for "vbov1" / "vbo" inputs
+    logger.warning(f"Strategy '{strategy_type}' not in registry; defaulting to VBO")
+    return registry.create("VBO", **kwargs)
 
 
 class StrategyRegistry:

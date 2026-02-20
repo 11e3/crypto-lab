@@ -8,7 +8,6 @@ from datetime import date
 
 import pandas as pd
 
-from src.backtester.engine.event_data_loader import Position
 from src.backtester.engine.event_exec import (
     check_exit_condition,
     execute_entry,
@@ -16,6 +15,7 @@ from src.backtester.engine.event_exec import (
 )
 from src.backtester.engine.trade_costs import TradeCostCalculator
 from src.backtester.models import BacktestConfig, Trade
+from src.strategies.base_models import Position
 
 __all__ = [
     "process_exits",

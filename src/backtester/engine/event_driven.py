@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from src.backtester.engine.base_engine import BaseBacktestEngine
 from src.backtester.engine.event_data_loader import Position, load_event_data
 from src.backtester.engine.event_loop import (
     calculate_portfolio_equity,
@@ -26,7 +27,7 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-class EventDrivenBacktestEngine:
+class EventDrivenBacktestEngine(BaseBacktestEngine):
     """
     Event-driven backtesting engine.
 
@@ -39,7 +40,7 @@ class EventDrivenBacktestEngine:
     """
 
     def __init__(self, config: BacktestConfig | None = None) -> None:
-        self.config = config or BacktestConfig()
+        super().__init__(config)
 
     def run(
         self,
