@@ -25,7 +25,7 @@ import pandas as pd
 from src.backtester.analysis.robustness_models import RobustnessReport, RobustnessResult
 from src.backtester.analysis.robustness_stats import calculate_sensitivity, find_neighbors
 from src.backtester.models import BacktestConfig
-from src.backtester.wfa.wfa_backtest import simple_backtest
+from src.backtester.wfa.walk_forward_backtest import simple_backtest
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
 

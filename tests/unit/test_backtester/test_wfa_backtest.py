@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 
 from src.backtester.models import BacktestResult
-from src.backtester.wfa.wfa_backtest import (
+from src.backtester.wfa.walk_forward_backtest import (
     _calculate_metrics,
     _calculate_win_rate,
     _create_empty_result,

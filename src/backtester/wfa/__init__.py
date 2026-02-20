@@ -10,7 +10,7 @@ from src.backtester.wfa.walk_forward import (
     WalkForwardResult,
     run_walk_forward_analysis,
 )
-from src.backtester.wfa.wfa_backtest import simple_backtest
+from src.backtester.wfa.walk_forward_backtest import simple_backtest
 
 __all__ = [
     # Main walk-forward

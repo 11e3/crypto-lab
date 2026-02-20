@@ -24,7 +24,7 @@ import pandas as pd
 from src.backtester.analysis.permutation_loop import run_permutation_loop
 from src.backtester.analysis.permutation_stats import compute_statistics
 from src.backtester.models import BacktestConfig
-from src.backtester.wfa.wfa_backtest import simple_backtest
+from src.backtester.wfa.walk_forward_backtest import simple_backtest
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
 
