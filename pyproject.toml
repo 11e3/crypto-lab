@@ -41,9 +41,6 @@ dependencies = [
     "typing-inspection<0.4",  # Pin for Python 3.12 compatibility (TypeIs not available)
 ]
 
-# Web app 진입점 (streamlit run으로 실행)
-# 실행: uv run streamlit run src/web/app.py
-
 [project.scripts]
 crypto-lab = "src.main:main"
 
@@ -255,7 +252,7 @@ exclude_lines = [
     "@abstractmethod",
 ]
 # Coverage threshold (will be enabled gradually)
-fail_under = 80  # Including web/* — target reached via web service+component tests
+fail_under = 80
 precision = 2
 show_missing = true
 skip_covered = false

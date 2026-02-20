@@ -1,7 +1,9 @@
 """
 Trade simulation core for vectorized backtesting.
 
-Re-exports from sub-modules for backward compatibility.
+Re-exports state and exec primitives from sub-modules, and provides
+composite helpers that combine them (stop-loss/take-profit processing,
+exit finalization, asset-return tracking).
 """
 
 from datetime import date
