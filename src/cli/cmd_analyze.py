@@ -167,9 +167,8 @@ def _print_analysis_result(result: Any, args: argparse.Namespace) -> None:
         tag = f"[{check.level}]"
         print(f"  {tag:<6} {check.description} ({check.detail})")
 
-    verdict_emoji = "✓" if passed_count == total_count else "✗"
-    verdict_text = "전환 가능" if passed_count >= 4 else "조건 미달"
-    print(f"  → 종합: {verdict_text} {verdict_emoji}  ({passed_count}/{total_count})")
+    verdict_text = "전환 가능 [Y]" if passed_count >= 4 else "조건 미달 [N]"
+    print(f"  → 종합: {verdict_text}  ({passed_count}/{total_count})")
 
 
 __all__ = ["register"]

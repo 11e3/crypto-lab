@@ -80,6 +80,7 @@ class BacktestResult:
     mdd: float = 0.0
     calmar_ratio: float = 0.0
     sharpe_ratio: float = 0.0
+    sortino_ratio: float = 0.0
     win_rate: float = 0.0
     profit_factor: float = 0.0
 

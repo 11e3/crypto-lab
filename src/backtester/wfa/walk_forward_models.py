@@ -42,6 +42,7 @@ class WalkForwardResult:
     # Aggregate statistics
     avg_test_cagr: float = 0.0
     avg_test_sharpe: float = 0.0
+    avg_test_sortino: float = 0.0
     avg_test_mdd: float = 0.0
     avg_optimization_cagr: float = 0.0
 

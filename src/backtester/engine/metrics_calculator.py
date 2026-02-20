@@ -21,6 +21,7 @@ from src.utils.metrics_core import (
     calculate_daily_returns,
     calculate_mdd,
     calculate_sharpe_ratio,
+    calculate_sortino_ratio,
 )
 
 logger = get_logger(__name__)
@@ -71,10 +72,11 @@ def calculate_metrics_vectorized(
     # Calmar Ratio
     result.calmar_ratio = calculate_calmar_ratio(result.cagr, result.mdd)
 
-    # Sharpe Ratio & daily returns
+    # Sharpe / Sortino & daily returns
     daily_returns = calculate_daily_returns(equity_curve, prepend_zero=True)
-    returns = daily_returns[1:]  # without prepended zero for Sharpe
+    returns = daily_returns[1:]  # without prepended zero for Sharpe/Sortino
     result.sharpe_ratio = calculate_sharpe_ratio(returns, ANNUALIZATION_FACTOR)
+    result.sortino_ratio = calculate_sortino_ratio(returns, annualization_factor=ANNUALIZATION_FACTOR)
 
     # Risk metrics
     result.risk_metrics = _calculate_risk_metrics(

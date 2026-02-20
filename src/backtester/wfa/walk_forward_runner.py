@@ -206,6 +206,7 @@ def extract_metric(result: BacktestResult, metric: str) -> float:
     """
     metric_map = {
         "sharpe_ratio": lambda r: r.sharpe_ratio if hasattr(r, "sharpe_ratio") else 0.0,
+        "sortino_ratio": lambda r: r.sortino_ratio if hasattr(r, "sortino_ratio") else 0.0,
         "cagr": lambda r: r.cagr if hasattr(r, "cagr") else 0.0,
         "total_return": lambda r: r.total_return if hasattr(r, "total_return") else 0.0,
         "calmar_ratio": lambda r: r.calmar_ratio if hasattr(r, "calmar_ratio") else 0.0,

@@ -35,10 +35,11 @@ def get_cache_params(strategy: Strategy) -> dict[str, Any]:
     """
     params: dict[str, Any] = {"strategy_name": strategy.name}
 
-    # Extract VBO-specific parameters if available
-    for attr in ["sma_period", "trend_sma_period", "short_noise_period", "long_noise_period"]:
-        if hasattr(strategy, attr):
-            params[attr] = getattr(strategy, attr)
+    # Dynamically extract all parameters defined in the strategy's schema
+    schema = strategy.parameter_schema()
+    for name in schema:
+        if hasattr(strategy, name):
+            params[name] = getattr(strategy, name)
 
     # Include entry/exit conditions in cache key
     if hasattr(strategy, "entry_conditions"):

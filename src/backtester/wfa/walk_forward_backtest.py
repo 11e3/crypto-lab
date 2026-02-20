@@ -11,7 +11,7 @@ import pandas as pd
 from src.backtester.models import BacktestResult
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
-from src.utils.metrics_core import calculate_daily_returns, calculate_mdd, calculate_sharpe_ratio
+from src.utils.metrics_core import calculate_daily_returns, calculate_mdd, calculate_sharpe_ratio, calculate_sortino_ratio
 
 logger = get_logger(__name__)
 
@@ -110,6 +110,7 @@ def _calculate_metrics(
     equity_arr = np.array(equity)
     returns = calculate_daily_returns(equity_arr)
     sharpe = calculate_sharpe_ratio(returns, 252)
+    sortino = calculate_sortino_ratio(returns, annualization_factor=252)
     max_drawdown = calculate_mdd(equity_arr)
 
     winning_trades, win_rate = _calculate_win_rate(trades)
@@ -117,6 +118,7 @@ def _calculate_metrics(
     result = BacktestResult()
     result.total_return = total_return
     result.sharpe_ratio = sharpe
+    result.sortino_ratio = sortino
     result.mdd = max_drawdown
     result.total_trades = len(trades)
     result.winning_trades = winning_trades
