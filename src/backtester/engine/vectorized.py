@@ -70,6 +70,14 @@ class VectorizedBacktestEngine(BaseBacktestEngine):
         if len(sorted_dates) == 0:
             return BacktestResult(strategy_name=strategy.name)
 
+        if start_date is not None:
+            sorted_dates = sorted_dates[np.array([d >= start_date for d in sorted_dates])]
+        if end_date is not None:
+            sorted_dates = sorted_dates[np.array([d <= end_date for d in sorted_dates])]
+
+        if len(sorted_dates) == 0:
+            return BacktestResult(strategy_name=strategy.name)
+
         tickers, n_tickers, n_dates, arrays = build_numpy_arrays(ticker_data, sorted_dates)
         sorted_dates, n_dates, arrays = filter_valid_dates(sorted_dates, arrays, n_dates)
 
