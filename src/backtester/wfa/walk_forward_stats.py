@@ -32,12 +32,12 @@ def calculate_walk_forward_statistics(
 
     for period in periods:
         if period.test_result:
-            test_cagrs.append(period.test_result.cagr)
+            test_cagrs.append(period.test_result.total_return)
             test_sharpes.append(period.test_result.sharpe_ratio)
             test_sortinos.append(period.test_result.sortino_ratio)
             test_mdds.append(period.test_result.mdd)
             total_count += 1
-            if period.test_result.cagr > 0:
+            if period.test_result.total_return > 0:
                 positive_count += 1
 
         if period.optimization_result and period.optimization_result.best_result:

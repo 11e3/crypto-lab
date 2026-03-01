@@ -6,6 +6,7 @@ import argparse
 from typing import Any
 
 from src.cli._helpers import build_config, build_param_grid, parse_date
+from src.cli._output import save_output
 
 
 def register(subparsers: Any) -> None:
@@ -29,6 +30,7 @@ def _register_backtest(subparsers: Any) -> None:
     p = subparsers.add_parser("backtest", help="Run strategy backtest")
     _add_common_args(p)
     p.add_argument("--output", default=None, metavar="PATH", help="Save HTML report to PATH")
+    p.add_argument("--no-save", action="store_true", dest="no_save", help="Skip saving result to results/")
     p.set_defaults(func=_run_backtest)
 
 
@@ -41,6 +43,7 @@ def _register_optimize(subparsers: Any) -> None:
     p.add_argument("--method", default="grid", choices=["grid", "random"])
     p.add_argument("--n-iter", type=int, default=100, dest="n_iter", metavar="N")
     p.add_argument("--workers", type=int, default=None, metavar="N")
+    p.add_argument("--no-save", action="store_true", dest="no_save", help="Skip saving result to results/")
     p.set_defaults(func=_run_optimize)
 
 
@@ -61,13 +64,14 @@ def _run_backtest(args: argparse.Namespace) -> None:
         end_date=parse_date(args.end),
     )
 
-    print(f"\n=== Backtest: {args.strategy} ===")
-    print(f"  Total Return : {result.total_return:.2%}")
-    print(f"  CAGR         : {result.cagr:.2%}")
-    print(f"  MDD          : {result.mdd:.2%}")
-    print(f"  Sharpe       : {result.sharpe_ratio:.2f}")
-    print(f"  Win Rate     : {result.win_rate:.1%}")
-    print(f"  Total Trades : {result.total_trades}")
+    with save_output("backtest", args.strategy, not args.no_save):
+        print(f"\n=== Backtest: {args.strategy} ===")
+        print(f"  Total Return : {result.total_return:.2f}%")
+        print(f"  CAGR         : {result.cagr:.2f}%")
+        print(f"  MDD          : {result.mdd:.2f}%")
+        print(f"  Sharpe       : {result.sharpe_ratio:.2f}")
+        print(f"  Win Rate     : {result.win_rate:.1f}%")
+        print(f"  Total Trades : {result.total_trades}")
 
     if args.output:
         from pathlib import Path
@@ -111,11 +115,12 @@ def _run_optimize(args: argparse.Namespace) -> None:
         n_workers=args.workers,
     )
 
-    print(f"\n=== Optimize: {args.strategy} ===")
-    print(f"  Best Score ({args.metric}): {result.best_score:.4f}")
-    print("  Best Params:")
-    for k, v in result.best_params.items():
-        print(f"    {k}: {v}")
+    with save_output("optimize", args.strategy, not args.no_save):
+        print(f"\n=== Optimize: {args.strategy} ===")
+        print(f"  Best Score ({args.metric}): {result.best_score:.4f}")
+        print("  Best Params:")
+        for k, v in result.best_params.items():
+            print(f"    {k}: {v}")
 
 
 __all__ = ["register"]

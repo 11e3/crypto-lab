@@ -26,12 +26,15 @@ def register(subparsers: Any) -> None:
                    help="Skip permutation test")
     p.add_argument("--skip-robust", action="store_true", dest="skip_robust",
                    help="Skip robustness analysis (bootstrap + parameter sweep)")
+    p.add_argument("--no-save", action="store_true", dest="no_save",
+                   help="Skip saving result to results/")
     p.set_defaults(func=_run_analyze)
 
 
 def _run_analyze(args: argparse.Namespace) -> None:
     from src.backtester.analysis.strategy_analysis import run_strategy_analysis
     from src.cli._helpers import build_config, parse_date
+    from src.cli._output import save_output
     from src.strategies.registry import registry
 
     cls = registry.get_class(args.strategy)
@@ -49,29 +52,30 @@ def _run_analyze(args: argparse.Namespace) -> None:
     def factory_p(params: dict[str, Any]) -> Any:
         return registry.create(name, **params)
 
-    print(f"\nRunning analysis for {name} on {', '.join(args.tickers)} ...")
-    if not args.skip_perm:
-        print(f"  Permutation test: {args.shuffles} shuffles")
-    if not args.skip_robust:
-        print(f"  Bootstrap: {args.bootstrap_samples} samples")
-    print()
+    with save_output("analyze", args.strategy, not args.no_save):
+        print(f"\nRunning analysis for {name} on {', '.join(args.tickers)} ...")
+        if not args.skip_perm:
+            print(f"  Permutation test: {args.shuffles} shuffles")
+        if not args.skip_robust:
+            print(f"  Bootstrap: {args.bootstrap_samples} samples")
+        print()
 
-    result = run_strategy_analysis(
-        strategy_name=name,
-        strategy_factory_0=factory_0,
-        strategy_factory_p=factory_p,
-        tickers=args.tickers,
-        interval=args.interval,
-        config=config,
-        start_date=start_date,
-        end_date=end_date,
-        n_shuffles=args.shuffles,
-        n_bootstrap=args.bootstrap_samples,
-        run_permutation=not args.skip_perm,
-        run_robustness=not args.skip_robust,
-    )
+        result = run_strategy_analysis(
+            strategy_name=name,
+            strategy_factory_0=factory_0,
+            strategy_factory_p=factory_p,
+            tickers=args.tickers,
+            interval=args.interval,
+            config=config,
+            start_date=start_date,
+            end_date=end_date,
+            n_shuffles=args.shuffles,
+            n_bootstrap=args.bootstrap_samples,
+            run_permutation=not args.skip_perm,
+            run_robustness=not args.skip_robust,
+        )
 
-    _print_analysis_result(result, args)
+        _print_analysis_result(result, args)
 
 
 def _print_analysis_result(result: Any, args: argparse.Namespace) -> None:

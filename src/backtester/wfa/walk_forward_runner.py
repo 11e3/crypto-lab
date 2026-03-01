@@ -9,10 +9,11 @@ from datetime import date, timedelta
 from itertools import product
 from typing import Any
 
+import pandas as pd
+
 from src.backtester.engine import run_backtest
 from src.backtester.models import BacktestConfig, BacktestResult
 from src.backtester.optimization import OptimizationResult
-from src.backtester.parallel import ParallelBacktestRunner, ParallelBacktestTask
 from src.backtester.wfa.walk_forward_models import WalkForwardPeriod
 from src.strategies.base import Strategy
 from src.utils.logger import get_logger
@@ -84,9 +85,18 @@ def optimize_period(
     param_grid: dict[str, list[Any]],
     metric: str,
     n_workers: int | None,
+    ticker_data: dict[str, pd.DataFrame] | None = None,
 ) -> OptimizationResult | None:
     """
     Optimize parameters on optimization period.
+
+    If ``ticker_data`` is provided (pre-loaded raw OHLCV DataFrames keyed by
+    ticker), uses the lightweight ``simple_backtest`` path — no subprocess
+    spawning, no per-combination disk I/O.  This is typically 10-100× faster
+    than the full-engine multiprocessing path.
+
+    If ``ticker_data`` is None, falls back to the original full-engine
+    multiprocessing path for backward compatibility.
 
     Args:
         period: Walk-forward period
@@ -96,11 +106,25 @@ def optimize_period(
         config: Backtest configuration
         param_grid: Parameter grid
         metric: Optimization metric
-        n_workers: Number of parallel workers
+        n_workers: Number of parallel workers (only used in fallback path)
+        ticker_data: Pre-loaded raw OHLCV data keyed by ticker symbol
 
     Returns:
         OptimizationResult or None if failed
     """
+    if ticker_data is not None:
+        return _optimize_period_fast(
+            period=period,
+            strategy_factory=strategy_factory,
+            config=config,
+            param_grid=param_grid,
+            metric=metric,
+            ticker_data=ticker_data,
+        )
+
+    # --- fallback: original full-engine multiprocessing path ---
+    from src.backtester.parallel import ParallelBacktestRunner, ParallelBacktestTask
+
     try:
         param_names = list(param_grid.keys())
         param_values = list(param_grid.values())
@@ -127,7 +151,6 @@ def optimize_period(
         runner = ParallelBacktestRunner(n_workers=n_workers)
         results = runner.run(tasks)
 
-        # Extract scores and find best
         all_results: list[tuple[dict[str, Any], BacktestResult, float]] = []
         for task in tasks:
             result = results.get(task.name)
@@ -135,7 +158,6 @@ def optimize_period(
                 score = extract_metric(result, metric)
                 all_results.append((task.params, result, score))
 
-        # Sort by score
         all_results.sort(key=lambda x: x[2], reverse=True)
 
         if not all_results:
@@ -152,6 +174,79 @@ def optimize_period(
         )
     except Exception as e:
         logger.error(f"Error optimizing period {period.period_num}: {e}", exc_info=True)
+        return None
+
+
+def _optimize_period_fast(
+    period: WalkForwardPeriod,
+    strategy_factory: Callable[[dict[str, Any]], Strategy],
+    config: BacktestConfig,
+    param_grid: dict[str, list[Any]],
+    metric: str,
+    ticker_data: dict[str, pd.DataFrame],
+) -> OptimizationResult | None:
+    """
+    Fast optimization using simple_backtest (no subprocess overhead).
+
+    Data is sliced to the optimization window for each call.  Indicators are
+    computed inside simple_backtest; the first few rows with NaN indicators
+    produce no signals, so the warmup period is handled automatically.
+    """
+    from src.backtester.wfa.walk_forward_backtest import simple_backtest
+
+    try:
+        # Slice each ticker's data to the optimization window
+        opt_start = pd.Timestamp(period.optimization_start)
+        opt_end = pd.Timestamp(period.optimization_end)
+        period_data: dict[str, pd.DataFrame] = {}
+        for ticker, df in ticker_data.items():
+            sliced = df[(df.index >= opt_start) & (df.index <= opt_end)]
+            if len(sliced) > 0:
+                period_data[ticker] = sliced
+
+        if not period_data:
+            logger.warning(f"No data for optimization period {period.period_num}")
+            return None
+
+        param_names = list(param_grid.keys())
+        combinations = list(product(*param_grid.values()))
+
+        all_results: list[tuple[dict[str, Any], BacktestResult, float]] = []
+
+        for combo in combinations:
+            params = dict(zip(param_names, combo, strict=True))
+            strategy = strategy_factory(params)
+
+            scores: list[float] = []
+            last_result: BacktestResult | None = None
+
+            for df in period_data.values():
+                r = simple_backtest(df, strategy, config.initial_capital)
+                scores.append(getattr(r, metric, 0.0))
+                last_result = r
+
+            if last_result is None or not scores:
+                continue
+
+            avg_score = sum(scores) / len(scores)
+            all_results.append((params, last_result, avg_score))
+
+        all_results.sort(key=lambda x: x[2], reverse=True)
+
+        if not all_results:
+            return None
+
+        best_params, best_result, best_score = all_results[0]
+
+        return OptimizationResult(
+            best_params=best_params,
+            best_result=best_result,
+            best_score=best_score,
+            all_results=all_results,
+            optimization_metric=metric,
+        )
+    except Exception as e:
+        logger.error(f"Error in fast optimization period {period.period_num}: {e}", exc_info=True)
         return None
 
 

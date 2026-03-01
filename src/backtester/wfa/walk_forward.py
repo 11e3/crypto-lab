@@ -12,6 +12,8 @@ from collections.abc import Callable
 from datetime import date, datetime
 from typing import Any
 
+import pandas as pd
+
 from src.backtester.models import BacktestConfig
 from src.backtester.wfa.walk_forward_models import WalkForwardPeriod, WalkForwardResult
 from src.backtester.wfa.walk_forward_runner import (
@@ -63,22 +65,32 @@ class WalkForwardAnalyzer:
         self.interval = interval
         self.config = config
 
-    def _load_date_range(
-        self,
-        start_date: date | None,
-        end_date: date | None,
-    ) -> tuple[date, date]:
-        """Load OHLCV data for all tickers to determine the valid date range."""
+    def _load_all_data(self) -> dict[str, pd.DataFrame]:
+        """Load raw OHLCV data for all tickers once (no indicators applied)."""
         from src.data.upbit_source import UpbitDataSource
 
         data_source = UpbitDataSource()
-        all_dates: list[date] = []
+        ticker_data: dict[str, pd.DataFrame] = {}
 
         for ticker in self.tickers:
             df = data_source.load_ohlcv(ticker, self.interval)
             if df is not None and len(df) > 0:
-                ticker_dates = [d.date() if isinstance(d, datetime) else d for d in df.index]
-                all_dates.extend(ticker_dates)
+                ticker_data[ticker] = df
+
+        return ticker_data
+
+    def _load_date_range(
+        self,
+        ticker_data: dict[str, pd.DataFrame],
+        start_date: date | None,
+        end_date: date | None,
+    ) -> tuple[date, date]:
+        """Determine valid date range from pre-loaded ticker data."""
+        all_dates: list[date] = []
+
+        for df in ticker_data.values():
+            ticker_dates = [d.date() if isinstance(d, datetime) else d for d in df.index]
+            all_dates.extend(ticker_dates)
 
         if not all_dates:
             raise ValueError("No data available for walk-forward analysis")
@@ -115,7 +127,8 @@ class WalkForwardAnalyzer:
         Returns:
             WalkForwardResult with analysis results
         """
-        start_date, end_date = self._load_date_range(start_date, end_date)
+        ticker_data = self._load_all_data()
+        start_date, end_date = self._load_date_range(ticker_data, start_date, end_date)
 
         periods = generate_periods(
             start_date=start_date,
@@ -132,7 +145,7 @@ class WalkForwardAnalyzer:
         )
 
         for period in periods:
-            self._process_period(period, param_grid, metric, n_workers)
+            self._process_period(period, param_grid, metric, n_workers, ticker_data)
 
         return calculate_walk_forward_statistics(periods)
 
@@ -142,6 +155,7 @@ class WalkForwardAnalyzer:
         param_grid: dict[str, list[Any]],
         metric: str,
         n_workers: int | None,
+        ticker_data: dict[str, pd.DataFrame] | None = None,
     ) -> None:
         """Process a single walk-forward period."""
         logger.info(f"\nProcessing period {period.period_num}...")
@@ -158,6 +172,7 @@ class WalkForwardAnalyzer:
             param_grid=param_grid,
             metric=metric,
             n_workers=n_workers,
+            ticker_data=ticker_data,
         )
         period.optimization_result = opt_result
 
