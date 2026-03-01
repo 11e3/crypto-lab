@@ -200,7 +200,7 @@ class MyStrategy(Strategy):
         }
 ```
 
-`parameter_schema()`가 `optimize`와 `wfa`를 구동하므로 별도 연결이 필요 없다.
+`parameter_schema()`가 `optimize`와 `wfa`를 구동하므로 별도 연결이 필요 없음.
 
 ---
 
@@ -262,7 +262,7 @@ data/
 └── binance/        # Parquet 파일: BTC_USDT_1d.parquet, …
 ```
 
-파일은 `crypto-lab collect` 실행 시 자동으로 생성/업데이트된다.
+파일은 `crypto-lab collect` 실행 시 자동으로 생성/업데이트됨.
 
 ---
 
