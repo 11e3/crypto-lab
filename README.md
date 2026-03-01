@@ -46,13 +46,13 @@ crypto-lab backtest \
   --capital 10000000 \
   --slots 2
 
-# === Backtest: VBO ===
-#   Total Return : 142.35%
-#   CAGR         : 43.21%
-#   MDD          : -17.8%
-#   Sharpe       : 2.54
-#   Win Rate     : 61.2%
-#   Total Trades : 552
+=== Backtest: VBO ===
+  Total Return : 318.11%
+  CAGR         : 61.10%
+  MDD          : 14.80%
+  Sharpe       : 1.91
+  Win Rate     : 32.9%
+  Total Trades : 207
 ```
 
 ### 파라미터 최적화
