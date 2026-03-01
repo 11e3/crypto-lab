@@ -52,6 +52,8 @@ analysis = [
     "matplotlib>=3.7.0",  # Plotting
     "seaborn>=0.12.0",  # Statistical visualization
     "pyparsing>=3.1.2,<3.3",  # Pin to avoid circular import bug in 3.3.1
+    "duckdb>=1.0.0",  # In-process SQL analytics over parquet files
+    "jupyter>=1.0.0",  # Notebook support
 ]
 dev = [
     "pytest>=7.4.0",

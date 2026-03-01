@@ -13,7 +13,7 @@ Upbit/Binance를 위한 퀀트 백테스팅 및 전략 연구 플랫폼.
 
 ## 설치
 
-Python 3.12 이상 필요.
+Python 3.12 이상 필요합니다.
 
 ```bash
 # 전체 의존성 설치
@@ -173,7 +173,7 @@ src/
 
 ## 전략 작성
 
-`Strategy`를 서브클래싱하고 `@registry.register`로 등록:
+`Strategy`를 서브클래싱하고 `@registry.register`로 등록합니다:
 
 ```python
 from src.strategies.base import Strategy
@@ -200,7 +200,28 @@ class MyStrategy(Strategy):
         }
 ```
 
-`parameter_schema()`가 `optimize`와 `wfa`를 구동하므로 별도 연결이 필요 없음.
+`parameter_schema()`가 `optimize`와 `wfa`를 구동하므로 별도 연결이 필요 없습니다.
+
+---
+
+## SQL 분석 (DuckDB)
+
+parquet 파일을 별도 import 없이 SQL로 직접 쿼리할 수 있습니다.
+
+```bash
+pip install -e ".[analysis]"
+jupyter notebook notebooks/duckdb_analysis.ipynb
+```
+
+[`notebooks/duckdb_analysis.ipynb`](notebooks/duckdb_analysis.ipynb) 에서 다루는 내용:
+
+| 섹션 | SQL 개념 |
+|------|----------|
+| 기본 조회 | `SELECT`, `WHERE`, `ORDER BY` |
+| 월별 집계 | `GROUP BY`, `AVG`, `MAX`, `MIN` |
+| 윈도우 함수 | `LAG()`, `AVG() OVER`, 이동평균 |
+| CTE | `WITH` 절로 VBO 시그널 재구현 |
+| 멀티 티커 | `JOIN`, `CORR`, `STDDEV` |
 
 ---
 
@@ -211,9 +232,9 @@ class MyStrategy(Strategy):
 1. **돌파**: `high ≥ open + 전일_range × noise_ratio`
 2. **BTC 필터**: `전일 BTC 종가 > 전일 BTC MA(btc_ma)`
 
-청산 조건 (VBOV1): 전일 `close < SMA(ma_short)` → 다음 시가에 청산
+청산 조건 (VBOV1): 전일 `close < SMA(ma_short)` → 다음 시가에 청산합니다.
 
-청산 조건 (VBODayExit): 항상 다음 날 시가에 청산
+청산 조건 (VBODayExit): 항상 다음 날 시가에 청산합니다.
 
 ### 최적 파라미터 (BTC+ETH, 2020–2024)
 
@@ -243,7 +264,7 @@ mypy src/ --strict
 pytest tests/ -x -q && ruff check src/ && mypy src/ --strict
 ```
 
-커버리지 기준: **80%** (현재 ~84%).
+커버리지 기준은 **80%**입니다 (현재 ~84%).
 
 ### 코드 컨벤션
 
@@ -262,7 +283,7 @@ data/
 └── binance/        # Parquet 파일: BTC_USDT_1d.parquet, …
 ```
 
-파일은 `crypto-lab collect` 실행 시 자동으로 생성/업데이트됨.
+파일은 `crypto-lab collect` 실행 시 자동으로 생성/업데이트됩니다.
 
 ---
 
