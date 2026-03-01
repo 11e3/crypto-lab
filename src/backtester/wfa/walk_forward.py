@@ -195,7 +195,7 @@ class WalkForwardAnalyzer:
             if test_result:
                 logger.info(
                     f"  Test result: CAGR={test_result.cagr:.2f}%, "
-                    f"Sharpe={test_result.sharpe_ratio:.2f}, MDD={test_result.mdd:.2f}%"
+                    f"Sharpe={test_result.sharpe_ratio:.2f}, MDD=-{test_result.mdd:.2f}%"
                 )
 
 

@@ -57,7 +57,7 @@ def get_metrics_html(m: Any) -> str:
         <div class="metric-card"><div class="metric-label">CAGR</div>
             <div class="metric-value {pos_cagr}">{m.cagr_pct:.2f}%</div></div>
         <div class="metric-card"><div class="metric-label">Max Drawdown</div>
-            <div class="metric-value negative">{m.mdd_pct:.2f}%</div></div>
+            <div class="metric-value negative">-{m.mdd_pct:.2f}%</div></div>
         <div class="metric-card"><div class="metric-label">Sharpe Ratio</div>
             <div class="metric-value">{m.sharpe_ratio:.2f}</div></div>
         <div class="metric-card"><div class="metric-label">Sortino Ratio</div>

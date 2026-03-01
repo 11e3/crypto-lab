@@ -49,7 +49,7 @@ crypto-lab backtest \
 === Backtest: VBO ===
   Total Return : 318.11%
   CAGR         : 61.10%
-  MDD          : 14.80%
+  MDD          : -14.80%
   Sharpe       : 1.91
   Win Rate     : 32.9%
   Total Trades : 207

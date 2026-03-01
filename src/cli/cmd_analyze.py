@@ -101,7 +101,7 @@ def _print_analysis_result(result: Any, args: argparse.Namespace) -> None:
 
     print(f"  CAGR         : {bt.cagr:>7.2f}%    Sharpe   : {bt.sharpe_ratio:.2f}")
     print(f"  Sortino      : {sortino:>7.2f}     Calmar   : {bt.calmar_ratio:.2f}")
-    print(f"  MDD          : {bt.mdd:>7.2f}%    Volatility: {volatility:.2f}%")
+    print(f"  MDD          : {-bt.mdd:>7.2f}%    Volatility: {volatility:.2f}%")
     print(f"  Win Rate     : {bt.win_rate:.1f}%     Profit Factor: {profit_factor:.2f}"
           f"    Trades: {bt.total_trades}")
     print()
@@ -121,7 +121,7 @@ def _print_analysis_result(result: Any, args: argparse.Namespace) -> None:
         print(f"  {'항목':<8}  {'전략':>8}    {'B&H':>8}    {'차이':>12}")
         print(f"  {'CAGR':<8}  {bt.cagr:>7.2f}%    {bm.cagr:>7.2f}%    "
               f"({sign_cagr}{cagr_diff:.2f}%p)")
-        print(f"  {'MDD':<8}  {bt.mdd:>7.2f}%    {bm.mdd:>7.2f}%    "
+        print(f"  {'MDD':<8}  {-bt.mdd:>7.2f}%    {-bm.mdd:>7.2f}%    "
               f"({sign_mdd}{mdd_diff:.2f}%p 낙폭)")
         print(f"  {'Sharpe':<8}  {bt.sharpe_ratio:>8.2f}    {bm.sharpe:>8.2f}    "
               f"({sign_sharpe}{sharpe_diff:.2f})")

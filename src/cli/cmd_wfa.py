@@ -74,7 +74,7 @@ def _print_wfa_result(result: Any, metric: str) -> None:
     print(f"  Avg Return    : {result.avg_test_cagr:.2f}%")
     print(f"  Avg Sharpe    : {result.avg_test_sharpe:.2f}")
     print(f"  Avg Sortino   : {result.avg_test_sortino:.2f}")
-    print(f"  Avg MDD       : {result.avg_test_mdd:.2f}%")
+    print(f"  Avg MDD       : -{result.avg_test_mdd:.2f}%")
     print()
     header = f"  {'Period':<25} {'Return':>8} {'MDD':>7} {'Sharpe':>7} {'Sortino':>8} {'WinRate':>8} {'Trades':>7}  Params"
     print(header)
@@ -83,7 +83,7 @@ def _print_wfa_result(result: Any, metric: str) -> None:
         r = period.test_result
         if r is not None:
             return_s = f"{r.total_return:+.1f}%"
-            mdd_s = f"{r.mdd:.1f}%"
+            mdd_s = f"-{r.mdd:.1f}%"
             sharpe_s = f"{r.sharpe_ratio:.2f}"
             sortino_s = f"{r.sortino_ratio:.2f}"
             wr_s = f"{r.win_rate:.1f}%"

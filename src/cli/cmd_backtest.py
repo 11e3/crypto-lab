@@ -68,7 +68,7 @@ def _run_backtest(args: argparse.Namespace) -> None:
         print(f"\n=== Backtest: {args.strategy} ===")
         print(f"  Total Return : {result.total_return:.2f}%")
         print(f"  CAGR         : {result.cagr:.2f}%")
-        print(f"  MDD          : {result.mdd:.2f}%")
+        print(f"  MDD          : -{result.mdd:.2f}%")
         print(f"  Sharpe       : {result.sharpe_ratio:.2f}")
         print(f"  Win Rate     : {result.win_rate:.1f}%")
         print(f"  Total Trades : {result.total_trades}")

@@ -36,7 +36,7 @@ def plot_metrics_table(
     data = [
         ["Total Return", f"{m.total_return_pct:,.2f}%"],
         ["CAGR", f"{m.cagr_pct:.2f}%"],
-        ["Max Drawdown", f"{m.mdd_pct:.2f}%"],
+        ["Max Drawdown", f"-{m.mdd_pct:.2f}%"],
         ["Sharpe Ratio", f"{m.sharpe_ratio:.2f}"],
         ["Sortino Ratio", f"{m.sortino_ratio:.2f}"],
         ["Calmar Ratio", f"{m.calmar_ratio:.2f}"],

@@ -39,7 +39,7 @@ def print_performance_summary(
         f"   Total Return:   {m.total_return_pct:,.2f}%",
         f"   CAGR:           {m.cagr_pct:.2f}%",
         "\n[Risk]",
-        f"   Max Drawdown:   {m.mdd_pct:.2f}%",
+        f"   Max Drawdown:   -{m.mdd_pct:.2f}%",
         f"   Volatility:     {m.volatility_pct:.2f}%",
         "\n[Risk-Adjusted Returns]",
         f"   Sharpe Ratio:   {m.sharpe_ratio:.2f}",

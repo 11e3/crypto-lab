@@ -69,7 +69,7 @@ def _get_drawdown_chart_js(
             x: {dates_str}, y: {drawdown_values}, type: 'scatter', mode: 'lines',
             fill: 'tozeroy', fillcolor: 'rgba(231, 76, 60, 0.5)', line: {{color: '#e74c3c', width: 1}}
         }};
-        var mddValue = {mdd_pct:.2f};
+        var mddValue = -{mdd_pct:.2f};
         var ddLayout = {{
             title: 'Drawdown Over Time (MDD: ' + mddValue.toFixed(2) + '%)',
             xaxis: {{title: 'Date'}}, yaxis: {{title: 'Drawdown (%)', range: [-100, 0]}},
