@@ -51,7 +51,7 @@ analysis = [
     "scipy>=1.10.0",  # Portfolio optimization, statistical tests
     "matplotlib>=3.7.0",  # Plotting
     "seaborn>=0.12.0",  # Statistical visualization
-    "pyparsing>=3.1.2,<3.3",  # Pin to avoid circular import bug in 3.3.1
+    "pyparsing>=3.1.2,<3.4",  # Pin to avoid circular import bug in 3.3.1
     "duckdb>=1.0.0",  # In-process SQL analytics over parquet files
     "jupyter>=1.0.0",  # Notebook support
 ]
@@ -80,7 +80,7 @@ test = [
     "scipy>=1.10.0",
     "matplotlib>=3.7.0",
     "seaborn>=0.12.0",
-    "pyparsing>=3.1.2,<3.3",  # Pin to avoid circular import bug in 3.3.1
+    "pyparsing>=3.1.2,<3.4",  # Pin to avoid circular import bug in 3.3.1
 ]
 
 # 패키지 구조 설정
