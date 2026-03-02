@@ -38,7 +38,7 @@ dependencies = [
     "psutil>=5.9.0",  # Process and system utilities
     "ccxt>=4.0.0",  # Universal crypto exchange library (Binance, etc.)
     "typing-extensions<4.15.0",  # Pin to avoid annotationlib dependency (Python 3.14+)
-    "typing-inspection<0.4",  # Pin for Python 3.12 compatibility (TypeIs not available)
+    "typing-inspection<0.5",  # Pin for Python 3.12 compatibility (TypeIs not available)
 ]
 
 [project.scripts]
