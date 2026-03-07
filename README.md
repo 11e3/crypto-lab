@@ -1,33 +1,35 @@
 # crypto-lab
 
-Upbit/Binance를 위한 퀀트 백테스팅 및 전략 연구 플랫폼.
+A quantitative backtesting and strategy research platform for Upbit/Binance.
 
-- **벡터화 백테스터** — 현실적인 비용 모델(수수료 + 슬리피지)을 갖춘 이벤트 기반 시뮬레이션
-- **파라미터 최적화** — 병렬 실행을 지원하는 그리드 및 랜덤 서치
-- **워크포워드 분석** — 과최적화 감지를 위한 아웃오브샘플 검증
-- **데이터 수집** — Upbit 및 Binance에서 OHLCV 증분 수집
-- **리스크 분석** — VaR, CVaR, 포트폴리오 최적화(MPT, 리스크 패리티)
-- **CLI** — 전체 워크플로우를 단일 `crypto-lab` 명령으로 실행
+> Korean version: [README_KR.md](README_KR.md)
+
+- **Vectorized backtester** — event-driven simulation with realistic cost model (fees + slippage)
+- **Parameter optimization** — grid and random search with parallel execution
+- **Walk-forward analysis** — out-of-sample validation to detect overfitting
+- **Data collection** — incremental OHLCV ingestion from Upbit and Binance
+- **Risk analysis** — VaR, CVaR, portfolio optimization (MPT, risk parity)
+- **CLI** — entire workflow driven by a single `crypto-lab` command
 
 ---
 
-## 설치
+## Installation
 
-Python 3.12 이상 필요합니다.
+Requires Python 3.12+.
 
 ```bash
-# 전체 의존성 설치
+# Install with all extras
 pip install -e ".[analysis,dev]"
 
-# 또는 uv 사용
+# Or with uv
 uv sync --all-extras
 ```
 
 ---
 
-## 빠른 시작
+## Quick Start
 
-### 등록된 전략 목록 확인
+### List registered strategies
 
 ```bash
 crypto-lab list
@@ -35,7 +37,7 @@ crypto-lab list
 # VBO_DAY
 ```
 
-### 백테스트 실행
+### Run a backtest
 
 ```bash
 crypto-lab backtest \
@@ -55,7 +57,7 @@ crypto-lab backtest \
   Total Trades : 207
 ```
 
-### 파라미터 최적화
+### Parameter optimization
 
 ```bash
 crypto-lab optimize \
@@ -73,7 +75,7 @@ crypto-lab optimize \
 #     ma_short: 3
 ```
 
-### 워크포워드 분석
+### Walk-forward analysis
 
 ```bash
 crypto-lab wfa \
@@ -93,7 +95,7 @@ crypto-lab wfa \
 #   Avg MDD       : -19.2%
 ```
 
-### 데이터 수집
+### Data collection
 
 ```bash
 crypto-lab collect \
@@ -104,76 +106,76 @@ crypto-lab collect \
 
 ---
 
-## CLI 레퍼런스
+## CLI Reference
 
 ```
 crypto-lab [--log-level LEVEL] COMMAND
 
 Commands:
-  backtest   과거 데이터로 전략 백테스트 실행
-  optimize   그리드/랜덤 파라미터 서치
-  collect    거래소에서 OHLCV 데이터 수집
-  wfa        워크포워드 분석
-  list       등록된 전략 목록 출력
+  backtest   Run a strategy backtest on historical data
+  optimize   Grid/random parameter search
+  collect    Fetch OHLCV data from an exchange
+  wfa        Walk-forward analysis
+  list       Print registered strategies
 ```
 
-`backtest`, `optimize`, `wfa` 공통 플래그:
+Common flags for `backtest`, `optimize`, and `wfa`:
 
-| 플래그 | 기본값 | 설명 |
-|--------|--------|------|
-| `--tickers` | (필수) | 공백으로 구분된 Upbit 티커. 예: `KRW-BTC KRW-ETH` |
-| `--strategy` | (필수) | 등록된 전략 이름 |
-| `--start` | 전체 데이터 | 시작일 `YYYY-MM-DD` |
-| `--end` | 전체 데이터 | 종료일 `YYYY-MM-DD` |
-| `--capital` | 1,000,000 | 초기 자본금 (원) |
-| `--slots` | 5 | 최대 동시 포지션 수 |
-| `--fee` | 0.0005 | 거래당 수수료율 (0.05%) |
-| `--interval` | `day` | 캔들 인터벌 (`day`, `minute240`, …) |
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--tickers` | (required) | Space-separated Upbit tickers, e.g. `KRW-BTC KRW-ETH` |
+| `--strategy` | (required) | Registered strategy name |
+| `--start` | full history | Start date `YYYY-MM-DD` |
+| `--end` | full history | End date `YYYY-MM-DD` |
+| `--capital` | 1,000,000 | Initial capital (KRW) |
+| `--slots` | 5 | Maximum concurrent positions |
+| `--fee` | 0.0005 | Per-trade fee rate (0.05%) |
+| `--interval` | `day` | Candle interval (`day`, `minute240`, …) |
 
 ---
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 src/
-├── main.py                  # CLI 진입점
-├── cli/                     # CLI 서브커맨드 모듈
+├── main.py                  # CLI entry point
+├── cli/                     # CLI subcommand modules
 │   ├── cmd_backtest.py      #   backtest, optimize
 │   ├── cmd_data.py          #   collect
 │   └── cmd_wfa.py           #   wfa
 ├── strategies/
-│   ├── base.py              # Strategy 추상 기반 클래스
-│   ├── registry.py          # StrategyFactory 싱글턴
+│   ├── base.py              # Strategy abstract base class
+│   ├── registry.py          # StrategyFactory singleton
 │   └── volatility_breakout/
-│       ├── vbo_v1.py        # VBOV1 — 돌파 + BTC MA 필터 + MA 청산
-│       └── vbo_day_exit.py  # VBODayExit — 고정 1일 보유
+│       ├── vbo_v1.py        # VBOV1 — breakout + BTC MA filter + MA exit
+│       └── vbo_day_exit.py  # VBODayExit — fixed 1-day hold
 ├── backtester/
-│   ├── engine/              # 벡터화 + 이벤트 기반 엔진, run_backtest()
-│   ├── optimization.py      # 그리드/랜덤 파라미터 최적화기
-│   ├── wfa/                 # 워크포워드 분석
-│   ├── analysis/            # 순열 테스트, 강건성, 부트스트랩
+│   ├── engine/              # Vectorized + event-driven engine, run_backtest()
+│   ├── optimization.py      # Grid/random parameter optimizer
+│   ├── wfa/                 # Walk-forward analysis
+│   ├── analysis/            # Permutation test, robustness, bootstrap
 │   └── models.py            # BacktestConfig, BacktestResult, Trade
 ├── data/
-│   ├── collector.py         # UpbitDataCollector (증분 parquet 업데이트)
+│   ├── collector.py         # UpbitDataCollector (incremental parquet updates)
 │   ├── collector_factory.py # DataCollectorFactory
-│   ├── upbit_source.py      # Upbit OHLCV 데이터 소스
-│   ├── binance_source.py    # Binance OHLCV 데이터 소스
-│   └── cache/               # LRU 데이터 캐시
+│   ├── upbit_source.py      # Upbit OHLCV data source
+│   ├── binance_source.py    # Binance OHLCV data source
+│   └── cache/               # LRU data cache
 ├── risk/
-│   ├── position_sizing.py   # 균등, 변동성 조정, 켈리 포지션 사이징
-│   ├── portfolio_methods.py # MPT + 리스크 패리티 최적화
+│   ├── position_sizing.py   # Equal, volatility-adjusted, Kelly sizing
+│   ├── portfolio_methods.py # MPT + risk parity optimization
 │   └── metrics*.py          # VaR, CVaR, Sharpe, Sortino, …
-├── config/                  # Pydantic 설정 + YAML 로더
+├── config/                  # Pydantic settings + YAML loader
 └── utils/
-    ├── indicators.py         # SMA, EMA, ATR, RSI, 볼린저 밴드
-    └── indicators_vbo.py     # VBO 전용: 목표가, 노이즈 범위
+    ├── indicators.py         # SMA, EMA, ATR, RSI, Bollinger Bands
+    └── indicators_vbo.py     # VBO-specific: target price, noise range
 ```
 
 ---
 
-## 전략 작성
+## Writing a Strategy
 
-`Strategy`를 서브클래싱하고 `@registry.register`로 등록합니다:
+Subclass `Strategy` and register it with `@registry.register`:
 
 ```python
 from src.strategies.base import Strategy
@@ -200,93 +202,93 @@ class MyStrategy(Strategy):
         }
 ```
 
-`parameter_schema()`가 `optimize`와 `wfa`를 구동하므로 별도 연결이 필요 없습니다.
+`parameter_schema()` drives both `optimize` and `wfa` — no additional wiring needed.
 
 ---
 
-## SQL 분석 (DuckDB)
+## SQL Analysis (DuckDB)
 
-parquet 파일을 별도 import 없이 SQL로 직접 쿼리할 수 있습니다.
+Query parquet files directly with SQL — no import step required.
 
 ```bash
 pip install -e ".[analysis]"
 jupyter notebook notebooks/duckdb_analysis.ipynb
 ```
 
-[`notebooks/duckdb_analysis.ipynb`](notebooks/duckdb_analysis.ipynb) 에서 다루는 내용:
+Topics covered in [`notebooks/duckdb_analysis.ipynb`](notebooks/duckdb_analysis.ipynb):
 
-| 섹션 | SQL 개념 |
-|------|----------|
-| 기본 조회 | `SELECT`, `WHERE`, `ORDER BY` |
-| 월별 집계 | `GROUP BY`, `AVG`, `MAX`, `MIN` |
-| 윈도우 함수 | `LAG()`, `AVG() OVER`, 이동평균 |
-| CTE | `WITH` 절로 VBO 시그널 재구현 |
-| 멀티 티커 | `JOIN`, `CORR`, `STDDEV` |
-
----
-
-## 변동성 돌파 전략 (VBO)
-
-진입 조건 (두 조건 모두 충족 시):
-
-1. **돌파**: `high ≥ open + 전일_range × noise_ratio`
-2. **BTC 필터**: `전일 BTC 종가 > 전일 BTC MA(btc_ma)`
-
-청산 조건 (VBOV1): 전일 `close < SMA(ma_short)` → 다음 시가에 청산합니다.
-
-청산 조건 (VBODayExit): 항상 다음 날 시가에 청산합니다.
-
-### 최적 파라미터 (BTC+ETH, 2020–2024)
-
-| 목표 | noise_ratio | btc_ma | ma_short | Sharpe | CAGR | MDD |
-|------|-------------|--------|----------|--------|------|-----|
-| 균형 | 0.6 | 30 | 3 | 2.54 | +121% | −17.9% |
-| 수익 극대화 | 0.3 | 10 | 3 | 2.20 | +128% | −23.9% |
-| 낙폭 최소화 | 0.8 | 30 | 3 | 2.05 | +101% | −16.7% |
-
-전체 스윕 연구 결과: [`src/research/results/vb_upbit/README.md`](src/research/results/vb_upbit/README.md)
+| Section | SQL concepts |
+|---------|--------------|
+| Basic queries | `SELECT`, `WHERE`, `ORDER BY` |
+| Monthly aggregation | `GROUP BY`, `AVG`, `MAX`, `MIN` |
+| Window functions | `LAG()`, `AVG() OVER`, moving averages |
+| CTEs | Re-implementing VBO signals with `WITH` clauses |
+| Multi-ticker | `JOIN`, `CORR`, `STDDEV` |
 
 ---
 
-## 개발
+## Volatility Breakout Strategy (VBO)
+
+Entry conditions (both must be met):
+
+1. **Breakout**: `high >= open + prev_range * noise_ratio`
+2. **BTC filter**: `prev BTC close > prev BTC MA(btc_ma)`
+
+Exit condition (VBOV1): previous `close < SMA(ma_short)` — exit at next open.
+
+Exit condition (VBODayExit): always exit at the next day's open.
+
+### Optimal Parameters (BTC+ETH, 2020–2024)
+
+| Objective | noise_ratio | btc_ma | ma_short | Sharpe | CAGR | MDD |
+|-----------|-------------|--------|----------|--------|------|-----|
+| Balanced | 0.6 | 30 | 3 | 2.54 | +121% | −17.9% |
+| Max return | 0.3 | 10 | 3 | 2.20 | +128% | −23.9% |
+| Min drawdown | 0.8 | 30 | 3 | 2.05 | +101% | −16.7% |
+
+Full sweep research: [`src/research/results/vb_upbit/README.md`](src/research/results/vb_upbit/README.md)
+
+---
+
+## Development
 
 ```bash
-# 테스트 실행
+# Run tests
 pytest tests/ -x -q
 
-# 린트 + 포맷
+# Lint + format
 ruff check src/ && ruff format src/
 
-# 타입 검사
+# Type checking
 mypy src/ --strict
 
-# 세 가지 모두 (품질 게이트)
+# All three (quality gate)
 pytest tests/ -x -q && ruff check src/ && mypy src/ --strict
 ```
 
-커버리지 기준은 **80%**입니다 (현재 ~84%).
+Coverage threshold is **80%** (currently ~84%).
 
-### 코드 컨벤션
+### Code Conventions
 
-- 파일 200줄 이하, 함수 50줄 이하
-- 모든 public 함수에 타입 어노테이션 필수 (mypy strict)
-- 주석은 영어로만 작성
-- 무거운 의존성(pyupbit, ccxt, matplotlib)은 함수 내부에서 지연 임포트
+- Files ≤ 200 lines, functions ≤ 50 lines
+- Type annotations required on all public functions (mypy strict)
+- Comments in English only
+- Heavy dependencies (pyupbit, ccxt, matplotlib) are lazy-imported inside functions
 
 ---
 
-## 데이터 레이아웃
+## Data Layout
 
 ```
 data/
-├── upbit/          # Parquet 파일: KRW-BTC_day.parquet, KRW-ETH_minute240.parquet, …
-└── binance/        # Parquet 파일: BTC_USDT_1d.parquet, …
+├── upbit/          # Parquet files: KRW-BTC_day.parquet, KRW-ETH_minute240.parquet, …
+└── binance/        # Parquet files: BTC_USDT_1d.parquet, …
 ```
 
-파일은 `crypto-lab collect` 실행 시 자동으로 생성/업데이트됩니다.
+Files are created/updated automatically when running `crypto-lab collect`.
 
 ---
 
-## 라이선스
+## License
 
 MIT

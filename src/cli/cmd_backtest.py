@@ -81,6 +81,9 @@ def _run_backtest(args: argparse.Namespace) -> None:
             strategy_name=args.strategy,
             save_path=Path(args.output),
             show=False,
+            strategy_obj=strategy,
+            config=config,
+            tickers=args.tickers,
         )
         print(f"  Report saved : {args.output}")
 

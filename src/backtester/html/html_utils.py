@@ -14,7 +14,7 @@ from src.backtester.report_pkg.report import BacktestReport
 
 
 def extract_strategy_params(strategy_obj: object, tickers: list[str] | None = None) -> str:
-    """Extract strategy parameters from strategy instance."""
+    """Extract strategy parameters from strategy instance using parameter_schema()."""
     if not strategy_obj:
         return ""
 
@@ -24,49 +24,17 @@ def extract_strategy_params(strategy_obj: object, tickers: list[str] | None = No
     if tickers:
         params.append(("Tickers", ", ".join(tickers)))
 
-    # Common VBO parameters
-    if hasattr(strategy_obj, "sma_period"):
-        params.append(("SMA Period", str(strategy_obj.sma_period)))
-    if hasattr(strategy_obj, "trend_sma_period"):
-        params.append(("Trend SMA Period", str(strategy_obj.trend_sma_period)))
-    if hasattr(strategy_obj, "short_noise_period"):
-        params.append(("Short Noise Period", str(strategy_obj.short_noise_period)))
-    if hasattr(strategy_obj, "long_noise_period"):
-        params.append(("Long Noise Period", str(strategy_obj.long_noise_period)))
-    if hasattr(strategy_obj, "exclude_current"):
-        params.append(("Exclude Current", str(strategy_obj.exclude_current)))
-
-    # Momentum strategy parameters
-    if hasattr(strategy_obj, "lookback_period"):
-        params.append(("Lookback Period", str(strategy_obj.lookback_period)))
-    if hasattr(strategy_obj, "momentum_threshold"):
-        params.append(("Momentum Threshold", f"{strategy_obj.momentum_threshold:.2f}"))
-
-    # Mean reversion parameters
-    if hasattr(strategy_obj, "zscore_threshold"):
-        params.append(("Z-Score Threshold", f"{strategy_obj.zscore_threshold:.2f}"))
-    if hasattr(strategy_obj, "lookback_window"):
-        params.append(("Lookback Window", str(strategy_obj.lookback_window)))
-
-    # Pair trading parameters
-    if hasattr(strategy_obj, "spread_lookback"):
-        params.append(("Spread Lookback", str(strategy_obj.spread_lookback)))
-    if hasattr(strategy_obj, "entry_zscore"):
-        params.append(("Entry Z-Score", f"{strategy_obj.entry_zscore:.2f}"))
-    if hasattr(strategy_obj, "exit_zscore"):
-        params.append(("Exit Z-Score", f"{strategy_obj.exit_zscore:.2f}"))
-
-    # Entry/Exit conditions
-    if hasattr(strategy_obj, "entry_conditions"):
-        entry_conds = strategy_obj.entry_conditions
-        if hasattr(entry_conds, "conditions"):
-            entry_names = [c.name for c in entry_conds.conditions]
-            params.append(("Entry Conditions", ", ".join(entry_names) if entry_names else "None"))
-    if hasattr(strategy_obj, "exit_conditions"):
-        exit_conds = strategy_obj.exit_conditions
-        if hasattr(exit_conds, "conditions"):
-            exit_names = [c.name for c in exit_conds.conditions]
-            params.append(("Exit Conditions", ", ".join(exit_names) if exit_names else "None"))
+    # Dynamically extract parameters from parameter_schema()
+    if hasattr(strategy_obj, "parameter_schema"):
+        schema = strategy_obj.parameter_schema()
+        for name in schema:
+            if hasattr(strategy_obj, name):
+                value = getattr(strategy_obj, name)
+                label = name.replace("_", " ").title()
+                if isinstance(value, float):
+                    params.append((label, f"{value:.4g}"))
+                else:
+                    params.append((label, str(value)))
 
     if not params:
         return ""
