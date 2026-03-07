@@ -2,6 +2,11 @@
 
 Upbit/Binance를 위한 퀀트 백테스팅 및 전략 연구 플랫폼.
 
+![VBO Equity Curve](docs/images/equity_curve.png)
+
+> VBO 전략 KRW-BTC + KRW-ETH (2022–2024), 초기 자본 ₩10,000,000, 2 슬롯.
+> 파란색: 전략 자산곡선. 빨간 점선: BTC 바이앤홀드 벤치마크.
+
 - **벡터화 백테스터** — 현실적인 비용 모델(수수료 + 슬리피지)을 갖춘 이벤트 기반 시뮬레이션
 - **파라미터 최적화** — 병렬 실행을 지원하는 그리드 및 랜덤 서치
 - **워크포워드 분석** — 과최적화 감지를 위한 아웃오브샘플 검증
@@ -129,6 +134,26 @@ Commands:
 | `--slots` | 5 | 최대 동시 포지션 수 |
 | `--fee` | 0.0005 | 거래당 수수료율 (0.05%) |
 | `--interval` | `day` | 캔들 인터벌 (`day`, `minute240`, …) |
+
+---
+
+## 아키텍처
+
+```mermaid
+graph LR
+    A[CLI] --> B[Backtester Engine]
+    A --> C[Optimizer]
+    A --> D[WFA]
+    A --> E[Data Collector]
+    B --> F[Strategy Registry]
+    B --> G[Risk Metrics]
+    C --> B
+    D --> C
+    E --> H[Upbit API]
+    E --> I[Binance API]
+    E --> J[Parquet Cache]
+    B --> J
+```
 
 ---
 

@@ -4,6 +4,11 @@ A quantitative backtesting and strategy research platform for Upbit/Binance.
 
 > Korean version: [README_KR.md](README_KR.md)
 
+![VBO Equity Curve](docs/images/equity_curve.png)
+
+> VBO strategy on KRW-BTC + KRW-ETH (2022–2024), initial capital ₩10,000,000, 2 slots.
+> Blue: strategy equity. Red dashed: BTC buy-and-hold benchmark.
+
 - **Vectorized backtester** — event-driven simulation with realistic cost model (fees + slippage)
 - **Parameter optimization** — grid and random search with parallel execution
 - **Walk-forward analysis** — out-of-sample validation to detect overfitting
@@ -131,6 +136,26 @@ Common flags for `backtest`, `optimize`, and `wfa`:
 | `--slots` | 5 | Maximum concurrent positions |
 | `--fee` | 0.0005 | Per-trade fee rate (0.05%) |
 | `--interval` | `day` | Candle interval (`day`, `minute240`, …) |
+
+---
+
+## Architecture
+
+```mermaid
+graph LR
+    A[CLI] --> B[Backtester Engine]
+    A --> C[Optimizer]
+    A --> D[WFA]
+    A --> E[Data Collector]
+    B --> F[Strategy Registry]
+    B --> G[Risk Metrics]
+    C --> B
+    D --> C
+    E --> H[Upbit API]
+    E --> I[Binance API]
+    E --> J[Parquet Cache]
+    B --> J
+```
 
 ---
 
