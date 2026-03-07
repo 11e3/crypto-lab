@@ -6,7 +6,7 @@ A quantitative backtesting and strategy research platform for Upbit/Binance.
 
 ![VBO Equity Curve](docs/images/equity_curve.png)
 
-> VBO strategy on KRW-BTC + KRW-ETH (2022–2024), initial capital ₩10,000,000, 2 slots.
+> VBO strategy on KRW-BTC + KRW-ETH (2017–2026), initial capital ₩10,000,000, 2 slots.
 > Blue: strategy equity. Red dashed: BTC buy-and-hold benchmark.
 
 - **Vectorized backtester** — event-driven simulation with realistic cost model (fees + slippage)
